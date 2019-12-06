@@ -20,7 +20,9 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.powsybl.server.cases.CaseConstants.*;
-
+/**
+ * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
+ */
 @Service
 public class CaseService {
 

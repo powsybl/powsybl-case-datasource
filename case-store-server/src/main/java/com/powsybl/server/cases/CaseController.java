@@ -30,6 +30,9 @@ import java.util.Map;
 
 import static com.powsybl.server.cases.CaseConstants.*;
 
+/**
+ * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
+ */
 @RestController
 @RequestMapping(value = "/" + CaseApi.VERSION + "/case-server")
 @Api(value = "Case server")
