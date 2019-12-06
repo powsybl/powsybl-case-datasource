@@ -1,0 +1,1 @@
+# powsybl-case-store
