@@ -35,14 +35,17 @@ public class CaseControllerTest {
     @Autowired
     private MockMvc mvc;
 
+    private static final String TEST_CASE = "testCase.xiidm";
+
+    private static final String GET_CASE_URL = "/v1/case-server/cases/{caseName}";
+
     @BeforeClass
     public static void setup() {
         final Path path = Paths.get(System.getProperty(USERHOME) + CASE_FOLDER);
-        if (Files.notExists(path)) {
+        if (!path.toFile().exists()) {
             try {
                 Files.createDirectory(path);
             } catch (IOException e) {
-                e.printStackTrace();
                 fail();
             }
         }
@@ -55,8 +58,8 @@ public class CaseControllerTest {
 
         //Import a case
         ClassLoader classLoader = getClass().getClassLoader();
-        try (InputStream inputStream = classLoader.getResourceAsStream("testCase.xiidm")) {
-            MockMultipartFile mockFile = new MockMultipartFile("file", "testCase.xiidm", "text/plain", inputStream);
+        try (InputStream inputStream = classLoader.getResourceAsStream(TEST_CASE)) {
+            MockMultipartFile mockFile = new MockMultipartFile("file", TEST_CASE, "text/plain", inputStream);
             MvcResult mvcResult = mvc.perform(MockMvcRequestBuilders.multipart("/v1/case-server/import-case")
                     .file(mockFile))
                     .andExpect(status().isOk())
@@ -65,8 +68,8 @@ public class CaseControllerTest {
         }
 
         //Import the same case and expect a fail
-        try (InputStream inputStream = classLoader.getResourceAsStream("testCase.xiidm")) {
-            MockMultipartFile mockFile = new MockMultipartFile("file", "testCase.xiidm", "text/plain", inputStream);
+        try (InputStream inputStream = classLoader.getResourceAsStream(TEST_CASE)) {
+            MockMultipartFile mockFile = new MockMultipartFile("file", TEST_CASE, "text/plain", inputStream);
             MvcResult mvcResult = mvc.perform(MockMvcRequestBuilders.multipart("/v1/case-server/import-case")
                     .file(mockFile))
                     .andExpect(status().is(409))
@@ -83,19 +86,19 @@ public class CaseControllerTest {
         ObjectMapper objectMapper = new ObjectMapper();
         String tmp = mvcResult.getResponse().getContentAsString();
         Map<String, String> listCase = objectMapper.readValue(tmp, Map.class);
-        assertTrue(listCase.containsValue("testCase.xiidm"));
-        assertTrue(listCase.containsKey(System.getProperty(USERHOME) + CASE_FOLDER + "testCase.xiidm"));
+        assertTrue(listCase.containsValue(TEST_CASE));
+        assertTrue(listCase.containsKey(System.getProperty(USERHOME) + CASE_FOLDER + TEST_CASE));
 
         //Retrieve a case as a network
         mvcResult =  mvc.perform(get("/v1/case-server/download-network")
-        .param("caseName", "testCase.xiidm"))
+        .param("caseName", TEST_CASE))
                 .andExpect(status().isOk())
                 .andReturn();
         Network network = NetworkXml.gunzip(mvcResult.getResponse().getContentAsByteArray());
         assertEquals("20140116_0830_2D4_UX1_pst", network.getName());
 
         //Retrieve a case (async)
-        mvcResult = mvc.perform(get("/v1/case-server/cases/{caseName}", "testCase.xiidm"))
+        mvcResult = mvc.perform(get(GET_CASE_URL, TEST_CASE))
                 .andExpect(request().asyncStarted())
                 .andReturn();
 
@@ -112,11 +115,11 @@ public class CaseControllerTest {
         }
 
         //Delete the case
-        mvc.perform(delete("/v1/case-server/cases/{caseName}", "testCase.xiidm"))
+        mvc.perform(delete(GET_CASE_URL, TEST_CASE))
                 .andExpect(status().isOk());
 
         //Delete non existing file
-        mvcResult = mvc.perform(delete("/v1/case-server/cases/{caseName}", "testCase.xiidm"))
+        mvcResult = mvc.perform(delete(GET_CASE_URL, TEST_CASE))
                 .andReturn();
 
         assertEquals(FILE_DOESNT_EXIST, mvcResult.getResponse().getErrorMessage());

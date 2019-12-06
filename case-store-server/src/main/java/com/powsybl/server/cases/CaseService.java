@@ -31,7 +31,7 @@ public class CaseService {
         Map<String, String> cases;
         try (Stream<Path> walk = Files.walk(Paths.get(System.getProperty(USERHOME) + CASE_FOLDER))) {
             cases = walk.filter(Files::isRegularFile)
-                    .collect(Collectors.toMap(x -> x.toString(), x -> x.getFileName().toString()));
+                    .collect(Collectors.toMap(Object::toString, x -> x.getFileName().toString()));
         } catch (IOException e) {
             return null;
         }
@@ -115,7 +115,7 @@ public class CaseService {
         return storageRooDir.toFile().exists() && storageRooDir.toFile().isDirectory();
     }
 
-    private void checkStorageInitialization() throws CaseException {
+    private void checkStorageInitialization() {
         if (!isStorageCreated()) {
             throw new CaseException(STORAGE_DIR_NOT_CREATED);
         }

@@ -9,13 +9,10 @@ import org.springframework.scheduling.annotation.AsyncConfigurer;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
-import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.context.request.async.CallableProcessingInterceptor;
 import org.springframework.web.context.request.async.TimeoutCallableProcessingInterceptor;
 import org.springframework.web.servlet.config.annotation.AsyncSupportConfigurer;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
-
-import java.util.concurrent.Callable;
 
 @Configuration
 @EnableAsync
@@ -52,10 +49,7 @@ public class AsyncConfig implements AsyncConfigurer, WebMvcConfigurer {
     @Bean
     public CallableProcessingInterceptor callableProcessingInterceptor() {
         return new TimeoutCallableProcessingInterceptor() {
-            @Override
-            public <T> Object handleTimeout(NativeWebRequest request, Callable<T> task) throws Exception {
-                return super.handleTimeout(request, task);
-            }
+
         };
     }
 }

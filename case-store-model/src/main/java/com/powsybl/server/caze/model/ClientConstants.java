@@ -7,5 +7,4 @@ public final class ClientConstants {
     }
 
     public static final String CASE_PARAM = "caseName";
-//    public static final String FILE_PARAM = "file";
 }
