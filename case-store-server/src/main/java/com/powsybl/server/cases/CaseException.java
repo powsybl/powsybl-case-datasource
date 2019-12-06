@@ -1,4 +1,4 @@
-package com.powsybl.server.caze.model;
+package com.powsybl.server.cases;
 
 public class CaseException extends RuntimeException {
 

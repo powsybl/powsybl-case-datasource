@@ -6,7 +6,6 @@
  */
 package com.powsybl.server.cases;
 
-import com.powsybl.server.caze.model.CaseException;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.import_.Importers;
 import org.apache.commons.io.FileUtils;

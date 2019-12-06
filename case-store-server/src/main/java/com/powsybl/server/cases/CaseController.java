@@ -6,10 +6,8 @@
  */
 package com.powsybl.server.cases;
 
-import com.powsybl.server.caze.model.CaseException;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.xml.NetworkXml;
-import com.powsybl.server.caze.model.CaseApi;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.slf4j.Logger;

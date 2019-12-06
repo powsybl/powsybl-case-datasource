@@ -1,4 +1,4 @@
-package com.powsybl.server.caze.model;
+package com.powsybl.server.cases;
 
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
