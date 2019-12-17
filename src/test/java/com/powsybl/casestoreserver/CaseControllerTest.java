@@ -1,4 +1,10 @@
-package com.powsybl.server.cases;
+/**
+ * Copyright (c) 2019, RTE (http://www.rte-france.com)
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+package com.powsybl.casestoreserver;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.powsybl.iidm.network.Network;
@@ -9,6 +15,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -22,14 +29,19 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 
-import static com.powsybl.server.cases.CaseConstants.*;
+import static com.powsybl.casestoreserver.CaseConstants.*;
 import static org.junit.Assert.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+/**
+ * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
+ */
+
 @RunWith(SpringRunner.class)
 @EnableWebMvc
-@WebMvcTest
+@WebMvcTest(CaseController.class)
+@ContextConfiguration(classes = CaseController.class)
 public class CaseControllerTest {
 
     @Autowired
@@ -60,17 +72,16 @@ public class CaseControllerTest {
         ClassLoader classLoader = getClass().getClassLoader();
         try (InputStream inputStream = classLoader.getResourceAsStream(TEST_CASE)) {
             MockMultipartFile mockFile = new MockMultipartFile("file", TEST_CASE, "text/plain", inputStream);
-            MvcResult mvcResult = mvc.perform(MockMvcRequestBuilders.multipart("/v1/case-server/import-case")
+            mvc.perform(MockMvcRequestBuilders.multipart("/v1/case-server/cases")
                     .file(mockFile))
                     .andExpect(status().isOk())
                     .andReturn();
-            assertEquals(DONE, mvcResult.getResponse().getContentAsString());
         }
 
         //Import the same case and expect a fail
         try (InputStream inputStream = classLoader.getResourceAsStream(TEST_CASE)) {
             MockMultipartFile mockFile = new MockMultipartFile("file", TEST_CASE, "text/plain", inputStream);
-            MvcResult mvcResult = mvc.perform(MockMvcRequestBuilders.multipart("/v1/case-server/import-case")
+            MvcResult mvcResult = mvc.perform(MockMvcRequestBuilders.multipart("/v1/case-server/cases")
                     .file(mockFile))
                     .andExpect(status().is(409))
                     .andReturn();
@@ -87,13 +98,18 @@ public class CaseControllerTest {
         String tmp = mvcResult.getResponse().getContentAsString();
         Map<String, String> listCase = objectMapper.readValue(tmp, Map.class);
         assertTrue(listCase.containsValue(TEST_CASE));
-        assertTrue(listCase.containsKey(System.getProperty(USERHOME) + CASE_FOLDER + TEST_CASE));
 
         //Retrieve a case as a network
-        mvcResult =  mvc.perform(get("/v1/case-server/download-network")
-        .param("caseName", TEST_CASE))
+        mvcResult =  mvc.perform(get(GET_CASE_URL, TEST_CASE)
+                .param("xiidm", "false"))
+                .andExpect(status().isOk())
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        mvcResult = mvc.perform(asyncDispatch(mvcResult))
                 .andExpect(status().isOk())
                 .andReturn();
+
         Network network = NetworkXml.gunzip(mvcResult.getResponse().getContentAsByteArray());
         assertEquals("20140116_0830_2D4_UX1_pst", network.getName());
 
@@ -123,5 +139,18 @@ public class CaseControllerTest {
                 .andReturn();
 
         assertEquals(FILE_DOESNT_EXIST, mvcResult.getResponse().getErrorMessage());
+
+        //import a case to delete it
+        try (InputStream inputStream = classLoader.getResourceAsStream(TEST_CASE)) {
+            MockMultipartFile mockFile = new MockMultipartFile("file", TEST_CASE, "text/plain", inputStream);
+            mvc.perform(MockMvcRequestBuilders.multipart("/v1/case-server/cases")
+                    .file(mockFile))
+                    .andExpect(status().isOk())
+                    .andReturn();
+        }
+
+        //delete all cases
+        mvc.perform(delete("/v1/case-server/cases"))
+                .andExpect(status().isOk());
     }
 }
