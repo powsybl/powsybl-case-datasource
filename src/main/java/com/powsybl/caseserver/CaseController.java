@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-package com.powsybl.casestoreserver;
+package com.powsybl.caseserver;
 
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.xml.NetworkXml;
@@ -55,7 +55,7 @@ public class CaseController {
     @GetMapping(value = "/cases/{caseName:.+}")
     @ApiOperation(value = "Get a case")
     public ResponseEntity<StreamingResponseBody> getCase(@PathVariable("caseName") String caseName,
-                                     @RequestParam(value = "xiidm", required = false, defaultValue = "true") boolean xiidmFormat) {
+                                                         @RequestParam(value = "xiidm", required = false, defaultValue = "true") boolean xiidmFormat) {
         LOGGER.debug("getCase request received with parameter caseName = {}", caseName);
         if (xiidmFormat) {
             Path file;
@@ -71,8 +71,7 @@ public class CaseController {
                 throw new UncheckedIOException(e);
             }
         } else {
-            Network network;
-            network = caseService.downloadNetwork(caseName);
+            Network network = caseService.downloadNetwork(caseName);
             byte[] zipNetwork = NetworkXml.gzip(network);
             StreamingResponseBody stream = outputStream -> outputStream.write(zipNetwork);
             return ResponseEntity.ok().body(stream);
@@ -82,14 +81,14 @@ public class CaseController {
     @GetMapping(value = "/cases/{caseName:.+}/exists")
     @ApiOperation(value = "check if the case exists")
     public ResponseEntity<Boolean> exists(@PathVariable("caseName") String caseName) {
-        Boolean exists = caseService.exists(caseName);
+        boolean exists = caseService.exists(caseName);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(exists);
 
     }
 
     @PostMapping(value = "/cases")
     @ApiOperation(value = "import a case")
-    public ResponseEntity importCase(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<Void> importCase(@RequestParam("file") MultipartFile file) {
         LOGGER.debug("importCase request received with file = {}", file.getName());
         caseService.importCase(file);
         return ResponseEntity.ok().build();
@@ -97,7 +96,7 @@ public class CaseController {
 
     @DeleteMapping(value = "/cases/{caseName:.+}")
     @ApiOperation(value = "delete a case")
-    public ResponseEntity deleteCase(@PathVariable("caseName") String caseName) {
+    public ResponseEntity<Void> deleteCase(@PathVariable("caseName") String caseName) {
         LOGGER.debug("deleteCase request received with parameter caseName = {}", caseName);
         caseService.deleteCase(caseName);
         return ResponseEntity.ok().build();
@@ -105,7 +104,7 @@ public class CaseController {
 
     @DeleteMapping(value = "/cases")
     @ApiOperation(value = "delete all cases")
-    public ResponseEntity deleteCases() {
+    public ResponseEntity<Void> deleteCases() {
         LOGGER.debug("deleteCases request received");
         caseService.deleteAllCases();
         return ResponseEntity.ok().build();

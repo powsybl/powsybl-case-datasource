@@ -11,7 +11,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.powsybl</groupId>
-    <artifactId>powsybl-case-store</artifactId>
+    <artifactId>powsybl-case-server</artifactId>
     <version>1.0.0-SNAPSHOT</version>
 
     <licenses>
@@ -22,9 +22,9 @@
     </licenses>
 
     <scm>
-        <connection>scm:git:https://github.com/powsybl/powsybl-case-store.git</connection>
-        <developerConnection>scm:git:https://github.com/powsybl/powsybl-case-store.git</developerConnection>
-        <url>https://github.com/powsybl/powsybl-case-store.git</url>
+        <connection>scm:git:https://github.com/powsybl/powsybl-case-server.git</connection>
+        <developerConnection>scm:git:https://github.com/powsybl/powsybl-case-server.git</developerConnection>
+        <url>https://github.com/powsybl/powsybl-case-server.git</url>
     </scm>
 
     <developers>
@@ -51,12 +51,10 @@
         <maven.site.version>3.7.1</maven.site.version>
         <maven.surefire.version>2.22.0</maven.surefire.version>
 
-        <spring.spring-test>5.1.5.RELEASE</spring.spring-test>
+        <junit.version>4.12</junit.version>
         <springboot.version>2.1.3.RELEASE</springboot.version>
         <springfox.version>2.9.2</springfox.version>
 
-        <google.guava.version>20.0</google.guava.version>
-        <junit.version>4.12</junit.version>
         <powsybl-core.version>3.0.0</powsybl-core.version>
     </properties>
 
@@ -191,26 +189,11 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
-            <dependency>
-                <groupId>com.google.guava</groupId>
-                <artifactId>guava</artifactId>
-                <version>${google.guava.version}</version>
-            </dependency>
         </dependencies>
     </dependencyManagement>
 
     <dependencies>
         <!-- Compilation dependencies -->
-        <dependency>
-            <groupId>com.powsybl</groupId>
-            <artifactId>powsybl-config-test</artifactId>
-            <version>${powsybl-core.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.powsybl</groupId>
-            <artifactId>powsybl-ucte-converter</artifactId>
-            <version>${powsybl-core.version}</version>
-        </dependency>
         <dependency>
             <groupId>io.springfox</groupId>
             <artifactId>springfox-swagger-ui</artifactId>
@@ -234,6 +217,7 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
+
         <!-- Runtime dependencies -->
         <dependency>
             <groupId>com.powsybl</groupId>
@@ -246,7 +230,13 @@
             <version>${powsybl-core.version}</version>
             <scope>test</scope>
         </dependency>
-        <!-- scope test -->
+        <dependency>
+            <groupId>com.powsybl</groupId>
+            <artifactId>powsybl-ucte-converter</artifactId>
+            <version>${powsybl-core.version}</version>
+        </dependency>
+
+        <!-- Test dependencies -->
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
@@ -260,9 +250,16 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-test</artifactId>
-            <version>${spring.spring-test}</version>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <version>${springboot.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.powsybl</groupId>
+            <artifactId>powsybl-config-test</artifactId>
+            <version>${powsybl-core.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

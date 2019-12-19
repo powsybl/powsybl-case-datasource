@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-package com.powsybl.casestoreserver;
+package com.powsybl.caseserver;
 
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
@@ -38,7 +38,7 @@ public class CaseSwaggerConfig {
     private ApiInfo apiInfo() {
         return new ApiInfoBuilder()
                 .title("Case API")
-                .description("This is the documentation of the Study REST API")
+                .description("This is the documentation of the case API")
                 .build();
     }
 

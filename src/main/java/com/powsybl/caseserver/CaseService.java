@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-package com.powsybl.casestoreserver;
+package com.powsybl.caseserver;
 
-import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.import_.Importers;
+import com.powsybl.iidm.network.Network;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -18,7 +18,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static com.powsybl.casestoreserver.CaseConstants.*;
+import static com.powsybl.caseserver.CaseConstants.*;
+
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
  */
@@ -29,7 +30,7 @@ public class CaseService {
         checkStorageInitialization();
 
         Map<String, String> cases;
-        try (Stream<Path> walk = Files.walk(Paths.get(System.getProperty(USERHOME) + CASE_FOLDER))) {
+        try (Stream<Path> walk = Files.walk(getStorageRootDir())) {
             cases = walk.filter(Files::isRegularFile)
                     .collect(Collectors.toMap(Object::toString, x -> x.getFileName().toString()));
         } catch (IOException e) {
@@ -40,23 +41,22 @@ public class CaseService {
 
     Path getCase(String caseName) {
         checkStorageInitialization();
-        Path file = Paths.get(System.getProperty(USERHOME) + CASE_FOLDER + caseName);
-
+        Path file = getStorageRootDir().resolve(caseName);
         if (Files.exists(file) && Files.isRegularFile(file)) {
             return file;
         }
         return null;
     }
 
-    Boolean exists(String caseName) {
-        Path file = Paths.get(System.getProperty(USERHOME) + CASE_FOLDER + caseName);
+    boolean exists(String caseName) {
+        Path file = getStorageRootDir().resolve(caseName);
         return Files.exists(file) && Files.isRegularFile(file);
     }
 
     void importCase(MultipartFile mpf) {
         checkStorageInitialization();
 
-        Path file = Paths.get(System.getProperty(USERHOME) + CASE_FOLDER + mpf.getOriginalFilename());
+        Path file = getStorageRootDir().resolve(mpf.getOriginalFilename());
         if (Files.exists(file) && Files.isRegularFile(file)) {
             throw new CaseException(FILE_ALREADY_EXISTS);
         }
@@ -69,7 +69,7 @@ public class CaseService {
 
     Network downloadNetwork(String caseName) {
         checkStorageInitialization();
-        Path caseFile = Paths.get(System.getProperty(USERHOME) + CASE_FOLDER + caseName);
+        Path caseFile = getStorageRootDir().resolve(caseName);
         Network network = Importers.loadNetwork(caseFile);
         if (network == null) {
             throw new CaseException(FILE_NOT_IMPORTABLE);
@@ -80,7 +80,7 @@ public class CaseService {
     void deleteCase(String caseName) {
         checkStorageInitialization();
 
-        Path file = Paths.get(System.getProperty(USERHOME) + CASE_FOLDER + caseName);
+        Path file = getStorageRootDir().resolve(caseName);
         if (Files.exists(file) && !Files.isRegularFile(file)) {
             throw new CaseException(FILE_DOESNT_EXIST);
         }
@@ -96,12 +96,12 @@ public class CaseService {
     void deleteAllCases() {
         checkStorageInitialization();
 
-        Path caseFolder = Paths.get(System.getProperty(USERHOME) + CASE_FOLDER);
+        Path caseFolder = getStorageRootDir();
         if (!Files.isDirectory(caseFolder)) {
             throw new CaseException(DIRECTORY_DOESNT_EXIST);
         }
-        try {
-            Files.newDirectoryStream(caseFolder).forEach(file -> {
+        try (DirectoryStream<Path> paths = Files.newDirectoryStream(caseFolder)) {
+            paths.forEach(file -> {
                 try {
                     Files.delete(file);
                 } catch (IOException e) {
@@ -109,13 +109,17 @@ public class CaseService {
                 }
             });
         } catch (IOException e) {
-            throw new CaseException(IOEXCEPTION_MESSAGE);
+            throw new UncheckedIOException(e);
         }
     }
 
     private boolean isStorageCreated() {
-        Path storageRootDir = Paths.get(System.getProperty(USERHOME) + CASE_FOLDER);
+        Path storageRootDir = getStorageRootDir();
         return Files.exists(storageRootDir) && Files.isDirectory(storageRootDir);
+    }
+
+    private Path getStorageRootDir() {
+        return Paths.get(System.getProperty(USERHOME)).resolve(CASE_FOLDER);
     }
 
     private void checkStorageInitialization() {
