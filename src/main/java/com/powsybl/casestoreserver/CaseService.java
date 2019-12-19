@@ -25,7 +25,7 @@ import static com.powsybl.casestoreserver.CaseConstants.*;
 @Service
 public class CaseService {
 
-    public Map<String, String> getCaseList() {
+    Map<String, String> getCaseList() {
         checkStorageInitialization();
 
         Map<String, String> cases;
@@ -38,7 +38,7 @@ public class CaseService {
         return cases;
     }
 
-    public Path getCase(String caseName) {
+    Path getCase(String caseName) {
         checkStorageInitialization();
         Path file = Paths.get(System.getProperty(USERHOME) + CASE_FOLDER + caseName);
 
@@ -48,12 +48,12 @@ public class CaseService {
         return null;
     }
 
-    public Boolean exists(String caseName) {
+    Boolean exists(String caseName) {
         Path file = Paths.get(System.getProperty(USERHOME) + CASE_FOLDER + caseName);
         return Files.exists(file) && Files.isRegularFile(file);
     }
 
-    public void importCase(MultipartFile mpf) {
+    void importCase(MultipartFile mpf) {
         checkStorageInitialization();
 
         Path file = Paths.get(System.getProperty(USERHOME) + CASE_FOLDER + mpf.getOriginalFilename());
@@ -63,21 +63,21 @@ public class CaseService {
         try {
             mpf.transferTo(file);
         } catch (IOException e) {
-            throw new CaseException(IMPORT_FAIL);
+            throw new UncheckedIOException(e);
         }
     }
 
-    public Network downloadNetwork(String caseName) {
+    Network downloadNetwork(String caseName) {
         checkStorageInitialization();
         Path caseFile = Paths.get(System.getProperty(USERHOME) + CASE_FOLDER + caseName);
         Network network = Importers.loadNetwork(caseFile);
         if (network == null) {
-            throw new CaseException("File '" + caseFile + "' is not importable");
+            throw new CaseException(FILE_NOT_IMPORTABLE);
         }
         return network;
     }
 
-    public void deleteCase(String caseName) {
+    void deleteCase(String caseName) {
         checkStorageInitialization();
 
         Path file = Paths.get(System.getProperty(USERHOME) + CASE_FOLDER + caseName);
@@ -89,18 +89,17 @@ public class CaseService {
         } catch (NoSuchFileException e) {
             throw new CaseException(FILE_DOESNT_EXIST);
         } catch (IOException e) {
-            throw new CaseException(IOEXCEPTION_MESSAGE);
+            throw new UncheckedIOException(e);
         }
     }
 
-    public void deleteAllCases() {
+    void deleteAllCases() {
         checkStorageInitialization();
 
         Path caseFolder = Paths.get(System.getProperty(USERHOME) + CASE_FOLDER);
         if (!Files.isDirectory(caseFolder)) {
             throw new CaseException(DIRECTORY_DOESNT_EXIST);
         }
-
         try {
             Files.newDirectoryStream(caseFolder).forEach(file -> {
                 try {

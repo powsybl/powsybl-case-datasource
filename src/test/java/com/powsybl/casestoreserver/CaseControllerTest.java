@@ -49,7 +49,7 @@ public class CaseControllerTest {
 
     private static final String TEST_CASE = "testCase.xiidm";
 
-    private static final String GET_CASE_URL = "/v1/case-server/cases/{caseName}";
+    private static final String GET_CASE_URL = "/v1/cases/{caseName}";
 
     @BeforeClass
     public static void setup() {
@@ -65,32 +65,45 @@ public class CaseControllerTest {
 
     @Test
     public void test() throws Exception {
-        mvc.perform(delete("/v1/case-server/cases"))
+        mvc.perform(delete("/v1/cases"))
                 .andExpect(status().isOk());
+
+        //check if the case exists (except a false)
+        MvcResult mvcResult = mvc.perform(get("/v1/cases/{caseName}/exists", "testCase.xiidm"))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        assertEquals("false", mvcResult.getResponse().getContentAsString());
 
         //Import a case
         ClassLoader classLoader = getClass().getClassLoader();
         try (InputStream inputStream = classLoader.getResourceAsStream(TEST_CASE)) {
             MockMultipartFile mockFile = new MockMultipartFile("file", TEST_CASE, "text/plain", inputStream);
-            mvc.perform(MockMvcRequestBuilders.multipart("/v1/case-server/cases")
+            mvc.perform(MockMvcRequestBuilders.multipart("/v1/cases")
                     .file(mockFile))
                     .andExpect(status().isOk())
                     .andReturn();
         }
 
+        //check if the case exists (except a true)
+        mvcResult = mvc.perform(get("/v1/cases/{caseName}/exists", "testCase.xiidm"))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        assertEquals("true", mvcResult.getResponse().getContentAsString());
+
         //Import the same case and expect a fail
         try (InputStream inputStream = classLoader.getResourceAsStream(TEST_CASE)) {
             MockMultipartFile mockFile = new MockMultipartFile("file", TEST_CASE, "text/plain", inputStream);
-            MvcResult mvcResult = mvc.perform(MockMvcRequestBuilders.multipart("/v1/case-server/cases")
+            mvcResult = mvc.perform(MockMvcRequestBuilders.multipart("/v1/cases")
                     .file(mockFile))
                     .andExpect(status().is(409))
                     .andReturn();
-            assertEquals(FILE_ALREADY_EXISTS, mvcResult.getResponse().getErrorMessage());
-
+            assertEquals(FILE_ALREADY_EXISTS, mvcResult.getResponse().getContentAsString());
         }
 
         //List the cases and expect the case added just before
-        MvcResult mvcResult = mvc.perform(get("/v1/case-server/cases"))
+        mvcResult = mvc.perform(get("/v1/cases"))
                 .andExpect(status().isOk())
                 .andReturn();
 
@@ -130,6 +143,11 @@ public class CaseControllerTest {
             fail();
         }
 
+        //Retrieve a non existing case (async)
+        mvcResult = mvc.perform(get(GET_CASE_URL, "non-existing"))
+                .andExpect(status().isNoContent())
+                .andReturn();
+
         //Delete the case
         mvc.perform(delete(GET_CASE_URL, TEST_CASE))
                 .andExpect(status().isOk());
@@ -138,19 +156,19 @@ public class CaseControllerTest {
         mvcResult = mvc.perform(delete(GET_CASE_URL, TEST_CASE))
                 .andReturn();
 
-        assertEquals(FILE_DOESNT_EXIST, mvcResult.getResponse().getErrorMessage());
+        assertEquals(FILE_DOESNT_EXIST, mvcResult.getResponse().getContentAsString());
 
         //import a case to delete it
         try (InputStream inputStream = classLoader.getResourceAsStream(TEST_CASE)) {
             MockMultipartFile mockFile = new MockMultipartFile("file", TEST_CASE, "text/plain", inputStream);
-            mvc.perform(MockMvcRequestBuilders.multipart("/v1/case-server/cases")
+            mvc.perform(MockMvcRequestBuilders.multipart("/v1/cases")
                     .file(mockFile))
                     .andExpect(status().isOk())
                     .andReturn();
         }
 
         //delete all cases
-        mvc.perform(delete("/v1/case-server/cases"))
+        mvc.perform(delete("/v1/cases"))
                 .andExpect(status().isOk());
     }
 }
