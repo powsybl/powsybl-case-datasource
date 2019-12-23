@@ -26,6 +26,8 @@ import static com.powsybl.caseserver.CaseConstants.*;
 @Service
 public class CaseService {
 
+    private FileSystem fileSystem = FileSystems.getDefault();
+
     Map<String, String> getCaseList() {
         checkStorageInitialization();
 
@@ -119,12 +121,16 @@ public class CaseService {
     }
 
     private Path getStorageRootDir() {
-        return Paths.get(System.getProperty(USERHOME)).resolve(CASE_FOLDER);
+        return fileSystem.getPath(System.getProperty(USERHOME) + CASE_FOLDER);
     }
 
     private void checkStorageInitialization() {
         if (!isStorageCreated()) {
             throw new CaseException(STORAGE_DIR_NOT_CREATED);
         }
+    }
+
+    void setFileSystem(FileSystem fileSystem) {
+        this.fileSystem = fileSystem;
     }
 }

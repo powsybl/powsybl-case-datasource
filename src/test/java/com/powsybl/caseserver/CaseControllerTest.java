@@ -7,13 +7,15 @@
 package com.powsybl.caseserver;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.jimfs.Jimfs;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.xml.NetworkXml;
-import org.junit.BeforeClass;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.ApplicationContext;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -24,9 +26,9 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Map;
 
 import static com.powsybl.caseserver.CaseConstants.*;
@@ -41,26 +43,33 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @RunWith(SpringRunner.class)
 @EnableWebMvc
 @WebMvcTest(CaseController.class)
-@ContextConfiguration(classes = CaseController.class)
+@ContextConfiguration(classes = {CaseController.class, CaseService.class})
 public class CaseControllerTest {
 
     @Autowired
+    private ApplicationContext context;
+
+    @Autowired
     private MockMvc mvc;
+
+    private FileSystem fileSystem = Jimfs.newFileSystem();
 
     private static final String TEST_CASE = "testCase.xiidm";
 
     private static final String GET_CASE_URL = "/v1/cases/{caseName}";
 
-    @BeforeClass
-    public static void setup() {
-        final Path path = Paths.get(System.getProperty(USERHOME) + CASE_FOLDER);
-        if (!path.toFile().exists()) {
+    @Before
+    public void setUp() {
+        Path path = fileSystem.getPath(System.getProperty(USERHOME) + CASE_FOLDER);
+        if (!Files.exists(path)) {
             try {
-                Files.createDirectory(path);
+                Files.createDirectories(path);
             } catch (IOException e) {
                 fail();
             }
         }
+        CaseService caseService = context.getBean(CaseService.class);
+        caseService.setFileSystem(fileSystem);
     }
 
     @Test
