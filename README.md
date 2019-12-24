@@ -1,1 +1,1 @@
-# powsybl-case-store
+# powsybl-case-server
