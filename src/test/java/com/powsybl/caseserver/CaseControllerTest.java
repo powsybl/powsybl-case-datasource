@@ -52,6 +52,9 @@ public class CaseControllerTest {
     @Autowired
     private MockMvc mvc;
 
+    @Autowired
+    private CaseService caseService;
+
     private FileSystem fileSystem = Jimfs.newFileSystem();
 
     private static final String TEST_CASE = "testCase.xiidm";
@@ -68,7 +71,6 @@ public class CaseControllerTest {
                 fail();
             }
         }
-        CaseService caseService = context.getBean(CaseService.class);
         caseService.setFileSystem(fileSystem);
     }
 
