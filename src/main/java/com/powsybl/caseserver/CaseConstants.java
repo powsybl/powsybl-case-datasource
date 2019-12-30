@@ -11,7 +11,7 @@ package com.powsybl.caseserver;
  */
 public final class CaseConstants {
 
-    CaseConstants() {
+    private CaseConstants() {
     }
 
     static final String CASE_API_VERSION = "v1";
