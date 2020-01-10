@@ -30,7 +30,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
       - name: Build Docker image
-#        if: github.ref == 'refs/heads/master'
+        if: github.ref == 'refs/heads/master'
         run: >
           mvn --batch-mode jib:build
           -Djib.httpTimeout=60000
