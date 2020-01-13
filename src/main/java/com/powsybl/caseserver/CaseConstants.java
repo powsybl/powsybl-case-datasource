@@ -9,7 +9,7 @@ package com.powsybl.caseserver;
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
  */
-public final class CaseConstants {
+final class CaseConstants {
 
     private CaseConstants() {
     }
@@ -18,10 +18,6 @@ public final class CaseConstants {
 
     static final String FILE_ALREADY_EXISTS = "A file with the same name already exists";
     static final String FILE_DOESNT_EXIST = "The file requested doesn't exist";
-    static final String DIRECTORY_DOESNT_EXIST = "This directory doesn't exist";
     static final String FILE_NOT_IMPORTABLE = "This file cannot be imported";
     static final String STORAGE_DIR_NOT_CREATED = "The storage is not initialized";
-
-    static final String USERHOME = "user.home";
-    static final String CASE_FOLDER = "/cases/";
 }

@@ -32,8 +32,8 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
                 return handleExceptionInternal(ex, FILE_NOT_IMPORTABLE, new HttpHeaders(), HttpStatus.UNPROCESSABLE_ENTITY, request);
             case FILE_DOESNT_EXIST :
                 return handleExceptionInternal(ex, FILE_DOESNT_EXIST, new HttpHeaders(), HttpStatus.NOT_FOUND, request);
-            case DIRECTORY_DOESNT_EXIST :
-                return handleExceptionInternal(ex, DIRECTORY_DOESNT_EXIST, new HttpHeaders(), HttpStatus.NOT_FOUND, request);
+            case STORAGE_DIR_NOT_CREATED :
+                return handleExceptionInternal(ex, STORAGE_DIR_NOT_CREATED, new HttpHeaders(), HttpStatus.UNPROCESSABLE_ENTITY, request);
             default:
                 return handleExceptionInternal(ex, ex.getMessage(), new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR, request);
         }
