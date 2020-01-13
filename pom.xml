@@ -198,6 +198,16 @@
                 </plugins>
             </build>
         </profile>
+        <profile>
+            <id>add-classic-config</id>
+            <dependencies>
+                <dependency>
+                    <groupId>com.powsybl</groupId>
+                    <artifactId>powsybl-config-classic</artifactId>
+                    <version>${powsybl-core.version}</version>
+                </dependency>
+            </dependencies>
+        </profile>
     </profiles>
 
     <dependencyManagement>
@@ -244,7 +254,6 @@
         </dependency>
 
         <!-- Runtime dependencies -->
-
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-iidm-xml-converter</artifactId>
@@ -252,14 +261,15 @@
         </dependency>
         <dependency>
             <groupId>com.powsybl</groupId>
-            <artifactId>powsybl-ucte-converter</artifactId>
+            <artifactId>powsybl-cgmes-conversion</artifactId>
             <version>${powsybl-core.version}</version>
         </dependency>
         <dependency>
             <groupId>com.powsybl</groupId>
-            <artifactId>powsybl-cgmes-conversion</artifactId>
+            <artifactId>powsybl-ucte-converter</artifactId>
             <version>${powsybl-core.version}</version>
         </dependency>
+
         <!-- Test dependencies -->
         <dependency>
             <groupId>com.google.jimfs</groupId>
@@ -267,6 +277,13 @@
             <version>${jimfs.version}</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-config-test</artifactId>
@@ -277,12 +294,6 @@
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-iidm-impl</artifactId>
             <version>${powsybl-core.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
