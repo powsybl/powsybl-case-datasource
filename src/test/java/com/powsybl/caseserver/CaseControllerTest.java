@@ -10,14 +10,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.jimfs.Jimfs;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.xml.NetworkXml;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.ApplicationContext;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -44,6 +45,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @EnableWebMvc
 @WebMvcTest(CaseController.class)
 @ContextConfiguration(classes = {CaseController.class, CaseService.class})
+@TestPropertySource(properties = {"case-store-directory=test"})
 public class CaseControllerTest {
 
     @Autowired
@@ -58,12 +60,16 @@ public class CaseControllerTest {
     private FileSystem fileSystem = Jimfs.newFileSystem();
 
     private static final String TEST_CASE = "testCase.xiidm";
+    private static final String NOT_A_NETWORK = "notANetwork.txt";
+    private static final String STILL_NOT_A_NETWORK = "stillNotANetwork.xiidm";
 
     private static final String GET_CASE_URL = "/v1/cases/{caseName}";
 
-    @Before
+    @Value("${case-store-directory:#{systemProperties['user.home'].concat(\"/cases\")}}")
+    private String rootDirectory;
+
     public void setUp() {
-        Path path = fileSystem.getPath(System.getProperty(USERHOME) + CASE_FOLDER);
+        Path path = fileSystem.getPath(rootDirectory);
         if (!Files.exists(path)) {
             try {
                 Files.createDirectories(path);
@@ -76,6 +82,13 @@ public class CaseControllerTest {
 
     @Test
     public void test() throws Exception {
+        //expect a fail since the storage dir. is not created
+        mvc.perform(delete("/v1/cases"))
+                .andExpect(status().isUnprocessableEntity());
+        //create the storage dir
+        setUp();
+
+        //now it must work
         mvc.perform(delete("/v1/cases"))
                 .andExpect(status().isOk());
 
@@ -111,6 +124,26 @@ public class CaseControllerTest {
                     .andExpect(status().is(409))
                     .andReturn();
             assertEquals(FILE_ALREADY_EXISTS, mvcResult.getResponse().getContentAsString());
+        }
+
+        //Import a non valid case and expect a fail
+        try (InputStream inputStream = classLoader.getResourceAsStream(NOT_A_NETWORK)) {
+            MockMultipartFile mockFile = new MockMultipartFile("file", NOT_A_NETWORK, "text/plain", inputStream);
+            mvcResult = mvc.perform(MockMvcRequestBuilders.multipart("/v1/cases")
+                    .file(mockFile))
+                    .andExpect(status().isUnprocessableEntity())
+                    .andReturn();
+            assertEquals(FILE_NOT_IMPORTABLE, mvcResult.getResponse().getContentAsString());
+        }
+
+        //Import a non valid case with a valid extension and expect a fail
+        try (InputStream inputStream = classLoader.getResourceAsStream(STILL_NOT_A_NETWORK)) {
+            MockMultipartFile mockFile = new MockMultipartFile("file", STILL_NOT_A_NETWORK, "text/plain", inputStream);
+            mvcResult = mvc.perform(MockMvcRequestBuilders.multipart("/v1/cases")
+                    .file(mockFile))
+                    .andExpect(status().isUnprocessableEntity())
+                    .andReturn();
+            assertEquals(FILE_NOT_IMPORTABLE, mvcResult.getResponse().getContentAsString());
         }
 
         //List the cases and expect the case added just before

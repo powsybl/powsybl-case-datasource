@@ -6,8 +6,11 @@
  */
 package com.powsybl.caseserver;
 
+import com.powsybl.commons.datasource.DataSource;
+import com.powsybl.computation.local.LocalComputationManager;
 import com.powsybl.iidm.import_.Importers;
 import com.powsybl.iidm.network.Network;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -27,6 +30,8 @@ import static com.powsybl.caseserver.CaseConstants.*;
 public class CaseService {
 
     private FileSystem fileSystem = FileSystems.getDefault();
+    @Value("${case-store-directory:#{systemProperties['user.home'].concat(\"/cases\")}}")
+    private String rootDirectory;
 
     Map<String, String> getCaseList() {
         checkStorageInitialization();
@@ -64,6 +69,10 @@ public class CaseService {
         }
         try {
             mpf.transferTo(file);
+            DataSource caseDataSource = Importers.createDataSource(file);
+            if (null == Importers.findImporter(caseDataSource, LocalComputationManager.getDefault())) {
+                throw new CaseException(FILE_NOT_IMPORTABLE);
+            }
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
@@ -99,9 +108,7 @@ public class CaseService {
         checkStorageInitialization();
 
         Path caseFolder = getStorageRootDir();
-        if (!Files.isDirectory(caseFolder)) {
-            throw new CaseException(DIRECTORY_DOESNT_EXIST);
-        }
+
         try (DirectoryStream<Path> paths = Files.newDirectoryStream(caseFolder)) {
             paths.forEach(file -> {
                 try {
@@ -121,7 +128,7 @@ public class CaseService {
     }
 
     private Path getStorageRootDir() {
-        return fileSystem.getPath(System.getProperty(USERHOME) + CASE_FOLDER);
+        return fileSystem.getPath(rootDirectory);
     }
 
     private void checkStorageInitialization() {
