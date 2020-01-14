@@ -102,6 +102,11 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
                     <version>${maven.surefire.version}</version>
+                    <configuration>
+                        <classpathDependencyExcludes>
+                            <classpathDependencyExclude>com.powsybl:powsybl-config-classic</classpathDependencyExclude>
+                        </classpathDependencyExcludes>
+                    </configuration>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -253,21 +258,35 @@
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
-        <!-- Runtime dependencies -->
+        <dependency>
+            <groupId>com.powsybl</groupId>
+            <artifactId>powsybl-iidm-api</artifactId>
+            <version>${powsybl-core.version}</version>
+        </dependency>
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-iidm-xml-converter</artifactId>
             <version>${powsybl-core.version}</version>
         </dependency>
+
+        <!-- Runtime dependencies -->
+        <dependency>
+            <groupId>com.powsybl</groupId>
+            <artifactId>powsybl-config-classic</artifactId>
+            <version>${powsybl-core.version}</version>
+            <scope>runtime</scope>
+        </dependency>
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-cgmes-conversion</artifactId>
             <version>${powsybl-core.version}</version>
+            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>powsybl-ucte-converter</artifactId>
             <version>${powsybl-core.version}</version>
+            <scope>runtime</scope>
         </dependency>
 
         <!-- Test dependencies -->
