@@ -32,7 +32,7 @@ jobs:
       - name: Build Docker image
         if: github.ref == 'refs/heads/master'
         run: >
-          mvn --batch-mode -Padd-classic-config jib:build
+          mvn --batch-mode jib:build
           -Djib.httpTimeout=60000
           -Djib.to.image=docker.io/powsybl/case-server
           -Djib.to.auth.username=powsyblci
