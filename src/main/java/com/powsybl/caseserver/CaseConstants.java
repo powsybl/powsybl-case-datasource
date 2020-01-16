@@ -9,15 +9,15 @@ package com.powsybl.caseserver;
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
  */
-final class CaseConstants {
+public final class CaseConstants {
 
     private CaseConstants() {
     }
 
-    static final String CASE_API_VERSION = "v1";
+    public static final String CASE_API_VERSION = "v1";
 
-    static final String FILE_ALREADY_EXISTS = "A file with the same name already exists";
-    static final String FILE_DOESNT_EXIST = "The file requested doesn't exist";
-    static final String FILE_NOT_IMPORTABLE = "This file cannot be imported";
-    static final String STORAGE_DIR_NOT_CREATED = "The storage is not initialized";
+    public static final String FILE_ALREADY_EXISTS = "A file with the same name already exists";
+    public static final String FILE_DOESNT_EXIST = "The file requested doesn't exist";
+    public static final String FILE_NOT_IMPORTABLE = "This file cannot be imported";
+    public static final String STORAGE_DIR_NOT_CREATED = "The storage is not initialized";
 }

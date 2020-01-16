@@ -9,9 +9,9 @@ package com.powsybl.caseserver;
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
  */
-class CaseException extends RuntimeException {
+public class CaseException extends RuntimeException {
 
-    CaseException(String msg) {
+    public CaseException(String msg) {
         super(msg);
     }
 
