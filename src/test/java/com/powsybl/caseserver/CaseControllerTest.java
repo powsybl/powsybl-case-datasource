@@ -183,7 +183,7 @@ public class CaseControllerTest {
         }
 
         //Retrieve a non existing case (async)
-        mvcResult = mvc.perform(get(GET_CASE_URL, "non-existing"))
+        mvc.perform(get(GET_CASE_URL, "non-existing"))
                 .andExpect(status().isNoContent())
                 .andReturn();
 

@@ -62,7 +62,7 @@ public class CaseDataSourceControllerTest {
     private String cgmesName = "CGMES_v2415_MicroGridTestConfiguration_BC_BE_v2.zip";
     private String fileName = "CGMES_v2.4.15_MicroGridTestConfiguration_BC_BE_v2/MicroGridTestConfiguration_BC_BE_DL_V2.xml";
 
-    DataSource dataSource;
+    private DataSource dataSource;
 
     @Before
     public void setUp() throws URISyntaxException, IOException {
