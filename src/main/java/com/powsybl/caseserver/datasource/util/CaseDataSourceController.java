@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Set;
 
 /**
@@ -55,7 +56,7 @@ public class CaseDataSourceController {
                                                       @RequestParam(value = "ext") String ext) {
         byte[] byteArray = caseDataSourceService.getInputStream(caseName, suffix, ext);
         StreamingResponseBody stream = outputStream -> outputStream.write(byteArray);
-        return ResponseEntity.ok().contentType(MediaType.TEXT_PLAIN).body(stream);
+        return ResponseEntity.ok().contentType(new MediaType("text", "plain", StandardCharsets.UTF_8)).body(stream);
     }
 
     @GetMapping(value = "/cases/{caseName}/datasource", params = "fileName")
@@ -64,7 +65,7 @@ public class CaseDataSourceController {
                                                              @RequestParam(value = "fileName") String fileName) {
         byte[] byteArray = caseDataSourceService.getInputStream(caseName, fileName);
         StreamingResponseBody stream = outputStream -> outputStream.write(byteArray);
-        return ResponseEntity.ok().contentType(MediaType.TEXT_PLAIN).body(stream);
+        return ResponseEntity.ok().contentType(new MediaType("text", "plain", StandardCharsets.UTF_8)).body(stream);
     }
 
     @GetMapping(value = "/cases/{caseName}/datasource/list")

@@ -1,17 +1,17 @@
 package com.powsybl.caseserver.datasource.util;
 
 import com.powsybl.caseserver.CaseException;
+import com.powsybl.caseserver.CaseService;
 import com.powsybl.commons.datasource.DataSource;
 import com.powsybl.commons.exceptions.UncheckedUnsupportedEncodingException;
 import com.powsybl.iidm.import_.Importers;
 import org.apache.commons.io.IOUtils;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
 import java.net.URLDecoder;
-import java.nio.file.FileSystem;
-import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.util.Set;
 
@@ -19,18 +19,20 @@ import java.util.Set;
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
  */
 @Service
+@ComponentScan(basePackageClasses = CaseService.class)
 class CaseDataSourceService {
 
-    private FileSystem fileSystem = FileSystems.getDefault();
-    @Value("${case-store-directory:#{systemProperties['user.home'].concat(\"/cases\")}}")
-    private String rootDirectory;
+    @Autowired
+    private CaseService caseService;
 
     String getBaseName(String caseName) {
+        caseService.checkStorageInitialization();
         DataSource dataSource = initDatasource(caseName);
         return dataSource.getBaseName();
     }
 
     Boolean datasourceExists(String caseName, String suffix, String ext) {
+        caseService.checkStorageInitialization();
         DataSource dataSource = initDatasource(caseName);
         try {
             return dataSource.exists(suffix, ext);
@@ -40,6 +42,7 @@ class CaseDataSourceService {
     }
 
     Boolean datasourceExists(String caseName, String fileName) {
+        caseService.checkStorageInitialization();
         DataSource dataSource = initDatasource(caseName);
         try {
             return dataSource.exists(fileName);
@@ -49,6 +52,7 @@ class CaseDataSourceService {
     }
 
     byte[] getInputStream(String caseName, String fileName) {
+        caseService.checkStorageInitialization();
         DataSource dataSource = initDatasource(caseName);
         try (InputStream inputStream = dataSource.newInputStream(fileName)) {
             return IOUtils.toByteArray(inputStream);
@@ -58,6 +62,7 @@ class CaseDataSourceService {
     }
 
     byte[] getInputStream(String caseName, String suffix, String ext) {
+        caseService.checkStorageInitialization();
         DataSource dataSource = initDatasource(caseName);
         try (InputStream inputStream = dataSource.newInputStream(suffix, ext)) {
             return IOUtils.toByteArray(inputStream);
@@ -67,6 +72,7 @@ class CaseDataSourceService {
     }
 
     Set<String> listName(String caseName, String regex) {
+        caseService.checkStorageInitialization();
         String decodedRegex;
         try {
             decodedRegex = URLDecoder.decode(regex, "UTF-8");
@@ -87,6 +93,8 @@ class CaseDataSourceService {
     }
 
     private Path getStorageRootDir() {
-        return fileSystem.getPath(rootDirectory);
+        return caseService.getStorageRootDir();
     }
+
 }
+

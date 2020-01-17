@@ -127,17 +127,17 @@ public class CaseService {
         return Files.exists(storageRootDir) && Files.isDirectory(storageRootDir);
     }
 
-    private Path getStorageRootDir() {
+    public Path getStorageRootDir() {
         return fileSystem.getPath(rootDirectory);
     }
 
-    private void checkStorageInitialization() {
+    public void checkStorageInitialization() {
         if (!isStorageCreated()) {
             throw new CaseException(STORAGE_DIR_NOT_CREATED);
         }
     }
 
-    void setFileSystem(FileSystem fileSystem) {
+    public void setFileSystem(FileSystem fileSystem) {
         this.fileSystem = fileSystem;
     }
 }
