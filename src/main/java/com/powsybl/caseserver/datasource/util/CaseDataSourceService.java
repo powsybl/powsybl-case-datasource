@@ -26,7 +26,7 @@ import java.util.Set;
  */
 @Service
 @ComponentScan(basePackageClasses = CaseService.class)
-class CaseDataSourceService {
+public class CaseDataSourceService {
 
     @Autowired
     private CaseService caseService;

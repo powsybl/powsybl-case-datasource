@@ -32,7 +32,7 @@ public class CaseDataSourceController {
     private CaseDataSourceService caseDataSourceService;
 
     @GetMapping(value = "/cases/{caseName}/datasource/baseName")
-    @ApiOperation(value = "Get the baseName of the datasource")
+    @ApiOperation(value = "Get datasource baseName")
     public ResponseEntity<String> getBaseName(@PathVariable("caseName") String caseName) {
         String baseName = caseDataSourceService.getBaseName(caseName);
         return ResponseEntity.ok().body(baseName);
@@ -75,7 +75,7 @@ public class CaseDataSourceController {
     }
 
     @GetMapping(value = "/cases/{caseName}/datasource/list")
-    @ApiOperation(value = "list the files matching the regex")
+    @ApiOperation(value = "list the files names matching the regex")
     public ResponseEntity<Set<String>> listName(@PathVariable("caseName") String caseName,
                                                 @RequestParam(value = "regex") String regex) {
         Set<String> nameList = caseDataSourceService.listName(caseName, regex);
