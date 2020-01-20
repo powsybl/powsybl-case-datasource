@@ -6,7 +6,6 @@
  */
 package com.powsybl.caseserver.datasource.util;
 
-import com.powsybl.caseserver.CaseException;
 import com.powsybl.caseserver.CaseService;
 import com.powsybl.commons.datasource.DataSource;
 import com.powsybl.commons.exceptions.UncheckedUnsupportedEncodingException;
@@ -32,34 +31,30 @@ public class CaseDataSourceService {
     private CaseService caseService;
 
     String getBaseName(String caseName) {
-        caseService.checkStorageInitialization();
-        DataSource dataSource = initDatasource(caseName);
+        DataSource dataSource = getDatasource(caseName);
         return dataSource.getBaseName();
     }
 
     Boolean datasourceExists(String caseName, String suffix, String ext) {
-        caseService.checkStorageInitialization();
-        DataSource dataSource = initDatasource(caseName);
+        DataSource dataSource = getDatasource(caseName);
         try {
             return dataSource.exists(suffix, ext);
         } catch (IOException e) {
-            throw new CaseException(e.getMessage());
+            throw new UncheckedIOException(e);
         }
     }
 
     Boolean datasourceExists(String caseName, String fileName) {
-        caseService.checkStorageInitialization();
-        DataSource dataSource = initDatasource(caseName);
+        DataSource dataSource = getDatasource(caseName);
         try {
             return dataSource.exists(fileName);
         } catch (IOException e) {
-            throw new CaseException(e.getMessage());
+            throw new UncheckedIOException(e);
         }
     }
 
     byte[] getInputStream(String caseName, String fileName) {
-        caseService.checkStorageInitialization();
-        DataSource dataSource = initDatasource(caseName);
+        DataSource dataSource = getDatasource(caseName);
         try (InputStream inputStream = dataSource.newInputStream(fileName)) {
             return IOUtils.toByteArray(inputStream);
         } catch (IOException e) {
@@ -68,8 +63,7 @@ public class CaseDataSourceService {
     }
 
     byte[] getInputStream(String caseName, String suffix, String ext) {
-        caseService.checkStorageInitialization();
-        DataSource dataSource = initDatasource(caseName);
+        DataSource dataSource = getDatasource(caseName);
         try (InputStream inputStream = dataSource.newInputStream(suffix, ext)) {
             return IOUtils.toByteArray(inputStream);
         } catch (IOException e) {
@@ -78,14 +72,13 @@ public class CaseDataSourceService {
     }
 
     Set<String> listName(String caseName, String regex) {
-        caseService.checkStorageInitialization();
+        DataSource dataSource = getDatasource(caseName);
         String decodedRegex;
         try {
             decodedRegex = URLDecoder.decode(regex, "UTF-8");
         } catch (UnsupportedEncodingException e) {
             throw new UncheckedUnsupportedEncodingException(e);
         }
-        DataSource dataSource = initDatasource(caseName);
         try {
             return dataSource.listNames(decodedRegex);
         } catch (IOException e) {
@@ -100,6 +93,11 @@ public class CaseDataSourceService {
 
     private Path getStorageRootDir() {
         return caseService.getStorageRootDir();
+    }
+
+    private DataSource getDatasource(String caseName) {
+        caseService.checkStorageInitialization();
+        return initDatasource(caseName);
     }
 
 }

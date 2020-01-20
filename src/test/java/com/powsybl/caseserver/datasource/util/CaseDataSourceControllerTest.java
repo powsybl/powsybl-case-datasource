@@ -6,9 +6,8 @@
  */
 package com.powsybl.caseserver.datasource.util;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.jimfs.Jimfs;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.powsybl.caseserver.CaseService;
 import com.powsybl.commons.datasource.DataSource;
 import com.powsybl.iidm.import_.Importers;
@@ -35,8 +34,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
@@ -99,11 +97,8 @@ public class CaseDataSourceControllerTest {
                 .andExpect(status().isOk())
                 .andReturn();
 
-        Gson gson = new GsonBuilder()
-                .disableHtmlEscaping()
-                .create();
-        Set nameList = gson.fromJson(mvcResult.getResponse().getContentAsString(), Set.class);
-
+        ObjectMapper mapper = new ObjectMapper();
+        Set nameList = mapper.readValue(mvcResult.getResponse().getContentAsString(), Set.class);
         assertEquals(dataSource.listNames(".*"), nameList);
     }
 
@@ -126,6 +121,7 @@ public class CaseDataSourceControllerTest {
             datasourceResponse.append(str).append("\n");
         }
         assertEquals(datasourceResponse.toString(), mvcResult.getResponse().getContentAsString());
+        isReader.close();
     }
 
     @Test
@@ -135,11 +131,8 @@ public class CaseDataSourceControllerTest {
                 .andExpect(status().isOk())
                 .andReturn();
 
-        Gson gson = new GsonBuilder()
-                .disableHtmlEscaping()
-                .create();
-
-        Boolean res = gson.fromJson(mvcResult.getResponse().getContentAsString(), Boolean.class);
+        ObjectMapper mapper = new ObjectMapper();
+        Boolean res = mapper.readValue(mvcResult.getResponse().getContentAsString(), Boolean.class);
         assertEquals(dataSource.exists(fileName), res);
 
         mvcResult = mvc.perform(get("/v1/cases/{caseName}/datasource/exists", cgmesName)
@@ -147,7 +140,7 @@ public class CaseDataSourceControllerTest {
                 .andExpect(status().isOk())
                 .andReturn();
 
-        res = gson.fromJson(mvcResult.getResponse().getContentAsString(), Boolean.class);
+        res = mapper.readValue(mvcResult.getResponse().getContentAsString(), Boolean.class);
         assertEquals(dataSource.exists("random"), res);
     }
 
@@ -161,11 +154,8 @@ public class CaseDataSourceControllerTest {
                 .andExpect(status().isOk())
                 .andReturn();
 
-        Gson gson = new GsonBuilder()
-                .disableHtmlEscaping()
-                .create();
-
-        Boolean res = gson.fromJson(mvcResult.getResponse().getContentAsString(), Boolean.class);
+        ObjectMapper mapper = new ObjectMapper();
+        Boolean res = mapper.readValue(mvcResult.getResponse().getContentAsString(), Boolean.class);
         assertEquals(dataSource.exists(suffix, ext), res);
 
     }
