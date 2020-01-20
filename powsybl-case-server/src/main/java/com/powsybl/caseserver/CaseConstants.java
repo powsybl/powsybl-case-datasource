@@ -20,4 +20,6 @@ public final class CaseConstants {
     static final String FILE_DOESNT_EXIST = "The file requested doesn't exist";
     static final String FILE_NOT_IMPORTABLE = "This file cannot be imported";
     static final String STORAGE_DIR_NOT_CREATED = "The storage is not initialized";
+    static final String ILLEGAL_FILE_NAME = "This is not an acceptable file name";
+
 }
