@@ -58,7 +58,7 @@ public class CaseDataSourceControllerTest {
     private String rootDirectory;
 
     private String cgmesName = "CGMES_v2415_MicroGridTestConfiguration_BC_BE_v2.zip";
-    private String fileName = "CGMES_v2.4.15_MicroGridTestConfiguration_BC_BE_v2/MicroGridTestConfiguration_BC_BE_DL_V2.xml";
+    private String fileName = "CGMES_v2415_MicroGridTestConfiguration_BC_BE_v2/MicroGridTestConfiguration_BC_BE_DL_V2.xml";
 
     private DataSource dataSource;
 
@@ -125,6 +125,31 @@ public class CaseDataSourceControllerTest {
     }
 
     @Test
+    public void testInputStreamWithSuffixExt() throws Exception {
+        String suffix = "/MicroGridTestConfiguration_BC_BE_DL_V2";
+        String ext = "xml";
+        MvcResult mvcResult = mvc.perform(get("/v1/cases/{caseName}/datasource", cgmesName)
+                .param("suffix", suffix)
+                .param("ext", ext))
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        mvcResult = mvc.perform(asyncDispatch(mvcResult))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        InputStreamReader isReader = new InputStreamReader(dataSource.newInputStream(suffix, ext));
+        BufferedReader reader = new BufferedReader(isReader);
+        StringBuilder datasourceResponse = new StringBuilder();
+        String str;
+        while ((str = reader.readLine()) != null) {
+            datasourceResponse.append(str).append("\n");
+        }
+        assertEquals(datasourceResponse.toString(), mvcResult.getResponse().getContentAsString());
+        isReader.close();
+    }
+
+    @Test
     public void testExistsWithFileName() throws Exception {
         MvcResult mvcResult = mvc.perform(get("/v1/cases/{caseName}/datasource/exists", cgmesName)
                 .param("fileName", fileName))
@@ -157,7 +182,6 @@ public class CaseDataSourceControllerTest {
         ObjectMapper mapper = new ObjectMapper();
         Boolean res = mapper.readValue(mvcResult.getResponse().getContentAsString(), Boolean.class);
         assertEquals(dataSource.exists(suffix, ext), res);
-
     }
 
 }
