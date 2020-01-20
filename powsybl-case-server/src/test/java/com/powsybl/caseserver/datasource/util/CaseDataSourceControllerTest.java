@@ -62,6 +62,7 @@ public class CaseDataSourceControllerTest {
     private String fileName = "CGMES_v2415_MicroGridTestConfiguration_BC_BE_v2/MicroGridTestConfiguration_BC_BE_DL_V2.xml";
 
     private DataSource dataSource;
+    private ObjectMapper mapper = new ObjectMapper();
 
     @Before
     public void setUp() throws URISyntaxException, IOException {
@@ -98,7 +99,6 @@ public class CaseDataSourceControllerTest {
                 .andExpect(status().isOk())
                 .andReturn();
 
-        ObjectMapper mapper = new ObjectMapper();
         Set nameList = mapper.readValue(mvcResult.getResponse().getContentAsString(), Set.class);
         assertEquals(dataSource.listNames(".*"), nameList);
     }
@@ -114,15 +114,15 @@ public class CaseDataSourceControllerTest {
                 .andExpect(status().isOk())
                 .andReturn();
 
-        InputStreamReader isReader = new InputStreamReader(dataSource.newInputStream(fileName), StandardCharsets.UTF_8);
-        BufferedReader reader = new BufferedReader(isReader);
-        StringBuilder datasourceResponse = new StringBuilder();
-        String str;
-        while ((str = reader.readLine()) != null) {
-            datasourceResponse.append(str).append("\n");
+        try (InputStreamReader isReader = new InputStreamReader(dataSource.newInputStream(fileName), StandardCharsets.UTF_8)) {
+            BufferedReader reader = new BufferedReader(isReader);
+            StringBuilder datasourceResponse = new StringBuilder();
+            String str;
+            while ((str = reader.readLine()) != null) {
+                datasourceResponse.append(str).append("\n");
+            }
+            assertEquals(datasourceResponse.toString(), mvcResult.getResponse().getContentAsString());
         }
-        assertEquals(datasourceResponse.toString(), mvcResult.getResponse().getContentAsString());
-        isReader.close();
     }
 
     @Test
@@ -139,15 +139,15 @@ public class CaseDataSourceControllerTest {
                 .andExpect(status().isOk())
                 .andReturn();
 
-        InputStreamReader isReader = new InputStreamReader(dataSource.newInputStream(suffix, ext), StandardCharsets.UTF_8);
-        BufferedReader reader = new BufferedReader(isReader);
-        StringBuilder datasourceResponse = new StringBuilder();
-        String str;
-        while ((str = reader.readLine()) != null) {
-            datasourceResponse.append(str).append("\n");
+        try (InputStreamReader isReader = new InputStreamReader(dataSource.newInputStream(suffix, ext), StandardCharsets.UTF_8)) {
+            BufferedReader reader = new BufferedReader(isReader);
+            StringBuilder datasourceResponse = new StringBuilder();
+            String str;
+            while ((str = reader.readLine()) != null) {
+                datasourceResponse.append(str).append("\n");
+            }
+            assertEquals(datasourceResponse.toString(), mvcResult.getResponse().getContentAsString());
         }
-        assertEquals(datasourceResponse.toString(), mvcResult.getResponse().getContentAsString());
-        isReader.close();
     }
 
     @Test
@@ -157,7 +157,6 @@ public class CaseDataSourceControllerTest {
                 .andExpect(status().isOk())
                 .andReturn();
 
-        ObjectMapper mapper = new ObjectMapper();
         Boolean res = mapper.readValue(mvcResult.getResponse().getContentAsString(), Boolean.class);
         assertEquals(dataSource.exists(fileName), res);
 
@@ -180,7 +179,6 @@ public class CaseDataSourceControllerTest {
                 .andExpect(status().isOk())
                 .andReturn();
 
-        ObjectMapper mapper = new ObjectMapper();
         Boolean res = mapper.readValue(mvcResult.getResponse().getContentAsString(), Boolean.class);
         assertEquals(dataSource.exists(suffix, ext), res);
     }

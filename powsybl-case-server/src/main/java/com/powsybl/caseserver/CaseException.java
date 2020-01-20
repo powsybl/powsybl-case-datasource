@@ -15,4 +15,7 @@ public class CaseException extends RuntimeException {
         super(msg);
     }
 
+    public CaseException(String message, Throwable cause) {
+        super(message, cause);
+    }
 }

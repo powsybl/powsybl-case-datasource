@@ -11,8 +11,10 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.powsybl</groupId>
-    <artifactId>powsybl-case-server</artifactId>
+    <artifactId>powsybl-case-store</artifactId>
     <version>1.0.0-SNAPSHOT</version>
+
+    <packaging>pom</packaging>
 
     <licenses>
         <license>
@@ -26,6 +28,11 @@
         <developerConnection>scm:git:https://github.com/powsybl/powsybl-case-server.git</developerConnection>
         <url>https://github.com/powsybl/powsybl-case-server.git</url>
     </scm>
+    <modules>
+        <module>powsybl-case-datasource-client</module>
+        <module>powsybl-case-server</module>
+        <module>powsybl-case-distribution</module>
+    </modules>
 
     <developers>
         <developer>
@@ -57,8 +64,17 @@
         <junit.version>4.12</junit.version>
         <springboot.version>2.2.2.RELEASE</springboot.version>
         <springfox.version>2.9.2</springfox.version>
+        <springcore-version>5.1.8.RELEASE</springcore-version>
 
-        <powsybl-core.version>3.0.0</powsybl-core.version>
+        <powsybl-core.version>3.1.0</powsybl-core.version>
+
+        <sonar.coverage.jacoco.xmlReportPaths>
+            ../powsybl-case-distribution/target/site/jacoco-aggregate/jacoco.xml
+        </sonar.coverage.jacoco.xmlReportPaths>
+
+        <sonar.exclusions>
+            **/generated/**/*
+        </sonar.exclusions>
     </properties>
 
     <build>
@@ -144,21 +160,6 @@
                             <consoleOutput>true</consoleOutput>
                             <failsOnError>true</failsOnError>
                             <includeTestSourceDirectory>true</includeTestSourceDirectory>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-                <version>${springboot.version}</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>repackage</goal>
-                        </goals>
-                        <configuration>
-                            <classifier>exec</classifier>
                         </configuration>
                     </execution>
                 </executions>
