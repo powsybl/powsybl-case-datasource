@@ -27,6 +27,7 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import java.io.*;
 import java.net.URISyntaxException;
 
+import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.Set;
 
@@ -113,7 +114,7 @@ public class CaseDataSourceControllerTest {
                 .andExpect(status().isOk())
                 .andReturn();
 
-        InputStreamReader isReader = new InputStreamReader(dataSource.newInputStream(fileName));
+        InputStreamReader isReader = new InputStreamReader(dataSource.newInputStream(fileName), StandardCharsets.UTF_8);
         BufferedReader reader = new BufferedReader(isReader);
         StringBuilder datasourceResponse = new StringBuilder();
         String str;
@@ -138,7 +139,7 @@ public class CaseDataSourceControllerTest {
                 .andExpect(status().isOk())
                 .andReturn();
 
-        InputStreamReader isReader = new InputStreamReader(dataSource.newInputStream(suffix, ext));
+        InputStreamReader isReader = new InputStreamReader(dataSource.newInputStream(suffix, ext), StandardCharsets.UTF_8);
         BufferedReader reader = new BufferedReader(isReader);
         StringBuilder datasourceResponse = new StringBuilder();
         String str;
