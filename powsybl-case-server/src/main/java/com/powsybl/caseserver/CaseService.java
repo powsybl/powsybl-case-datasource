@@ -47,7 +47,7 @@ public class CaseService {
     }
 
     Path getCase(String caseName) {
-        checkCaseName(caseName);
+        validateCaseName(caseName);
         checkStorageInitialization();
         Path file = getStorageRootDir().resolve(caseName);
         if (Files.exists(file) && Files.isRegularFile(file)) {
@@ -57,7 +57,7 @@ public class CaseService {
     }
 
     boolean exists(String caseName) {
-        checkCaseName(caseName);
+        validateCaseName(caseName);
         Path file = getStorageRootDir().resolve(caseName);
         return Files.exists(file) && Files.isRegularFile(file);
     }
@@ -81,7 +81,7 @@ public class CaseService {
     }
 
     Network downloadNetwork(String caseName) {
-        checkCaseName(caseName);
+        validateCaseName(caseName);
         checkStorageInitialization();
         Path caseFile = getStorageRootDir().resolve(caseName);
         Network network = Importers.loadNetwork(caseFile);
@@ -92,7 +92,7 @@ public class CaseService {
     }
 
     void deleteCase(String caseName) {
-        checkCaseName(caseName);
+        validateCaseName(caseName);
         checkStorageInitialization();
         Path file = getStorageRootDir().resolve(caseName);
         if (Files.exists(file) && !Files.isRegularFile(file)) {
@@ -144,8 +144,8 @@ public class CaseService {
         this.fileSystem = fileSystem;
     }
 
-    private void checkCaseName(String caseName) {
-        if (!caseName.matches("^[a-zA-Z0-9](?:[a-zA-Z0-9 ._-]*[a-zA-Z0-9])?\\.*[a-zA-Z0-9_-]+$")) {
+    private void validateCaseName(String caseName) {
+        if (!caseName.matches("^[\\w0-9\\-]+(\\.[\\w0-9]+)*$")) {
             throw new CaseException(ILLEGAL_FILE_NAME);
         }
     }
