@@ -93,7 +93,7 @@ public class CaseDataSourceClient implements ReadOnlyDataSource {
                     Boolean.class);
             return responseEntity.getBody();
         } catch (HttpStatusCodeException e) {
-            throw new CaseDataSourceClientException("Exception when checking file existence", e);
+            throw new CaseDataSourceClientException("Exception when checking file existence: " + e.getResponseBodyAsString());
         }
     }
 
@@ -115,7 +115,7 @@ public class CaseDataSourceClient implements ReadOnlyDataSource {
                     Boolean.class);
             return responseEntity.getBody();
         } catch (HttpStatusCodeException e) {
-            throw new CaseDataSourceClientException("Exception when checking file exitence", e);
+            throw new CaseDataSourceClientException("Exception when checking file existence:" + e.getResponseBodyAsString());
         }
     }
 
@@ -138,7 +138,7 @@ public class CaseDataSourceClient implements ReadOnlyDataSource {
                     byte[].class);
             return new ByteArrayInputStream(responseEntity.getBody());
         } catch (HttpStatusCodeException e) {
-            throw new CaseDataSourceClientException("Exception when requesting the file inputStream", e);
+            throw new CaseDataSourceClientException("Exception when requesting the file inputStream: " + e.getResponseBodyAsString());
         }
     }
 
@@ -160,7 +160,7 @@ public class CaseDataSourceClient implements ReadOnlyDataSource {
                     byte[].class);
             return new ByteArrayInputStream(responseEntity.getBody());
         } catch (HttpStatusCodeException e) {
-            throw new CaseDataSourceClientException("Exception when requesting the file inputStream", e);
+            throw new CaseDataSourceClientException("Exception when requesting the file inputStream: " + e.getResponseBodyAsString());
         }
     }
 
@@ -183,11 +183,11 @@ public class CaseDataSourceClient implements ReadOnlyDataSource {
                     new ParameterizedTypeReference<Set<String>>() { });
             return responseEntity.getBody();
         } catch (HttpStatusCodeException e) {
-            throw new CaseDataSourceClientException("Exception when requesting the files listNames", e);
+            throw new CaseDataSourceClientException("Exception when requesting the files listNames: " + e.getResponseBodyAsString());
         }
     }
 
-    public void setCaseName(String caseName) {
+    void setCaseName(String caseName) {
         this.caseName = caseName;
     }
 }

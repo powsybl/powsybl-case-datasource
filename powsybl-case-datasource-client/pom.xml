@@ -13,11 +13,6 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.powsybl</groupId>
-            <artifactId>powsybl-commons</artifactId>
-            <version>${powsybl-core.version}</version>
-        </dependency>
-        <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-core</artifactId>
             <version>${springcore-version}</version>

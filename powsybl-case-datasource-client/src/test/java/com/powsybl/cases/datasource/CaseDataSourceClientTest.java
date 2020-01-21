@@ -20,13 +20,15 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.Set;
 
 import static java.util.Arrays.asList;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
@@ -69,6 +71,12 @@ public class CaseDataSourceClientTest {
                 eq(byte[].class)))
                 .willReturn(ResponseEntity.ok("Data in the file".getBytes()));
 
+        given(caseServerRest.exchange(eq("http://localhost:8080/v1/cases/myCaseName.zip/datasource?suffix=A&ext=xml"),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                eq(byte[].class)))
+                .willReturn(ResponseEntity.ok("Data in the file".getBytes()));
+
         given(caseServerRest.exchange(eq("http://localhost:8080/v1/cases/myCaseName.zip/datasource/exists?fileName=A.xml"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
@@ -92,8 +100,24 @@ public class CaseDataSourceClientTest {
         assertTrue(caseDataSourceClient.exists("A.xml"));
         assertTrue(caseDataSourceClient.exists("A", "xml"));
 
-        byte[] buffer = new byte[16];
-        caseDataSourceClient.newInputStream("A.xml").read(buffer);
-        assertEquals("Data in the file", new String(buffer));
+        try (InputStreamReader isReader = new InputStreamReader(caseDataSourceClient.newInputStream("A.xml"), StandardCharsets.UTF_8)) {
+            BufferedReader reader = new BufferedReader(isReader);
+            StringBuilder datasourceResponse = new StringBuilder();
+            String str;
+            while ((str = reader.readLine()) != null) {
+                datasourceResponse.append(str);
+            }
+            assertEquals("Data in the file", datasourceResponse.toString());
+        }
+
+        try (InputStreamReader isReader = new InputStreamReader(caseDataSourceClient.newInputStream("A", "xml"), StandardCharsets.UTF_8)) {
+            BufferedReader reader = new BufferedReader(isReader);
+            StringBuilder datasourceResponse = new StringBuilder();
+            String str;
+            while ((str = reader.readLine()) != null) {
+                datasourceResponse.append(str);
+            }
+            assertEquals("Data in the file", datasourceResponse.toString());
+        }
     }
 }
