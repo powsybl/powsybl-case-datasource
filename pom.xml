@@ -29,9 +29,9 @@
         <url>https://github.com/powsybl/powsybl-case-server.git</url>
     </scm>
     <modules>
-        <module>powsybl-case-datasource-client</module>
-        <module>powsybl-case-server</module>
-        <module>powsybl-case-distribution</module>
+        <module>case-datasource-client</module>
+        <module>case-server</module>
+        <module>case-distribution</module>
     </modules>
 
     <developers>
@@ -168,6 +168,15 @@
     </build>
 
     <profiles>
+        <profile>
+            <id>client</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <modules>
+                <module>case-datasource-client</module>
+            </modules>
+        </profile>
         <profile>
             <id>jacoco</id>
             <activation>
