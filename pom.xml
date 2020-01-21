@@ -69,7 +69,7 @@
         <powsybl-core.version>3.1.0</powsybl-core.version>
 
         <sonar.coverage.jacoco.xmlReportPaths>
-            ../powsybl-case-distribution/target/site/jacoco-aggregate/jacoco.xml
+            ../case-distribution/target/site/jacoco-aggregate/jacoco.xml
         </sonar.coverage.jacoco.xmlReportPaths>
 
         <sonar.exclusions>
