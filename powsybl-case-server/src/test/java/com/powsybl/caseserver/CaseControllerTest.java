@@ -210,4 +210,27 @@ public class CaseControllerTest {
         mvc.perform(delete("/v1/cases"))
                 .andExpect(status().isOk());
     }
+
+    @Test
+    public void validateCaseNameTest() {
+        caseService.validateCaseName("test");
+        caseService.validateCaseName("test.xiidm");
+        caseService.validateCaseName("te-st");
+        caseService.validateCaseName("test-case.7zip");
+        caseService.validateCaseName("testcase1.7zip");
+
+        try {
+            caseService.validateCaseName("../test.xiidm");
+            fail();
+        } catch (CaseException ignored) { }
+        try {
+            caseService.validateCaseName("test..xiidm");
+            fail();
+        } catch (CaseException ignored) { }
+        try {
+            caseService.validateCaseName("test/xiidm");
+            fail();
+        } catch (CaseException ignored) { }
+
+    }
 }

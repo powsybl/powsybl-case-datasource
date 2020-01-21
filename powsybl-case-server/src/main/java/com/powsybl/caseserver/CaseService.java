@@ -144,7 +144,7 @@ public class CaseService {
         this.fileSystem = fileSystem;
     }
 
-    private void validateCaseName(String caseName) {
+    void validateCaseName(String caseName) {
         if (!caseName.matches("^[\\w0-9\\-]+(\\.[\\w0-9]+)*$")) {
             throw new CaseException(ILLEGAL_FILE_NAME);
         }
