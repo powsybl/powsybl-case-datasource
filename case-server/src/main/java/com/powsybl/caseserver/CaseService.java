@@ -47,6 +47,7 @@ public class CaseService {
     }
 
     Path getCase(String caseName) {
+        validateCaseName(caseName);
         checkStorageInitialization();
         Path file = getStorageRootDir().resolve(caseName);
         if (Files.exists(file) && Files.isRegularFile(file)) {
@@ -56,6 +57,7 @@ public class CaseService {
     }
 
     boolean exists(String caseName) {
+        validateCaseName(caseName);
         Path file = getStorageRootDir().resolve(caseName);
         return Files.exists(file) && Files.isRegularFile(file);
     }
@@ -79,6 +81,7 @@ public class CaseService {
     }
 
     Network downloadNetwork(String caseName) {
+        validateCaseName(caseName);
         checkStorageInitialization();
         Path caseFile = getStorageRootDir().resolve(caseName);
         Network network = Importers.loadNetwork(caseFile);
@@ -89,8 +92,8 @@ public class CaseService {
     }
 
     void deleteCase(String caseName) {
+        validateCaseName(caseName);
         checkStorageInitialization();
-
         Path file = getStorageRootDir().resolve(caseName);
         if (Files.exists(file) && !Files.isRegularFile(file)) {
             throw new CaseException(FILE_DOESNT_EXIST);
@@ -127,17 +130,23 @@ public class CaseService {
         return Files.exists(storageRootDir) && Files.isDirectory(storageRootDir);
     }
 
-    private Path getStorageRootDir() {
+    public Path getStorageRootDir() {
         return fileSystem.getPath(rootDirectory);
     }
 
-    private void checkStorageInitialization() {
+    public void checkStorageInitialization() {
         if (!isStorageCreated()) {
             throw new CaseException(STORAGE_DIR_NOT_CREATED);
         }
     }
 
-    void setFileSystem(FileSystem fileSystem) {
+    public void setFileSystem(FileSystem fileSystem) {
         this.fileSystem = fileSystem;
+    }
+
+    void validateCaseName(String caseName) {
+        if (!caseName.matches("^[\\w0-9\\-]+(\\.[\\w0-9]+)*$")) {
+            throw new CaseException(ILLEGAL_FILE_NAME);
+        }
     }
 }

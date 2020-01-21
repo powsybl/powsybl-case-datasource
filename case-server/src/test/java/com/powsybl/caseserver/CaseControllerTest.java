@@ -15,7 +15,6 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.context.ApplicationContext;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
@@ -40,16 +39,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
  */
-
 @RunWith(SpringRunner.class)
 @EnableWebMvc
 @WebMvcTest(CaseController.class)
 @ContextConfiguration(classes = {CaseController.class, CaseService.class})
 @TestPropertySource(properties = {"case-store-directory=test"})
 public class CaseControllerTest {
-
-    @Autowired
-    private ApplicationContext context;
 
     @Autowired
     private MockMvc mvc;
@@ -188,7 +183,7 @@ public class CaseControllerTest {
         }
 
         //Retrieve a non existing case (async)
-        mvcResult = mvc.perform(get(GET_CASE_URL, "non-existing"))
+        mvc.perform(get(GET_CASE_URL, "non-existing"))
                 .andExpect(status().isNoContent())
                 .andReturn();
 
@@ -214,5 +209,28 @@ public class CaseControllerTest {
         //delete all cases
         mvc.perform(delete("/v1/cases"))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    public void validateCaseNameTest() {
+        caseService.validateCaseName("test");
+        caseService.validateCaseName("test.xiidm");
+        caseService.validateCaseName("te-st");
+        caseService.validateCaseName("test-case.7zip");
+        caseService.validateCaseName("testcase1.7zip");
+
+        try {
+            caseService.validateCaseName("../test.xiidm");
+            fail();
+        } catch (CaseException ignored) { }
+        try {
+            caseService.validateCaseName("test..xiidm");
+            fail();
+        } catch (CaseException ignored) { }
+        try {
+            caseService.validateCaseName("test/xiidm");
+            fail();
+        } catch (CaseException ignored) { }
+
     }
 }
