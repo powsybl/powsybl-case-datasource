@@ -187,7 +187,7 @@ public class CaseDataSourceClient implements ReadOnlyDataSource {
         }
     }
 
-    void setCaseName(String caseName) {
+    public void setCaseName(String caseName) {
         this.caseName = caseName;
     }
 }
