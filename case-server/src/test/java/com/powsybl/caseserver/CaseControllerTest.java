@@ -90,11 +90,9 @@ public class CaseControllerTest {
     }
 
     private static MockMultipartFile createMockMultipartFile(String fileName) throws IOException {
-        MockMultipartFile mockFile;
         try (InputStream inputStream = CaseControllerTest.class.getResourceAsStream("/" + fileName)) {
-            mockFile = new MockMultipartFile("file", fileName, MediaType.TEXT_PLAIN_VALUE, inputStream);
+            return new MockMultipartFile("file", fileName, MediaType.TEXT_PLAIN_VALUE, inputStream);
         }
-        return mockFile;
     }
 
     @Test
