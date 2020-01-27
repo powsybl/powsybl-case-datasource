@@ -20,17 +20,16 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.Map;
+import java.util.List;
 
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
  */
 @RestController
-@RequestMapping(value = "/" + CaseConstants.CASE_API_VERSION)
+@RequestMapping(value = "/" + CaseConstants.API_VERSION)
 @Api(value = "Case server")
 @ComponentScan(basePackageClasses = {CaseService.class})
 public class CaseController {
@@ -42,10 +41,9 @@ public class CaseController {
 
     @GetMapping(value = "/cases")
     @ApiOperation(value = "Get all cases")
-    public ResponseEntity<Map<String, String>> getCaseList() {
-        LOGGER.debug("Cases request received");
-        Map<String, String> cases;
-        cases = caseService.getCaseList();
+    public ResponseEntity<List<CaseInfos>> getCases() {
+        LOGGER.debug("getCases request received");
+        List<CaseInfos> cases = caseService.getCases();
         if (cases == null) {
             return ResponseEntity.noContent().build();
         }
@@ -58,30 +56,36 @@ public class CaseController {
                                                          @RequestParam(value = "xiidm", required = false, defaultValue = "true") boolean xiidmFormat) {
         LOGGER.debug("getCase request received with parameter caseName = {}", caseName);
         if (xiidmFormat) {
-            Path file;
-            file = caseService.getCase(caseName);
-            if (file == null) {
+            Network network = caseService.loadNetwork(caseName).orElse(null);
+            if (network == null) {
                 return ResponseEntity.noContent().build();
             }
-            try {
-                byte[] arrayBytes = Files.readAllBytes(file);
-                StreamingResponseBody stream = outputStream -> outputStream.write(arrayBytes);
-                return ResponseEntity.ok().contentType(MediaType.TEXT_PLAIN).body(stream);
+            try (ByteArrayOutputStream os = new ByteArrayOutputStream()) {
+                NetworkXml.write(network, os);
+                os.flush();
+                StreamingResponseBody stream = outputStream -> outputStream.write(os.toByteArray());
+                return ResponseEntity.ok()
+                        .contentType(MediaType.APPLICATION_XML)
+                        .body(stream);
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             }
         } else {
-            Network network = caseService.downloadNetwork(caseName);
-            byte[] zipNetwork = NetworkXml.gzip(network);
-            StreamingResponseBody stream = outputStream -> outputStream.write(zipNetwork);
-            return ResponseEntity.ok().body(stream);
+            byte[] bytes = caseService.getCaseBytes(caseName).orElse(null);
+            if (bytes == null) {
+                return ResponseEntity.noContent().build();
+            }
+            StreamingResponseBody stream = outputStream -> outputStream.write(bytes);
+            return ResponseEntity.ok()
+                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                    .body(stream);
         }
     }
 
     @GetMapping(value = "/cases/{caseName:.+}/exists")
     @ApiOperation(value = "check if the case exists")
     public ResponseEntity<Boolean> exists(@PathVariable("caseName") String caseName) {
-        boolean exists = caseService.exists(caseName);
+        boolean exists = caseService.caseExists(caseName);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(exists);
 
     }

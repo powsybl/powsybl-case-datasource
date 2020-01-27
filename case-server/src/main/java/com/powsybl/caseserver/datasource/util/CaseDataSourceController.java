@@ -23,7 +23,7 @@ import java.util.Set;
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
  */
 @RestController
-@RequestMapping(value = "/" + CaseConstants.CASE_API_VERSION)
+@RequestMapping(value = "/" + CaseConstants.API_VERSION)
 @Api(value = "Case datasource util")
 @ComponentScan(basePackageClasses = {CaseDataSourceService.class})
 public class CaseDataSourceController {
