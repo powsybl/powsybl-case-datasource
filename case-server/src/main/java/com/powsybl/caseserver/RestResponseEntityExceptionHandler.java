@@ -38,6 +38,8 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
                 case STORAGE_DIR_NOT_CREATED:
                     status = HttpStatus.UNPROCESSABLE_ENTITY;
                     break;
+                default:
+                    break;
             }
         }
 
