@@ -7,33 +7,38 @@
 package com.powsybl.caseserver;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.io.ByteStreams;
+import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
-import com.powsybl.iidm.network.Network;
-import com.powsybl.iidm.xml.NetworkXml;
+import com.powsybl.computation.ComputationManager;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Map;
 
-import static com.powsybl.caseserver.CaseConstants.*;
-import static org.junit.Assert.*;
+import static org.hamcrest.Matchers.startsWith;
+import static org.junit.Assert.fail;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
@@ -43,16 +48,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @EnableWebMvc
 @WebMvcTest(CaseController.class)
 @ContextConfiguration(classes = {CaseController.class, CaseService.class})
-@TestPropertySource(properties = {"case-store-directory=test"})
+@TestPropertySource(properties = {"case-store-directory=/cases"})
 public class CaseControllerTest {
-
-    @Autowired
-    private MockMvc mvc;
-
-    @Autowired
-    private CaseService caseService;
-
-    private FileSystem fileSystem = Jimfs.newFileSystem();
 
     private static final String TEST_CASE = "testCase.xiidm";
     private static final String NOT_A_NETWORK = "notANetwork.txt";
@@ -60,177 +57,173 @@ public class CaseControllerTest {
 
     private static final String GET_CASE_URL = "/v1/cases/{caseName}";
 
-    @Value("${case-store-directory:#{systemProperties['user.home'].concat(\"/cases\")}}")
+    @Autowired
+    private MockMvc mvc;
+
+    @Autowired
+    private CaseService caseService;
+
+    @Value("${case-store-directory}")
     private String rootDirectory;
 
+    private FileSystem fileSystem;
+
+    private ObjectMapper objectMapper = new ObjectMapper();
+
+    @Before
     public void setUp() {
+        fileSystem = Jimfs.newFileSystem(Configuration.unix());
+        caseService.setFileSystem(fileSystem);
+        caseService.setComputationManager(Mockito.mock(ComputationManager.class));
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        fileSystem.close();
+    }
+
+    private void createStorageDir() throws IOException {
         Path path = fileSystem.getPath(rootDirectory);
         if (!Files.exists(path)) {
-            try {
-                Files.createDirectories(path);
-            } catch (IOException e) {
-                fail();
-            }
+            Files.createDirectories(path);
         }
-        caseService.setFileSystem(fileSystem);
+    }
+
+    private static MockMultipartFile createMockMultipartFile(String fileName) throws IOException {
+        try (InputStream inputStream = CaseControllerTest.class.getResourceAsStream("/" + fileName)) {
+            return new MockMultipartFile("file", fileName, MediaType.TEXT_PLAIN_VALUE, inputStream);
+        }
     }
 
     @Test
     public void test() throws Exception {
-        //expect a fail since the storage dir. is not created
+        // expect a fail since the storage dir. is not created
         mvc.perform(delete("/v1/cases"))
                 .andExpect(status().isUnprocessableEntity());
-        //create the storage dir
-        setUp();
 
-        //now it must work
+        // create the storage dir
+        createStorageDir();
+
+        // now it must work
         mvc.perform(delete("/v1/cases"))
                 .andExpect(status().isOk());
 
-        //check if the case exists (except a false)
-        MvcResult mvcResult = mvc.perform(get("/v1/cases/{caseName}/exists", "testCase.xiidm"))
+        // check if the case exists (except a false)
+        mvc.perform(get("/v1/cases/{caseName}/exists", TEST_CASE))
+                .andExpect(status().isOk())
+                .andExpect(content().string("false"))
+                .andReturn();
+
+        // import a case
+        mvc.perform(multipart("/v1/cases")
+                .file(createMockMultipartFile(TEST_CASE)))
                 .andExpect(status().isOk())
                 .andReturn();
 
-        assertEquals("false", mvcResult.getResponse().getContentAsString());
-
-        //Import a case
-        ClassLoader classLoader = getClass().getClassLoader();
-        try (InputStream inputStream = classLoader.getResourceAsStream(TEST_CASE)) {
-            MockMultipartFile mockFile = new MockMultipartFile("file", TEST_CASE, "text/plain", inputStream);
-            mvc.perform(MockMvcRequestBuilders.multipart("/v1/cases")
-                    .file(mockFile))
-                    .andExpect(status().isOk())
-                    .andReturn();
-        }
-
-        //check if the case exists (except a true)
-        mvcResult = mvc.perform(get("/v1/cases/{caseName}/exists", "testCase.xiidm"))
+        // check if the case exists (except a true)
+        mvc.perform(get("/v1/cases/{caseName}/exists", TEST_CASE))
                 .andExpect(status().isOk())
+                .andExpect(content().string("true"))
                 .andReturn();
 
-        assertEquals("true", mvcResult.getResponse().getContentAsString());
-
-        //Import the same case and expect a fail
-        try (InputStream inputStream = classLoader.getResourceAsStream(TEST_CASE)) {
-            MockMultipartFile mockFile = new MockMultipartFile("file", TEST_CASE, "text/plain", inputStream);
-            mvcResult = mvc.perform(MockMvcRequestBuilders.multipart("/v1/cases")
-                    .file(mockFile))
-                    .andExpect(status().is(409))
-                    .andReturn();
-            assertEquals(FILE_ALREADY_EXISTS, mvcResult.getResponse().getContentAsString());
-        }
-
-        //Import a non valid case and expect a fail
-        try (InputStream inputStream = classLoader.getResourceAsStream(NOT_A_NETWORK)) {
-            MockMultipartFile mockFile = new MockMultipartFile("file", NOT_A_NETWORK, "text/plain", inputStream);
-            mvcResult = mvc.perform(MockMvcRequestBuilders.multipart("/v1/cases")
-                    .file(mockFile))
-                    .andExpect(status().isUnprocessableEntity())
-                    .andReturn();
-            assertEquals(FILE_NOT_IMPORTABLE, mvcResult.getResponse().getContentAsString());
-        }
-
-        //Import a non valid case with a valid extension and expect a fail
-        try (InputStream inputStream = classLoader.getResourceAsStream(STILL_NOT_A_NETWORK)) {
-            MockMultipartFile mockFile = new MockMultipartFile("file", STILL_NOT_A_NETWORK, "text/plain", inputStream);
-            mvcResult = mvc.perform(MockMvcRequestBuilders.multipart("/v1/cases")
-                    .file(mockFile))
-                    .andExpect(status().isUnprocessableEntity())
-                    .andReturn();
-            assertEquals(FILE_NOT_IMPORTABLE, mvcResult.getResponse().getContentAsString());
-        }
-
-        //List the cases and expect the case added just before
-        mvcResult = mvc.perform(get("/v1/cases"))
-                .andExpect(status().isOk())
+        // import the same case and expect a fail
+        mvc.perform(multipart("/v1/cases")
+                .file(createMockMultipartFile(TEST_CASE)))
+                .andExpect(status().is(409))
+                .andExpect(content().string(startsWith("A file with the same name already exists")))
                 .andReturn();
 
-        ObjectMapper objectMapper = new ObjectMapper();
-        String tmp = mvcResult.getResponse().getContentAsString();
-        Map<String, String> listCase = objectMapper.readValue(tmp, Map.class);
-        assertTrue(listCase.containsValue(TEST_CASE));
+        // import a non valid case and expect a fail
+        mvc.perform(multipart("/v1/cases")
+                .file(createMockMultipartFile(NOT_A_NETWORK)))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(content().string(startsWith("This file cannot be imported")))
+                .andReturn();
 
-        //Retrieve a case as a network
-        mvcResult =  mvc.perform(get(GET_CASE_URL, TEST_CASE)
+        // import a non valid case with a valid extension and expect a fail
+        mvc.perform(multipart("/v1/cases")
+                .file(createMockMultipartFile(STILL_NOT_A_NETWORK)))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(content().string(startsWith("This file cannot be imported")))
+                .andReturn();
+
+        // list the cases and expect the case added just before
+        mvc.perform(get("/v1/cases"))
+                .andExpect(status().isOk())
+                .andExpect(content().json("[{name: 'testCase.xiidm', format: 'XIIDM'}]"))
+                .andReturn();
+
+        // retrieve a case as a network
+        MvcResult mvcResult =  mvc.perform(get(GET_CASE_URL, TEST_CASE)
                 .param("xiidm", "false"))
                 .andExpect(status().isOk())
                 .andExpect(request().asyncStarted())
                 .andReturn();
 
-        mvcResult = mvc.perform(asyncDispatch(mvcResult))
+        String testCaseContent = new String(ByteStreams.toByteArray(getClass().getResourceAsStream("/" + TEST_CASE)), StandardCharsets.UTF_8);
+        mvc.perform(asyncDispatch(mvcResult))
                 .andExpect(status().isOk())
+                .andExpect(content().xml(testCaseContent))
                 .andReturn();
 
-        Network network = NetworkXml.gunzip(mvcResult.getResponse().getContentAsByteArray());
-        assertEquals("20140116_0830_2D4_UX1_pst", network.getName());
-
-        //Retrieve a case (async)
+        // retrieve a case (async)
         mvcResult = mvc.perform(get(GET_CASE_URL, TEST_CASE))
                 .andExpect(request().asyncStarted())
                 .andReturn();
 
-        mvcResult = mvc.perform(asyncDispatch(mvcResult))
+        mvc.perform(asyncDispatch(mvcResult))
                 .andExpect(status().isOk())
+                .andExpect(content().xml(testCaseContent))
                 .andReturn();
 
-        String xmlNetwork = mvcResult.getResponse().getContentAsString();
-
-        if (xmlNetwork.length() > 20) {
-            assertEquals("<?xml version=\"1.0\"", xmlNetwork.substring(0, 19));
-        } else {
-            fail();
-        }
-
-        //Retrieve a non existing case (async)
+        // retrieve a non existing case (async)
         mvc.perform(get(GET_CASE_URL, "non-existing"))
                 .andExpect(status().isNoContent())
                 .andReturn();
 
-        //Delete the case
+        // delete the case
         mvc.perform(delete(GET_CASE_URL, TEST_CASE))
                 .andExpect(status().isOk());
 
-        //Delete non existing file
-        mvcResult = mvc.perform(delete(GET_CASE_URL, TEST_CASE))
+        // delete non existing file
+        mvc.perform(delete(GET_CASE_URL, TEST_CASE))
+                .andExpect(content().string(startsWith("The file requested doesn't exist")))
                 .andReturn();
 
-        assertEquals(FILE_DOESNT_EXIST, mvcResult.getResponse().getContentAsString());
+        // import a case to delete it
+        mvc.perform(multipart("/v1/cases")
+                .file(createMockMultipartFile(TEST_CASE)))
+                .andExpect(status().isOk())
+                .andReturn();
 
-        //import a case to delete it
-        try (InputStream inputStream = classLoader.getResourceAsStream(TEST_CASE)) {
-            MockMultipartFile mockFile = new MockMultipartFile("file", TEST_CASE, "text/plain", inputStream);
-            mvc.perform(MockMvcRequestBuilders.multipart("/v1/cases")
-                    .file(mockFile))
-                    .andExpect(status().isOk())
-                    .andReturn();
-        }
-
-        //delete all cases
+        // delete all cases
         mvc.perform(delete("/v1/cases"))
                 .andExpect(status().isOk());
     }
 
     @Test
     public void validateCaseNameTest() {
-        caseService.validateCaseName("test");
-        caseService.validateCaseName("test.xiidm");
-        caseService.validateCaseName("te-st");
-        caseService.validateCaseName("test-case.7zip");
-        caseService.validateCaseName("testcase1.7zip");
+        CaseService.validateCaseName("test");
+        CaseService.validateCaseName("test.xiidm");
+        CaseService.validateCaseName("te-st");
+        CaseService.validateCaseName("test-case.7zip");
+        CaseService.validateCaseName("testcase1.7zip");
 
         try {
-            caseService.validateCaseName("../test.xiidm");
+            CaseService.validateCaseName("../test.xiidm");
             fail();
-        } catch (CaseException ignored) { }
+        } catch (CaseException ignored) {
+        }
         try {
-            caseService.validateCaseName("test..xiidm");
+            CaseService.validateCaseName("test..xiidm");
             fail();
-        } catch (CaseException ignored) { }
+        } catch (CaseException ignored) {
+        }
         try {
-            caseService.validateCaseName("test/xiidm");
+            CaseService.validateCaseName("test/xiidm");
             fail();
-        } catch (CaseException ignored) { }
+        } catch (CaseException ignored) {
+        }
 
     }
 }

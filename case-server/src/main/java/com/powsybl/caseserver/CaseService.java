@@ -7,9 +7,13 @@
 package com.powsybl.caseserver;
 
 import com.powsybl.commons.datasource.DataSource;
+import com.powsybl.computation.ComputationManager;
 import com.powsybl.computation.local.LocalComputationManager;
+import com.powsybl.iidm.import_.Importer;
 import com.powsybl.iidm.import_.Importers;
 import com.powsybl.iidm.network.Network;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -17,11 +21,11 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.*;
-import java.util.Map;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import static com.powsybl.caseserver.CaseConstants.*;
 
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
@@ -29,79 +33,119 @@ import static com.powsybl.caseserver.CaseConstants.*;
 @Service
 public class CaseService {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(CaseService.class);
+
     private FileSystem fileSystem = FileSystems.getDefault();
+
+    private ComputationManager computationManager = LocalComputationManager.getDefault();
+
     @Value("${case-store-directory:#{systemProperties['user.home'].concat(\"/cases\")}}")
     private String rootDirectory;
 
-    Map<String, String> getCaseList() {
-        checkStorageInitialization();
+    private Importer getImporterOrThrowsException(Path caseFile) {
+        DataSource dataSource = Importers.createDataSource(caseFile);
+        Importer importer = Importers.findImporter(dataSource, computationManager);
+        if (importer == null) {
+            throw CaseException.createFileNotImportable(caseFile);
+        }
+        return importer;
+    }
 
-        Map<String, String> cases;
+    private String getFormat(Path caseFile) {
+        Importer importer = getImporterOrThrowsException(caseFile);
+        return importer.getFormat();
+    }
+
+    List<CaseInfos> getCases() {
+        checkStorageInitialization();
         try (Stream<Path> walk = Files.walk(getStorageRootDir())) {
-            cases = walk.filter(Files::isRegularFile)
-                    .collect(Collectors.toMap(Object::toString, x -> x.getFileName().toString()));
-        } catch (IOException e) {
-            return null;
-        }
-        return cases;
-    }
-
-    Path getCase(String caseName) {
-        validateCaseName(caseName);
-        checkStorageInitialization();
-        Path file = getStorageRootDir().resolve(caseName);
-        if (Files.exists(file) && Files.isRegularFile(file)) {
-            return file;
-        }
-        return null;
-    }
-
-    boolean exists(String caseName) {
-        validateCaseName(caseName);
-        Path file = getStorageRootDir().resolve(caseName);
-        return Files.exists(file) && Files.isRegularFile(file);
-    }
-
-    void importCase(MultipartFile mpf) {
-        checkStorageInitialization();
-
-        Path file = getStorageRootDir().resolve(mpf.getOriginalFilename());
-        if (Files.exists(file) && Files.isRegularFile(file)) {
-            throw new CaseException(FILE_ALREADY_EXISTS);
-        }
-        try {
-            mpf.transferTo(file);
-            DataSource caseDataSource = Importers.createDataSource(file);
-            if (null == Importers.findImporter(caseDataSource, LocalComputationManager.getDefault())) {
-                throw new CaseException(FILE_NOT_IMPORTABLE);
-            }
+            return walk.filter(Files::isRegularFile)
+                    .map(file -> new CaseInfos(file.getFileName().toString(), getFormat(file)))
+                    .collect(Collectors.toList());
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
     }
 
-    Network downloadNetwork(String caseName) {
+    private Path getCaseFile(String caseName) {
         validateCaseName(caseName);
+        return getStorageRootDir().resolve(caseName);
+    }
+
+    Optional<byte[]> getCaseBytes(String caseName) {
         checkStorageInitialization();
-        Path caseFile = getStorageRootDir().resolve(caseName);
-        Network network = Importers.loadNetwork(caseFile);
-        if (network == null) {
-            throw new CaseException(FILE_NOT_IMPORTABLE);
+
+        Path caseFile = getCaseFile(caseName);
+        if (Files.exists(caseFile) && Files.isRegularFile(caseFile)) {
+            try {
+                byte[] bytes = Files.readAllBytes(caseFile);
+                return Optional.of(bytes);
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
         }
-        return network;
+        return Optional.empty();
+    }
+
+    boolean caseExists(String caseName) {
+        checkStorageInitialization();
+
+        Path caseFile = getCaseFile(caseName);
+        return Files.exists(caseFile) && Files.isRegularFile(caseFile);
+    }
+
+    void importCase(MultipartFile mpf) {
+        checkStorageInitialization();
+
+        Path caseFile = getCaseFile(mpf.getOriginalFilename());
+        if (Files.exists(caseFile) && Files.isRegularFile(caseFile)) {
+            throw CaseException.createFileAreadyExists(caseFile);
+        }
+
+        try {
+            mpf.transferTo(caseFile);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+
+        try {
+            getImporterOrThrowsException(caseFile);
+        } catch (CaseException e) {
+            try {
+                Files.deleteIfExists(caseFile);
+            } catch (IOException e2) {
+                LOGGER.error(e2.toString(), e2);
+            }
+            throw e;
+        }
+    }
+
+    Optional<Network> loadNetwork(String caseName) {
+        checkStorageInitialization();
+
+        Path caseFile = getCaseFile(caseName);
+        if (Files.exists(caseFile) && Files.isRegularFile(caseFile)) {
+            Network network = Importers.loadNetwork(caseFile);
+            if (network == null) {
+                throw CaseException.createFileNotImportable(caseFile);
+            }
+            return Optional.of(network);
+        }
+        return Optional.empty();
     }
 
     void deleteCase(String caseName) {
-        validateCaseName(caseName);
         checkStorageInitialization();
-        Path file = getStorageRootDir().resolve(caseName);
-        if (Files.exists(file) && !Files.isRegularFile(file)) {
-            throw new CaseException(FILE_DOESNT_EXIST);
+
+        Path caseFile = getCaseFile(caseName);
+        if (Files.exists(caseFile) && !Files.isRegularFile(caseFile)) {
+            throw CaseException.createFileDoesNotExist(caseFile);
         }
+
         try {
-            Files.delete(file);
+            Files.delete(caseFile);
         } catch (NoSuchFileException e) {
-            throw new CaseException(FILE_DOESNT_EXIST);
+            throw CaseException.createFileDoesNotExist(caseFile);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
@@ -125,28 +169,33 @@ public class CaseService {
         }
     }
 
+    public Path getStorageRootDir() {
+        return fileSystem.getPath(rootDirectory);
+    }
+
     private boolean isStorageCreated() {
         Path storageRootDir = getStorageRootDir();
         return Files.exists(storageRootDir) && Files.isDirectory(storageRootDir);
     }
 
-    public Path getStorageRootDir() {
-        return fileSystem.getPath(rootDirectory);
-    }
-
     public void checkStorageInitialization() {
         if (!isStorageCreated()) {
-            throw new CaseException(STORAGE_DIR_NOT_CREATED);
+            throw CaseException.createStorageNotInitialized(getStorageRootDir());
         }
     }
 
     public void setFileSystem(FileSystem fileSystem) {
-        this.fileSystem = fileSystem;
+        this.fileSystem = Objects.requireNonNull(fileSystem);
     }
 
-    void validateCaseName(String caseName) {
+    public void setComputationManager(ComputationManager computationManager) {
+        this.computationManager = Objects.requireNonNull(computationManager);
+    }
+
+    static void validateCaseName(String caseName) {
+        Objects.requireNonNull(caseName);
         if (!caseName.matches("^[\\w0-9\\-]+(\\.[\\w0-9]+)*$")) {
-            throw new CaseException(ILLEGAL_FILE_NAME);
+            throw CaseException.createIllegalCaseName(caseName);
         }
     }
 }

@@ -14,8 +14,6 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
-import static com.powsybl.caseserver.CaseConstants.*;
-
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
  */
@@ -24,18 +22,27 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
 
     @ExceptionHandler(value = { CaseException.class})
     protected ResponseEntity<Object> handleConflict(RuntimeException ex, WebRequest request) {
-        String errorMessage = ex.getMessage();
-        switch (errorMessage) {
-            case FILE_ALREADY_EXISTS :
-                return handleExceptionInternal(ex, FILE_ALREADY_EXISTS, new HttpHeaders(), HttpStatus.CONFLICT, request);
-            case FILE_NOT_IMPORTABLE :
-                return handleExceptionInternal(ex, FILE_NOT_IMPORTABLE, new HttpHeaders(), HttpStatus.UNPROCESSABLE_ENTITY, request);
-            case FILE_DOESNT_EXIST :
-                return handleExceptionInternal(ex, FILE_DOESNT_EXIST, new HttpHeaders(), HttpStatus.NOT_FOUND, request);
-            case STORAGE_DIR_NOT_CREATED :
-                return handleExceptionInternal(ex, STORAGE_DIR_NOT_CREATED, new HttpHeaders(), HttpStatus.UNPROCESSABLE_ENTITY, request);
-            default:
-                return handleExceptionInternal(ex, ex.getMessage(), new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR, request);
+        HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
+
+        if (ex instanceof CaseException) {
+            switch (((CaseException) ex).getType()) {
+                case FILE_ALREADY_EXISTS:
+                    status = HttpStatus.CONFLICT;
+                    break;
+                case FILE_NOT_IMPORTABLE:
+                    status = HttpStatus.UNPROCESSABLE_ENTITY;
+                    break;
+                case FILE_DOESNT_EXIST:
+                    status = HttpStatus.NOT_FOUND;
+                    break;
+                case STORAGE_DIR_NOT_CREATED:
+                    status = HttpStatus.UNPROCESSABLE_ENTITY;
+                    break;
+                default:
+                    break;
+            }
         }
+
+        return handleExceptionInternal(ex, ex.getMessage(), new HttpHeaders(), status, request);
     }
 }
