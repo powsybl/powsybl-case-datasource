@@ -51,7 +51,7 @@ public class CaseService {
         return importer;
     }
 
-    private String getFormat(Path caseFile) {
+    String getFormat(Path caseFile) {
         Importer importer = getImporterOrThrowsException(caseFile);
         return importer.getFormat();
     }
@@ -67,7 +67,7 @@ public class CaseService {
         }
     }
 
-    private Path getCaseFile(String caseName) {
+    Path getCaseFile(String caseName) {
         validateCaseName(caseName);
         return getStorageRootDir().resolve(caseName);
     }
