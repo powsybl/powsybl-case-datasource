@@ -124,7 +124,7 @@ public class CaseControllerTest {
         // retrieve case format
         mvc.perform(get(GET_CASE_FORMAT_URL, TEST_CASE))
                 .andExpect(status().isOk())
-                .andExpect(content().string("xiidm"))
+                .andExpect(content().string("XIIDM"))
                 .andReturn();
 
         // check if the case exists (except a true)
