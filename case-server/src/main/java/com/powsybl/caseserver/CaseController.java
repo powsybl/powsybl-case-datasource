@@ -56,7 +56,7 @@ public class CaseController {
     public ResponseEntity<String> getCaseFormat(@PathVariable("caseName") String caseName) {
         LOGGER.debug("getCaseFormat request received");
         Path file = caseService.getCaseFile(caseName);
-        String caseFormat = caseService.getFormat(file).toUpperCase();
+        String caseFormat = caseService.getFormat(file);
         return ResponseEntity.ok().body(caseFormat);
     }
 
