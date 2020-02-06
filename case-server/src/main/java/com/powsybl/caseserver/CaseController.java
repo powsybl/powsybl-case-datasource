@@ -23,6 +23,7 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.nio.file.Path;
 import java.util.List;
 
 /**
@@ -48,6 +49,15 @@ public class CaseController {
             return ResponseEntity.noContent().build();
         }
         return ResponseEntity.ok().body(cases);
+    }
+
+    @GetMapping(value = "/cases/{caseName:.+}/format")
+    @ApiOperation(value = "Get case Format")
+    public ResponseEntity<String> getCaseFormat(@PathVariable("caseName") String caseName) {
+        LOGGER.debug("getCaseFormat request received");
+        Path file = caseService.getCaseFile(caseName);
+        String caseFormat = caseService.getFormat(file);
+        return ResponseEntity.ok().body(caseFormat);
     }
 
     @GetMapping(value = "/cases/{caseName:.+}")
