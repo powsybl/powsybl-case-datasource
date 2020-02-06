@@ -56,6 +56,7 @@ public class CaseControllerTest {
     private static final String STILL_NOT_A_NETWORK = "stillNotANetwork.xiidm";
 
     private static final String GET_CASE_URL = "/v1/cases/{caseName}";
+    private static final String GET_CASE_FORMAT_URL = "/v1/cases/{caseName}/format";
 
     @Autowired
     private MockMvc mvc;
@@ -118,6 +119,12 @@ public class CaseControllerTest {
         mvc.perform(multipart("/v1/cases")
                 .file(createMockMultipartFile(TEST_CASE)))
                 .andExpect(status().isOk())
+                .andReturn();
+
+        // retrieve case format
+        mvc.perform(get(GET_CASE_FORMAT_URL, TEST_CASE))
+                .andExpect(status().isOk())
+                .andExpect(content().string("XIIDM"))
                 .andReturn();
 
         // check if the case exists (except a true)
