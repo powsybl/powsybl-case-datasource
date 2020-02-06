@@ -9,14 +9,11 @@ package com.powsybl.cases.datasource;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
-
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
@@ -28,7 +25,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 import static java.util.Arrays.asList;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
@@ -43,47 +41,46 @@ public class CaseDataSourceClientTest {
     @Mock
     private RestTemplate caseServerRest;
 
-    @InjectMocks
-    CaseDataSourceClient caseDataSourceClient = new CaseDataSourceClient("http://localhost:8080");
+    private CaseDataSourceClient caseDataSourceClient;
 
     @Before
     public void setUp() {
+        caseDataSourceClient = new CaseDataSourceClient(caseServerRest, "myCaseName.zip");
 
-        ResponseEntity<String> myEntity = new ResponseEntity<>(HttpStatus.ACCEPTED);
-
-        given(caseServerRest.exchange(eq("http://localhost:8080/v1/cases/myCaseName.zip/datasource/baseName"),
+        given(caseServerRest.exchange(eq("/v1/cases/{caseName}/datasource/baseName"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
-                eq(String.class)))
+                eq(String.class),
+                eq("myCaseName.zip")))
                 .willReturn(ResponseEntity.ok("myCaseName"));
 
         ParameterizedTypeReference< Set<String>> parameterizedTypeReference = new ParameterizedTypeReference<Set<String>>() { };
 
-        given(caseServerRest.exchange(eq("http://localhost:8080/v1/cases/myCaseName.zip/datasource/list?caseName=myCaseName.zip&regex=.*"),
+        given(caseServerRest.exchange(eq("/v1/cases/myCaseName.zip/datasource/list?caseName=myCaseName.zip&regex=.*"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
                 eq(parameterizedTypeReference)))
                 .willReturn(ResponseEntity.ok(new HashSet<>(asList("A.xml", "B.xml"))));
 
-        given(caseServerRest.exchange(eq("http://localhost:8080/v1/cases/myCaseName.zip/datasource?fileName=A.xml"),
+        given(caseServerRest.exchange(eq("/v1/cases/myCaseName.zip/datasource?fileName=A.xml"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
                 eq(byte[].class)))
                 .willReturn(ResponseEntity.ok("Data in the file".getBytes()));
 
-        given(caseServerRest.exchange(eq("http://localhost:8080/v1/cases/myCaseName.zip/datasource?suffix=A&ext=xml"),
+        given(caseServerRest.exchange(eq("/v1/cases/myCaseName.zip/datasource?suffix=A&ext=xml"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
                 eq(byte[].class)))
                 .willReturn(ResponseEntity.ok("Data in the file".getBytes()));
 
-        given(caseServerRest.exchange(eq("http://localhost:8080/v1/cases/myCaseName.zip/datasource/exists?fileName=A.xml"),
+        given(caseServerRest.exchange(eq("/v1/cases/myCaseName.zip/datasource/exists?fileName=A.xml"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
                 eq(Boolean.class)))
                 .willReturn(ResponseEntity.ok(true));
 
-        given(caseServerRest.exchange(eq("http://localhost:8080/v1/cases/myCaseName.zip/datasource/exists?suffix=A&ext=xml"),
+        given(caseServerRest.exchange(eq("/v1/cases/myCaseName.zip/datasource/exists?suffix=A&ext=xml"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
                 eq(Boolean.class)))
@@ -92,7 +89,6 @@ public class CaseDataSourceClientTest {
 
     @Test
     public void test() throws IOException {
-        caseDataSourceClient.setCaseName("myCaseName.zip");
         assertEquals("myCaseName", caseDataSourceClient.getBaseName());
 
         assertEquals(new HashSet<>(asList("A.xml", "B.xml")), caseDataSourceClient.listNames(".*"));
