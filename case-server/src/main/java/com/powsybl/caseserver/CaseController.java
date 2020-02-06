@@ -51,12 +51,12 @@ public class CaseController {
         return ResponseEntity.ok().body(cases);
     }
 
-    @GetMapping(value = "/case/{caseName:.+}/format")
+    @GetMapping(value = "/cases/{caseName:.+}/format")
     @ApiOperation(value = "Get case Format")
     public ResponseEntity<String> getCaseFormat(@PathVariable("caseName") String caseName) {
         LOGGER.debug("getCaseFormat request received");
         Path file = caseService.getCaseFile(caseName);
-        String caseFormat = caseService.getFormat(file);
+        String caseFormat = caseService.getFormat(file).toUpperCase();
         return ResponseEntity.ok().body(caseFormat);
     }
 
