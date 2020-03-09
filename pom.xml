@@ -48,15 +48,14 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
+        <java.version>11</java.version>
 
         <maven.clean.version>3.1.0</maven.clean.version>
         <maven.checkstyle.version>3.0.0</maven.checkstyle.version>
-        <maven.compiler.version>3.8.0</maven.compiler.version>
+        <maven.compiler.version>3.8.1</maven.compiler.version>
         <maven.install.version>2.5.2</maven.install.version>
         <maven.jacoco.version>0.8.4</maven.jacoco.version>
-        <maven.jib.version>1.8.0</maven.jib.version>
+        <maven.jib.version>2.1.0</maven.jib.version>
         <maven.resources.version>3.1.0</maven.resources.version>
         <maven.site.version>3.7.1</maven.site.version>
         <maven.surefire.version>2.22.2</maven.surefire.version>
@@ -66,7 +65,7 @@
         <junit.version>4.12</junit.version>
         <lombok.version>1.18.10</lombok.version>
         <slf4j.version>1.7.30</slf4j.version>
-        <springboot.version>2.2.2.RELEASE</springboot.version>
+        <springboot.version>2.2.5.RELEASE</springboot.version>
         <springfox.version>2.9.2</springfox.version>
 
         <powsybl-core.version>3.1.0</powsybl-core.version>
@@ -89,7 +88,7 @@
                     <version>${maven.jib.version}</version>
                     <configuration>
                         <from>
-                            <image>openjdk:8</image>
+                            <image>openjdk:11</image>
                         </from>
                     </configuration>
                 </plugin>
@@ -103,8 +102,7 @@
                     <artifactId>maven-compiler-plugin</artifactId>
                     <version>${maven.compiler.version}</version>
                     <configuration>
-                        <source>${maven.compiler.source}</source>
-                        <target>${maven.compiler.target}</target>
+                        <release>${java.version}</release>
                     </configuration>
                 </plugin>
                 <plugin>
