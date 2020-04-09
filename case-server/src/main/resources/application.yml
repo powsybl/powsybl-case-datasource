@@ -6,3 +6,16 @@ spring:
     multipart:
       max-file-size: 100MB
       max-request-size: 100MB
+
+  autoconfigure:
+    exclude: org.springframework.cloud.function.context.config.ContextFunctionCatalogAutoConfiguration
+
+  rabbitmq:
+    addresses: localhost
+    port: 5672
+  cloud:
+    stream:
+      bindings:
+        publishCaseImport-out-0:
+          destination: case.import
+
