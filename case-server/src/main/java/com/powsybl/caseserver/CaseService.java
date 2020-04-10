@@ -21,9 +21,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.*;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -58,24 +56,67 @@ public class CaseService {
 
     List<CaseInfos> getCases() {
         checkStorageInitialization();
-        try (Stream<Path> walk = Files.walk(getStorageRootDir())) {
+        try (Stream<Path> walk = Files.walk(getPublicStorageDir())) {
             return walk.filter(Files::isRegularFile)
-                    .map(file -> new CaseInfos(file.getFileName().toString(), getFormat(file)))
+                    .map(file -> new CaseInfos(file.getFileName().toString(), getFormat(file), UUID.fromString(file.getParent().getFileName().toString())))
                     .collect(Collectors.toList());
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
     }
 
-    Path getCaseFile(String caseName) {
-        validateCaseName(caseName);
-        return getStorageRootDir().resolve(caseName);
+    public Path getCaseFile(UUID caseUuid) {
+        Path publicCaseDirectory = getPublicStorageDir();
+        Path privateCaseDirectory = getPrivateStorageDir();
+        Path caseFile = walkCaseDirectory(publicCaseDirectory.resolve(caseUuid.toString()));
+        if (caseFile != null) {
+            return caseFile;
+        }
+        caseFile = walkCaseDirectory(privateCaseDirectory.resolve(caseUuid.toString()));
+        if (caseFile != null) {
+            return caseFile;
+        }
+        throw CaseException.createDirectoryNotFound(caseUuid);
     }
 
-    Optional<byte[]> getCaseBytes(String caseName) {
+    Path getCaseDirectory(UUID caseUuid) {
+        Path publicCaseDirectory = getPublicStorageDir();
+        Path privateCaseDirectory = getPrivateStorageDir();
+        Path caseFile = publicCaseDirectory.resolve(caseUuid.toString());
+        if (Files.exists(caseFile) && Files.isDirectory(caseFile)) {
+            return caseFile;
+        }
+        caseFile = privateCaseDirectory.resolve(caseUuid.toString());
+        if (Files.exists(caseFile) && Files.isDirectory(caseFile)) {
+            return caseFile;
+        }
+        throw CaseException.createDirectoryNotFound(caseUuid);
+    }
+
+    public Path walkCaseDirectory(Path caseDirectory) {
+        if (Files.exists(caseDirectory) && Files.isDirectory(caseDirectory)) {
+            try (Stream<Path> pathStream = Files.walk(caseDirectory)) {
+                List<Path> list = pathStream.filter(file -> !Files.isDirectory(file)).collect(Collectors.toList());
+                if (list.isEmpty()) {
+                    throw CaseException.createDirectoryEmpty(caseDirectory);
+                }
+                return list.get(0);
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        }
+        return null;
+    }
+
+    Optional<byte[]> getCaseBytes(UUID caseUuid) {
         checkStorageInitialization();
 
-        Path caseFile = getCaseFile(caseName);
+        Path caseFile;
+        try {
+            caseFile = getCaseFile(caseUuid);
+        } catch (CaseException e) {
+            return Optional.empty();
+        }
         if (Files.exists(caseFile) && Files.isRegularFile(caseFile)) {
             try {
                 byte[] bytes = Files.readAllBytes(caseFile);
@@ -87,22 +128,33 @@ public class CaseService {
         return Optional.empty();
     }
 
-    boolean caseExists(String caseName) {
+    boolean caseExists(UUID caseName) {
         checkStorageInitialization();
-
-        Path caseFile = getCaseFile(caseName);
-        return Files.exists(caseFile) && Files.isRegularFile(caseFile);
+        Path caseFile;
+        try {
+            caseFile = getCaseFile(caseName);
+            return Files.exists(caseFile) && Files.isRegularFile(caseFile);
+        } catch (CaseException e) {
+            return false;
+        }
     }
 
-    void importCase(MultipartFile mpf) {
+    UUID importCase(MultipartFile mpf) {
         checkStorageInitialization();
 
-        Path caseFile = getCaseFile(mpf.getOriginalFilename());
-        if (Files.exists(caseFile) && Files.isRegularFile(caseFile)) {
-            throw CaseException.createFileAreadyExists(caseFile);
+        UUID caseUuid = UUID.randomUUID();
+        Path uuidDirectory = getPrivateStorageDir().resolve(caseUuid.toString());
+        String caseName = mpf.getOriginalFilename();
+        validateCaseName(caseName);
+
+        if (Files.exists(uuidDirectory)) {
+            throw CaseException.createDirectoryAreadyExists(uuidDirectory);
         }
 
+        Path caseFile;
         try {
+            Files.createDirectory(uuidDirectory);
+            caseFile = uuidDirectory.resolve(caseName);
             mpf.transferTo(caseFile);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
@@ -113,17 +165,23 @@ public class CaseService {
         } catch (CaseException e) {
             try {
                 Files.deleteIfExists(caseFile);
+                Files.deleteIfExists(uuidDirectory);
             } catch (IOException e2) {
                 LOGGER.error(e2.toString(), e2);
             }
             throw e;
         }
+        return caseUuid;
     }
 
-    Optional<Network> loadNetwork(String caseName) {
+    Optional<Network> loadNetwork(UUID caseUuid) {
         checkStorageInitialization();
-
-        Path caseFile = getCaseFile(caseName);
+        Path caseFile;
+        try {
+            caseFile = getCaseFile(caseUuid);
+        } catch (CaseException e) {
+            return Optional.empty();
+        }
         if (Files.exists(caseFile) && Files.isRegularFile(caseFile)) {
             Network network = Importers.loadNetwork(caseFile);
             if (network == null) {
@@ -134,29 +192,8 @@ public class CaseService {
         return Optional.empty();
     }
 
-    void deleteCase(String caseName) {
-        checkStorageInitialization();
-
-        Path caseFile = getCaseFile(caseName);
-        if (Files.exists(caseFile) && !Files.isRegularFile(caseFile)) {
-            throw CaseException.createFileDoesNotExist(caseFile);
-        }
-
-        try {
-            Files.delete(caseFile);
-        } catch (NoSuchFileException e) {
-            throw CaseException.createFileDoesNotExist(caseFile);
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
-    }
-
-    void deleteAllCases() {
-        checkStorageInitialization();
-
-        Path caseFolder = getStorageRootDir();
-
-        try (DirectoryStream<Path> paths = Files.newDirectoryStream(caseFolder)) {
+    void deleteDirectoryRecursively(Path caseDirectory) {
+        try (DirectoryStream<Path> paths = Files.newDirectoryStream(caseDirectory)) {
             paths.forEach(file -> {
                 try {
                     Files.delete(file);
@@ -164,8 +201,31 @@ public class CaseService {
                     throw new UncheckedIOException(e);
                 }
             });
+            Files.delete(caseDirectory);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
+        }
+    }
+
+    void deleteCase(UUID caseUuid) {
+        checkStorageInitialization();
+        Path caseDirectory = getCaseDirectory(caseUuid);
+        deleteDirectoryRecursively(caseDirectory);
+    }
+
+    void deleteAllCases() {
+        checkStorageInitialization();
+
+        List<Path> directories = new ArrayList<>();
+        directories.add(getPrivateStorageDir());
+        directories.add(getPublicStorageDir());
+
+        for (Path directory : directories) {
+            try (DirectoryStream<Path> paths = Files.newDirectoryStream(directory)) {
+                paths.forEach(this::deleteDirectoryRecursively);
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
         }
     }
 
@@ -173,9 +233,22 @@ public class CaseService {
         return fileSystem.getPath(rootDirectory);
     }
 
+    public Path getPublicStorageDir() {
+        return getStorageRootDir().resolve("public");
+    }
+
+    public Path getPrivateStorageDir() {
+        return getStorageRootDir().resolve("private");
+    }
+
     private boolean isStorageCreated() {
         Path storageRootDir = getStorageRootDir();
-        return Files.exists(storageRootDir) && Files.isDirectory(storageRootDir);
+        Path publicCases = getPublicStorageDir();
+        Path privateCases = getPrivateStorageDir();
+        return Files.exists(storageRootDir) && Files.isDirectory(storageRootDir)
+                && Files.exists(publicCases) && Files.isDirectory(publicCases)
+                && Files.exists(privateCases) && Files.isDirectory(privateCases);
+
     }
 
     public void checkStorageInitialization() {

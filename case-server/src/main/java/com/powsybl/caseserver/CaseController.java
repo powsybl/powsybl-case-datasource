@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
@@ -51,22 +52,22 @@ public class CaseController {
         return ResponseEntity.ok().body(cases);
     }
 
-    @GetMapping(value = "/cases/{caseName:.+}/format")
+    @GetMapping(value = "/cases/{caseUuid}/format")
     @ApiOperation(value = "Get case Format")
-    public ResponseEntity<String> getCaseFormat(@PathVariable("caseName") String caseName) {
+    public ResponseEntity<String> getCaseFormat(@PathVariable("caseUuid") UUID caseUuid) {
         LOGGER.debug("getCaseFormat request received");
-        Path file = caseService.getCaseFile(caseName);
+        Path file = caseService.getCaseFile(caseUuid);
         String caseFormat = caseService.getFormat(file);
         return ResponseEntity.ok().body(caseFormat);
     }
 
-    @GetMapping(value = "/cases/{caseName:.+}")
+    @GetMapping(value = "/cases/{caseUuid}")
     @ApiOperation(value = "Get a case")
-    public ResponseEntity<StreamingResponseBody> getCase(@PathVariable("caseName") String caseName,
+    public ResponseEntity<StreamingResponseBody> getCase(@PathVariable("caseUuid") UUID caseUuid,
                                                          @RequestParam(value = "xiidm", required = false, defaultValue = "true") boolean xiidmFormat) {
-        LOGGER.debug("getCase request received with parameter caseName = {}", caseName);
+        LOGGER.debug("getCase request received with parameter caseUuid = {}", caseUuid);
         if (xiidmFormat) {
-            Network network = caseService.loadNetwork(caseName).orElse(null);
+            Network network = caseService.loadNetwork(caseUuid).orElse(null);
             if (network == null) {
                 return ResponseEntity.noContent().build();
             }
@@ -81,7 +82,7 @@ public class CaseController {
                 throw new UncheckedIOException(e);
             }
         } else {
-            byte[] bytes = caseService.getCaseBytes(caseName).orElse(null);
+            byte[] bytes = caseService.getCaseBytes(caseUuid).orElse(null);
             if (bytes == null) {
                 return ResponseEntity.noContent().build();
             }
@@ -92,27 +93,27 @@ public class CaseController {
         }
     }
 
-    @GetMapping(value = "/cases/{caseName:.+}/exists")
+    @GetMapping(value = "/cases/{caseUuid}/exists")
     @ApiOperation(value = "check if the case exists")
-    public ResponseEntity<Boolean> exists(@PathVariable("caseName") String caseName) {
-        boolean exists = caseService.caseExists(caseName);
+    public ResponseEntity<Boolean> exists(@PathVariable("caseUuid") UUID caseUuid) {
+        boolean exists = caseService.caseExists(caseUuid);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(exists);
 
     }
 
     @PostMapping(value = "/cases")
     @ApiOperation(value = "import a case")
-    public ResponseEntity<Void> importCase(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<UUID> importCase(@RequestParam("file") MultipartFile file) {
         LOGGER.debug("importCase request received with file = {}", file.getName());
-        caseService.importCase(file);
-        return ResponseEntity.ok().build();
+        UUID caseUuid = caseService.importCase(file);
+        return ResponseEntity.ok().body(caseUuid);
     }
 
-    @DeleteMapping(value = "/cases/{caseName:.+}")
+    @DeleteMapping(value = "/cases/{caseUuid}")
     @ApiOperation(value = "delete a case")
-    public ResponseEntity<Void> deleteCase(@PathVariable("caseName") String caseName) {
-        LOGGER.debug("deleteCase request received with parameter caseName = {}", caseName);
-        caseService.deleteCase(caseName);
+    public ResponseEntity<Void> deleteCase(@PathVariable("caseUuid") UUID caseUuid) {
+        LOGGER.debug("deleteCase request received with parameter caseUuid = {}", caseUuid);
+        caseService.deleteCase(caseUuid);
         return ResponseEntity.ok().build();
     }
 

@@ -22,6 +22,7 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.Objects;
 import java.util.Set;
+import java.util.UUID;
 
 /**
  * @author Chamseddine Benhamed <chamseddine.benhamed at rte-france.com>
@@ -30,15 +31,14 @@ import java.util.Set;
 public class CaseDataSourceClient implements ReadOnlyDataSource {
 
     private static final String CASE_API_VERSION = "v1";
-    private static final String CASE_NAME = "caseName";
 
     private final RestTemplate restTemplate;
 
-    private String caseName;
+    private UUID caseUuid;
 
-    public CaseDataSourceClient(RestTemplate restTemplate, String caseName) {
+    public CaseDataSourceClient(RestTemplate restTemplate, UUID caseUuid) {
         this.restTemplate = Objects.requireNonNull(restTemplate);
-        this.caseName = Objects.requireNonNull(caseName);
+        this.caseUuid = Objects.requireNonNull(caseUuid);
     }
 
     private static RestTemplate createRestTemplate(String caseServerBaseUri) {
@@ -47,18 +47,18 @@ public class CaseDataSourceClient implements ReadOnlyDataSource {
         return restTemplate;
     }
 
-    public CaseDataSourceClient(@Value("${case-server.base.url}") String caseServerBaseUri, String caseName) {
-        this(createRestTemplate(caseServerBaseUri), caseName);
+    public CaseDataSourceClient(@Value("${case-server.base.url}") String caseServerBaseUri, UUID caseUuid) {
+        this(createRestTemplate(caseServerBaseUri), caseUuid);
     }
 
     @Override
     public String getBaseName() {
         try {
-            ResponseEntity<String> responseEntity = restTemplate.exchange("/" + CASE_API_VERSION + "/cases/{caseName}/datasource/baseName",
+            ResponseEntity<String> responseEntity = restTemplate.exchange("/" + CASE_API_VERSION + "/cases/{caseUuid}/datasource/baseName",
                                                                           HttpMethod.GET,
                                                                           HttpEntity.EMPTY,
                                                                           String.class,
-                                                                          caseName);
+                                                                          caseUuid);
             return responseEntity.getBody();
         } catch (HttpStatusCodeException e) {
             throw new CaseDataSourceClientException("Exception when requesting baseName", e);
@@ -67,10 +67,10 @@ public class CaseDataSourceClient implements ReadOnlyDataSource {
 
     @Override
     public boolean exists(String suffix, String ext) {
-        String path = UriComponentsBuilder.fromPath("/" + CASE_API_VERSION + "/cases/{caseName}/datasource/exists")
+        String path = UriComponentsBuilder.fromPath("/" + CASE_API_VERSION + "/cases/{caseUuid}/datasource/exists")
                 .queryParam("suffix", suffix)
                 .queryParam("ext", ext)
-                .buildAndExpand(caseName)
+                .buildAndExpand(caseUuid)
                 .toUriString();
         try {
             ResponseEntity<Boolean> responseEntity = restTemplate.exchange(path,
@@ -85,9 +85,9 @@ public class CaseDataSourceClient implements ReadOnlyDataSource {
 
     @Override
     public boolean exists(String fileName) {
-        String path = UriComponentsBuilder.fromPath("/" + CASE_API_VERSION + "/cases/{caseName}/datasource/exists")
+        String path = UriComponentsBuilder.fromPath("/" + CASE_API_VERSION + "/cases/{caseUuid}/datasource/exists")
                 .queryParam("fileName", fileName)
-                .buildAndExpand(caseName)
+                .buildAndExpand(caseUuid)
                 .toUriString();
         try {
             ResponseEntity<Boolean> responseEntity = restTemplate.exchange(path,
@@ -102,10 +102,10 @@ public class CaseDataSourceClient implements ReadOnlyDataSource {
 
     @Override
     public InputStream newInputStream(String suffix, String ext) {
-        String path = UriComponentsBuilder.fromPath("/" + CASE_API_VERSION + "/cases/{caseName}/datasource")
+        String path = UriComponentsBuilder.fromPath("/" + CASE_API_VERSION + "/cases/{caseUuid}/datasource")
                 .queryParam("suffix", suffix)
                 .queryParam("ext", ext)
-                .buildAndExpand(caseName)
+                .buildAndExpand(caseUuid)
                 .toUriString();
         try {
             ResponseEntity<byte[]> responseEntity = restTemplate.exchange(path,
@@ -120,9 +120,9 @@ public class CaseDataSourceClient implements ReadOnlyDataSource {
 
     @Override
     public InputStream newInputStream(String fileName) {
-        String path = UriComponentsBuilder.fromPath("/" + CASE_API_VERSION + "/cases/{caseName}/datasource")
+        String path = UriComponentsBuilder.fromPath("/" + CASE_API_VERSION + "/cases/{caseUuid}/datasource")
                 .queryParam("fileName", fileName)
-                .buildAndExpand(caseName)
+                .buildAndExpand(caseUuid)
                 .toUriString();
         try {
             ResponseEntity<byte[]> responseEntity = restTemplate.exchange(path,
@@ -137,10 +137,9 @@ public class CaseDataSourceClient implements ReadOnlyDataSource {
 
     @Override
     public Set<String> listNames(String regex) {
-        String path = UriComponentsBuilder.fromPath("/" + CASE_API_VERSION + "/cases/{caseName}/datasource/list")
-                .queryParam(CASE_NAME, caseName)
+        String path = UriComponentsBuilder.fromPath("/" + CASE_API_VERSION + "/cases/{caseUuid}/datasource/list")
                 .queryParam("regex", regex)
-                .buildAndExpand(caseName)
+                .buildAndExpand(caseUuid)
                 .toUriString();
         try {
             ResponseEntity<Set<String>> responseEntity = restTemplate.exchange(path,
@@ -153,7 +152,7 @@ public class CaseDataSourceClient implements ReadOnlyDataSource {
         }
     }
 
-    public void setCaseName(String caseName) {
-        this.caseName = Objects.requireNonNull(caseName);
+    public void setCaseName(UUID caseUuid) {
+        this.caseUuid = Objects.requireNonNull(caseUuid);
     }
 }

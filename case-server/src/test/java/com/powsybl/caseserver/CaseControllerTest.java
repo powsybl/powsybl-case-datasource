@@ -34,6 +34,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.UUID;
 
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.fail;
@@ -55,8 +56,10 @@ public class CaseControllerTest {
     private static final String NOT_A_NETWORK = "notANetwork.txt";
     private static final String STILL_NOT_A_NETWORK = "stillNotANetwork.xiidm";
 
-    private static final String GET_CASE_URL = "/v1/cases/{caseName}";
+    private static final String GET_CASE_URL = "/v1/cases/{caseUuid}";
     private static final String GET_CASE_FORMAT_URL = "/v1/cases/{caseName}/format";
+
+    private static final UUID RANDOM_UUID = UUID.fromString("3e2b6777-fea5-4e76-9b6b-b68f151373ab");
 
     @Autowired
     private MockMvc mvc;
@@ -88,6 +91,15 @@ public class CaseControllerTest {
         if (!Files.exists(path)) {
             Files.createDirectories(path);
         }
+        path = fileSystem.getPath(rootDirectory).resolve("public");
+        if (!Files.exists(path)) {
+            Files.createDirectories(path);
+        }
+        path = fileSystem.getPath(rootDirectory).resolve("private");
+        if (!Files.exists(path)) {
+            Files.createDirectories(path);
+        }
+
     }
 
     private static MockMultipartFile createMockMultipartFile(String fileName) throws IOException {
@@ -110,34 +122,29 @@ public class CaseControllerTest {
                 .andExpect(status().isOk());
 
         // check if the case exists (except a false)
-        mvc.perform(get("/v1/cases/{caseName}/exists", TEST_CASE))
+        mvc.perform(get("/v1/cases/{caseUuid}/exists", RANDOM_UUID))
                 .andExpect(status().isOk())
                 .andExpect(content().string("false"))
                 .andReturn();
 
         // import a case
-        mvc.perform(multipart("/v1/cases")
+        String firstCase = mvc.perform(multipart("/v1/cases")
                 .file(createMockMultipartFile(TEST_CASE)))
                 .andExpect(status().isOk())
-                .andReturn();
+                .andReturn().getResponse().getContentAsString();
+
+        UUID firstCaseUuid = UUID.fromString(firstCase.substring(1, firstCase.length() - 1));
 
         // retrieve case format
-        mvc.perform(get(GET_CASE_FORMAT_URL, TEST_CASE))
+        mvc.perform(get(GET_CASE_FORMAT_URL, firstCaseUuid))
                 .andExpect(status().isOk())
                 .andExpect(content().string("XIIDM"))
                 .andReturn();
 
         // check if the case exists (except a true)
-        mvc.perform(get("/v1/cases/{caseName}/exists", TEST_CASE))
+        mvc.perform(get("/v1/cases/{caseUuid}/exists", firstCaseUuid))
                 .andExpect(status().isOk())
                 .andExpect(content().string("true"))
-                .andReturn();
-
-        // import the same case and expect a fail
-        mvc.perform(multipart("/v1/cases")
-                .file(createMockMultipartFile(TEST_CASE)))
-                .andExpect(status().is(409))
-                .andExpect(content().string(startsWith("A file with the same name already exists")))
                 .andReturn();
 
         // import a non valid case and expect a fail
@@ -154,14 +161,14 @@ public class CaseControllerTest {
                 .andExpect(content().string(startsWith("This file cannot be imported")))
                 .andReturn();
 
-        // list the cases and expect the case added just before
+        // list the cases and expect no case since the case imported just before is not public
         mvc.perform(get("/v1/cases"))
                 .andExpect(status().isOk())
-                .andExpect(content().json("[{name: 'testCase.xiidm', format: 'XIIDM'}]"))
+                .andExpect(content().json("[]"))
                 .andReturn();
 
         // retrieve a case as a network
-        MvcResult mvcResult =  mvc.perform(get(GET_CASE_URL, TEST_CASE)
+        MvcResult mvcResult =  mvc.perform(get(GET_CASE_URL, firstCaseUuid)
                 .param("xiidm", "false"))
                 .andExpect(status().isOk())
                 .andExpect(request().asyncStarted())
@@ -174,7 +181,7 @@ public class CaseControllerTest {
                 .andReturn();
 
         // retrieve a case (async)
-        mvcResult = mvc.perform(get(GET_CASE_URL, TEST_CASE))
+        mvcResult = mvc.perform(get(GET_CASE_URL, firstCaseUuid))
                 .andExpect(request().asyncStarted())
                 .andReturn();
 
@@ -184,17 +191,17 @@ public class CaseControllerTest {
                 .andReturn();
 
         // retrieve a non existing case (async)
-        mvc.perform(get(GET_CASE_URL, "non-existing"))
+        mvc.perform(get(GET_CASE_URL, UUID.randomUUID()))
                 .andExpect(status().isNoContent())
                 .andReturn();
 
         // delete the case
-        mvc.perform(delete(GET_CASE_URL, TEST_CASE))
+        mvc.perform(delete(GET_CASE_URL, firstCaseUuid))
                 .andExpect(status().isOk());
 
         // delete non existing file
-        mvc.perform(delete(GET_CASE_URL, TEST_CASE))
-                .andExpect(content().string(startsWith("The file requested doesn't exist")))
+        mvc.perform(delete(GET_CASE_URL, firstCaseUuid))
+                .andExpect(content().string(startsWith("The directory with the following uuid doesn't exist:")))
                 .andReturn();
 
         // import a case to delete it

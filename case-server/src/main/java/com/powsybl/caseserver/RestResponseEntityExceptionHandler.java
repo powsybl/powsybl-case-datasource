@@ -26,15 +26,7 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
 
         if (ex instanceof CaseException) {
             switch (((CaseException) ex).getType()) {
-                case FILE_ALREADY_EXISTS:
-                    status = HttpStatus.CONFLICT;
-                    break;
                 case FILE_NOT_IMPORTABLE:
-                    status = HttpStatus.UNPROCESSABLE_ENTITY;
-                    break;
-                case FILE_DOESNT_EXIST:
-                    status = HttpStatus.NOT_FOUND;
-                    break;
                 case STORAGE_DIR_NOT_CREATED:
                     status = HttpStatus.UNPROCESSABLE_ENTITY;
                     break;

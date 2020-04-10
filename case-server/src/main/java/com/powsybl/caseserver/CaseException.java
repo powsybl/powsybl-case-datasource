@@ -8,6 +8,7 @@ package com.powsybl.caseserver;
 
 import java.nio.file.Path;
 import java.util.Objects;
+import java.util.UUID;
 
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
@@ -15,11 +16,12 @@ import java.util.Objects;
 public final class CaseException extends RuntimeException {
 
     public enum Type {
-        FILE_ALREADY_EXISTS,
-        FILE_DOESNT_EXIST,
         FILE_NOT_IMPORTABLE,
         STORAGE_DIR_NOT_CREATED,
-        ILLEGAL_FILE_NAME
+        ILLEGAL_FILE_NAME,
+        DIRECTORY_ALREADY_EXISTS,
+        DIRECTORY_EMPTY,
+        DIRECTORY_NOT_FOUND
     }
 
     private final Type type;
@@ -33,14 +35,19 @@ public final class CaseException extends RuntimeException {
         return type;
     }
 
-    public static CaseException createFileAreadyExists(Path file) {
-        Objects.requireNonNull(file);
-        return new CaseException(Type.FILE_ALREADY_EXISTS, "A file with the same name already exists: " + file);
+    public static CaseException createDirectoryAreadyExists(Path directory) {
+        Objects.requireNonNull(directory);
+        return new CaseException(Type.DIRECTORY_ALREADY_EXISTS, "A directory with the same name already exists: " + directory);
     }
 
-    public static CaseException createFileDoesNotExist(Path file) {
-        Objects.requireNonNull(file);
-        return new CaseException(Type.FILE_DOESNT_EXIST, "The file requested doesn't exist: " + file);
+    public static CaseException createDirectoryEmpty(Path directory) {
+        Objects.requireNonNull(directory);
+        return new CaseException(Type.DIRECTORY_EMPTY, "The directory is empty: " + directory);
+    }
+
+    public static CaseException createDirectoryNotFound(UUID uuid) {
+        Objects.requireNonNull(uuid);
+        return new CaseException(Type.DIRECTORY_NOT_FOUND, "The directory with the following uuid doesn't exist: " + uuid);
     }
 
     public static CaseException createFileNotImportable(Path file) {
