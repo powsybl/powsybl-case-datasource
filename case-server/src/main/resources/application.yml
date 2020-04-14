@@ -7,12 +7,10 @@ spring:
       max-file-size: 100MB
       max-request-size: 100MB
 
-  autoconfigure:
-    exclude: org.springframework.cloud.function.context.config.ContextFunctionCatalogAutoConfiguration
-
   rabbitmq:
     addresses: localhost
     port: 5672
+
   cloud:
     function:
       definition: publishCaseImport
