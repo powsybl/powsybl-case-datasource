@@ -132,7 +132,7 @@ public class CaseService {
         }
 
         CaseInfos caseInfos = new CaseInfos(caseFile.getFileName().toString(), getFormat(caseFile));
-        caseInfosPublisher.onNext(caseInfos.getMessage());
+        caseInfosPublisher.onNext(CaseInfos.getMessage(caseInfos));
     }
 
     Optional<Network> loadNetwork(String caseName) {

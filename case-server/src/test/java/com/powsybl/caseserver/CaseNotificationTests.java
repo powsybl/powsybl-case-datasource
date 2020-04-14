@@ -1,3 +1,10 @@
+/**
+ * Copyright (c) 2019, RTE (http://www.rte-france.com)
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
 package com.powsybl.caseserver;
 
 import org.hamcrest.CoreMatchers;
@@ -20,6 +27,9 @@ import static org.springframework.cloud.stream.test.matcher.MessageQueueMatcher.
 import static org.springframework.cloud.stream.test.matcher.MessageQueueMatcher.receivesPayloadThat;
 import static org.springframework.integration.test.matcher.PayloadAndHeaderMatcher.sameExceptIgnorableHeaders;
 
+/**
+ * @author Slimane Amar <slimane.amar at rte-france.com>
+ */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @ContextConfiguration(classes = {CaseController.class, ContextFunctionCatalogAutoConfiguration.class})
 @DirtiesContext
@@ -37,13 +47,13 @@ class CaseNotificationTests {
     void testMessages() {
         CaseInfos caseInfos = new CaseInfos("testCase.xml", "CGMES");
 
-        this.output.send(caseInfos.getMessage());
+        this.output.send(CaseInfos.getMessage(caseInfos));
 
         BlockingQueue<Message<?>> messages = this.collector.forChannel(this.output);
 
         assertThat(messages, receivesPayloadThat(CoreMatchers.is("")));
 
-        Message<String> message = caseInfos.getMessage();
+        Message<String> message = CaseInfos.getMessage(caseInfos);
         this.output.send(message);
 
         Matcher<Message<Object>> sameExceptIgnorableHeaders =  (Matcher<Message<Object>>) (Matcher<?>) sameExceptIgnorableHeaders(message);

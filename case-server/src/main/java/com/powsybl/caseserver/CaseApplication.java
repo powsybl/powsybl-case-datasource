@@ -16,6 +16,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class CaseApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(CaseApplication.class, "--spring.cloud.function.definition=publishCaseImport");
+        SpringApplication.run(CaseApplication.class, args);
     }
 }
