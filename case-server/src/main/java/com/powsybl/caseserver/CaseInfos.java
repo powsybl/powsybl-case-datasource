@@ -10,6 +10,8 @@ import io.swagger.annotations.ApiModel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.integration.support.MessageBuilder;
+import org.springframework.messaging.Message;
 
 import java.util.UUID;
 
@@ -22,9 +24,17 @@ import java.util.UUID;
 @ApiModel("Case infos")
 public class CaseInfos {
 
+    private static final String NAME_HEADER_KEY     = "name";
+    private static final String FORMAT_HEADER_KEY   = "format";
+
     private String name;
-
     private String format;
-
     private UUID uuid;
+
+    public static Message<String> getMessage(CaseInfos caseInfos) {
+        return MessageBuilder.withPayload("")
+                .setHeader(NAME_HEADER_KEY,   caseInfos.getName())
+                .setHeader(FORMAT_HEADER_KEY, caseInfos.getFormat())
+                .build();
+    }
 }

@@ -15,13 +15,18 @@ import com.powsybl.iidm.network.Network;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import reactor.core.publisher.EmitterProcessor;
+import reactor.core.publisher.Flux;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.*;
 import java.util.*;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -36,6 +41,13 @@ public class CaseService {
     private FileSystem fileSystem = FileSystems.getDefault();
 
     private ComputationManager computationManager = LocalComputationManager.getDefault();
+
+    private EmitterProcessor<Message<String>> caseInfosPublisher = EmitterProcessor.create();
+
+    @Bean
+    public Supplier<Flux<Message<String>>> publishCaseImport() {
+        return () -> caseInfosPublisher;
+    }
 
     @Value("${case-store-directory:#{systemProperties['user.home'].concat(\"/cases\")}}")
     private String rootDirectory;
@@ -171,6 +183,8 @@ public class CaseService {
             }
             throw e;
         }
+        CaseInfos caseInfos = new CaseInfos(caseFile.getFileName().toString(), getFormat(caseFile), caseUuid);
+        caseInfosPublisher.onNext(CaseInfos.getMessage(caseInfos));
         return caseUuid;
     }
 
