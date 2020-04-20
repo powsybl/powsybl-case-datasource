@@ -85,22 +85,19 @@ public class CaseService {
             return caseFile;
         }
         caseFile = walkCaseDirectory(privateCaseDirectory.resolve(caseUuid.toString()));
-        if (caseFile != null) {
-            return caseFile;
-        }
-        throw CaseException.createDirectoryNotFound(caseUuid);
+        return caseFile;
     }
 
     Path getCaseDirectory(UUID caseUuid) {
         Path publicCaseDirectory = getPublicStorageDir();
         Path privateCaseDirectory = getPrivateStorageDir();
-        Path caseFile = publicCaseDirectory.resolve(caseUuid.toString());
-        if (Files.exists(caseFile) && Files.isDirectory(caseFile)) {
-            return caseFile;
+        Path caseDirectory = publicCaseDirectory.resolve(caseUuid.toString());
+        if (Files.exists(caseDirectory) && Files.isDirectory(caseDirectory)) {
+            return caseDirectory;
         }
-        caseFile = privateCaseDirectory.resolve(caseUuid.toString());
-        if (Files.exists(caseFile) && Files.isDirectory(caseFile)) {
-            return caseFile;
+        caseDirectory = privateCaseDirectory.resolve(caseUuid.toString());
+        if (Files.exists(caseDirectory) && Files.isDirectory(caseDirectory)) {
+            return caseDirectory;
         }
         throw CaseException.createDirectoryNotFound(caseUuid);
     }
@@ -108,11 +105,11 @@ public class CaseService {
     public Path walkCaseDirectory(Path caseDirectory) {
         if (Files.exists(caseDirectory) && Files.isDirectory(caseDirectory)) {
             try (Stream<Path> pathStream = Files.walk(caseDirectory)) {
-                List<Path> list = pathStream.filter(file -> !Files.isDirectory(file)).collect(Collectors.toList());
-                if (list.isEmpty()) {
+                Optional<Path> pathOpt = pathStream.filter(file -> !Files.isDirectory(file)).findFirst();
+                if (pathOpt.isEmpty()) {
                     throw CaseException.createDirectoryEmpty(caseDirectory);
                 }
-                return list.get(0);
+                return pathOpt.get();
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             }
@@ -123,12 +120,11 @@ public class CaseService {
     Optional<byte[]> getCaseBytes(UUID caseUuid) {
         checkStorageInitialization();
 
-        Path caseFile;
-        try {
-            caseFile = getCaseFile(caseUuid);
-        } catch (CaseException e) {
+        Path caseFile = getCaseFile(caseUuid);
+        if (caseFile == null) {
             return Optional.empty();
         }
+
         if (Files.exists(caseFile) && Files.isRegularFile(caseFile)) {
             try {
                 byte[] bytes = Files.readAllBytes(caseFile);
@@ -142,13 +138,11 @@ public class CaseService {
 
     boolean caseExists(UUID caseName) {
         checkStorageInitialization();
-        Path caseFile;
-        try {
-            caseFile = getCaseFile(caseName);
-            return Files.exists(caseFile) && Files.isRegularFile(caseFile);
-        } catch (CaseException e) {
+        Path caseFile = getCaseFile(caseName);
+        if (caseFile == null) {
             return false;
         }
+        return Files.exists(caseFile) && Files.isRegularFile(caseFile);
     }
 
     UUID importCase(MultipartFile mpf) {
@@ -190,12 +184,12 @@ public class CaseService {
 
     Optional<Network> loadNetwork(UUID caseUuid) {
         checkStorageInitialization();
-        Path caseFile;
-        try {
-            caseFile = getCaseFile(caseUuid);
-        } catch (CaseException e) {
+
+        Path caseFile = getCaseFile(caseUuid);
+        if (caseFile == null) {
             return Optional.empty();
         }
+
         if (Files.exists(caseFile) && Files.isRegularFile(caseFile)) {
             Network network = Importers.loadNetwork(caseFile);
             if (network == null) {
@@ -230,9 +224,7 @@ public class CaseService {
     void deleteAllCases() {
         checkStorageInitialization();
 
-        List<Path> directories = new ArrayList<>();
-        directories.add(getPrivateStorageDir());
-        directories.add(getPublicStorageDir());
+        List<Path> directories = Arrays.asList(getPrivateStorageDir(), getPublicStorageDir());
 
         for (Path directory : directories) {
             try (DirectoryStream<Path> paths = Files.newDirectoryStream(directory)) {

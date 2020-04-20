@@ -27,6 +27,8 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.UUID;
 
+import static com.powsybl.caseserver.CaseException.createDirectoryNotFound;
+
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
  */
@@ -57,6 +59,9 @@ public class CaseController {
     public ResponseEntity<String> getCaseFormat(@PathVariable("caseUuid") UUID caseUuid) {
         LOGGER.debug("getCaseFormat request received");
         Path file = caseService.getCaseFile(caseUuid);
+        if (file == null) {
+            createDirectoryNotFound(caseUuid);
+        }
         String caseFormat = caseService.getFormat(file);
         return ResponseEntity.ok().body(caseFormat);
     }
