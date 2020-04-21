@@ -213,6 +213,16 @@ public class CaseControllerTest {
         // delete all cases
         mvc.perform(delete("/v1/cases"))
                 .andExpect(status().isOk());
+
+        // import a case to delete it
+        mvc.perform(multipart("/v1/cases")
+                .file(createMockMultipartFile(TEST_CASE)))
+                .andExpect(status().isOk())
+                .andReturn();
+        //delete it
+        mvc.perform(delete(GET_CASE_URL + "?onlyPrivate=true", firstCaseUuid))
+                .andExpect(status().isOk());
+
     }
 
     @Test

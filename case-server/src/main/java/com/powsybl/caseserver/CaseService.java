@@ -215,9 +215,17 @@ public class CaseService {
         }
     }
 
-    void deleteCase(UUID caseUuid) {
+    void deleteCase(UUID caseUuid, boolean onlyPrivate) {
         checkStorageInitialization();
-        Path caseDirectory = getCaseDirectory(caseUuid);
+        Path caseDirectory;
+        if (onlyPrivate) {
+            caseDirectory = getPrivateStorageDir().resolve(caseUuid.toString());
+            if (Files.exists(caseDirectory) && Files.isDirectory(caseDirectory)) {
+                deleteDirectoryRecursively(caseDirectory);
+            }
+            return;
+        }
+        caseDirectory = getCaseDirectory(caseUuid);
         deleteDirectoryRecursively(caseDirectory);
     }
 

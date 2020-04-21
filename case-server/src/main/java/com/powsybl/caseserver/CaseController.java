@@ -60,7 +60,7 @@ public class CaseController {
         LOGGER.debug("getCaseFormat request received");
         Path file = caseService.getCaseFile(caseUuid);
         if (file == null) {
-            createDirectoryNotFound(caseUuid);
+            throw createDirectoryNotFound(caseUuid);
         }
         String caseFormat = caseService.getFormat(file);
         return ResponseEntity.ok().body(caseFormat);
@@ -116,9 +116,10 @@ public class CaseController {
 
     @DeleteMapping(value = "/cases/{caseUuid}")
     @ApiOperation(value = "delete a case")
-    public ResponseEntity<Void> deleteCase(@PathVariable("caseUuid") UUID caseUuid) {
-        LOGGER.debug("deleteCase request received with parameter caseUuid = {}", caseUuid);
-        caseService.deleteCase(caseUuid);
+    public ResponseEntity<Void> deleteCase(@PathVariable("caseUuid") UUID caseUuid,
+                                           @RequestParam(name = "onlyPrivate", defaultValue = "false") boolean onlyPrivate) {
+        LOGGER.debug("deleteCase request received with parameter caseUuid = {}, onlyPrivate = {}", caseUuid, onlyPrivate);
+        caseService.deleteCase(caseUuid, onlyPrivate);
         return ResponseEntity.ok().build();
     }
 
