@@ -145,11 +145,16 @@ public class CaseService {
         return Files.exists(caseFile) && Files.isRegularFile(caseFile);
     }
 
-    UUID importCase(MultipartFile mpf) {
+    UUID importCase(MultipartFile mpf, boolean toPublic) {
         checkStorageInitialization();
 
         UUID caseUuid = UUID.randomUUID();
-        Path uuidDirectory = getPrivateStorageDir().resolve(caseUuid.toString());
+        Path uuidDirectory;
+        if (toPublic) {
+            uuidDirectory = getPublicStorageDir().resolve(caseUuid.toString());
+        } else {
+            uuidDirectory = getPrivateStorageDir().resolve(caseUuid.toString());
+        }
         String caseName = mpf.getOriginalFilename();
         validateCaseName(caseName);
 

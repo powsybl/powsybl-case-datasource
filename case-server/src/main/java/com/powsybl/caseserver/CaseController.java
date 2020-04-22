@@ -106,11 +106,19 @@ public class CaseController {
 
     }
 
-    @PostMapping(value = "/cases")
-    @ApiOperation(value = "import a case")
-    public ResponseEntity<UUID> importCase(@RequestParam("file") MultipartFile file) {
-        LOGGER.debug("importCase request received with file = {}", file.getName());
-        UUID caseUuid = caseService.importCase(file);
+    @PostMapping(value = "/cases/private")
+    @ApiOperation(value = "import a case in the private directory")
+    public ResponseEntity<UUID> importPrivateCase(@RequestParam("file") MultipartFile file) {
+        LOGGER.debug("importPrivateCase request received with file = {}", file.getName());
+        UUID caseUuid = caseService.importCase(file, false);
+        return ResponseEntity.ok().body(caseUuid);
+    }
+
+    @PostMapping(value = "/cases/public")
+    @ApiOperation(value = "import a case in the public directory")
+    public ResponseEntity<UUID> importPublicCase(@RequestParam("file") MultipartFile file) {
+        LOGGER.debug("importPublicCase request received with file = {}", file.getName());
+        UUID caseUuid = caseService.importCase(file, true);
         return ResponseEntity.ok().body(caseUuid);
     }
 

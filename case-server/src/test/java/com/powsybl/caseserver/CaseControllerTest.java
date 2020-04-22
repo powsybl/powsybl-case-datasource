@@ -37,7 +37,7 @@ import java.nio.file.Path;
 import java.util.UUID;
 
 import static org.hamcrest.Matchers.startsWith;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -128,7 +128,7 @@ public class CaseControllerTest {
                 .andReturn();
 
         // import a case
-        String firstCase = mvc.perform(multipart("/v1/cases")
+        String firstCase = mvc.perform(multipart("/v1/cases/private")
                 .file(createMockMultipartFile(TEST_CASE)))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
@@ -148,14 +148,14 @@ public class CaseControllerTest {
                 .andReturn();
 
         // import a non valid case and expect a fail
-        mvc.perform(multipart("/v1/cases")
+        mvc.perform(multipart("/v1/cases/private")
                 .file(createMockMultipartFile(NOT_A_NETWORK)))
                 .andExpect(status().isUnprocessableEntity())
                 .andExpect(content().string(startsWith("This file cannot be imported")))
                 .andReturn();
 
         // import a non valid case with a valid extension and expect a fail
-        mvc.perform(multipart("/v1/cases")
+        mvc.perform(multipart("/v1/cases/private")
                 .file(createMockMultipartFile(STILL_NOT_A_NETWORK)))
                 .andExpect(status().isUnprocessableEntity())
                 .andExpect(content().string(startsWith("This file cannot be imported")))
@@ -205,7 +205,7 @@ public class CaseControllerTest {
                 .andReturn();
 
         // import a case to delete it
-        mvc.perform(multipart("/v1/cases")
+        mvc.perform(multipart("/v1/cases/private")
                 .file(createMockMultipartFile(TEST_CASE)))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -214,6 +214,18 @@ public class CaseControllerTest {
         mvc.perform(delete("/v1/cases"))
                 .andExpect(status().isOk());
 
+        // import a case to public
+        mvc.perform(multipart("/v1/cases/public")
+                .file(createMockMultipartFile(TEST_CASE)))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        // list the cases and expect one case since the case imported just before is public
+        mvcResult = mvc.perform(get("/v1/cases"))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        assertTrue(mvcResult.getResponse().getContentAsString().startsWith("[{\"name\":\"testCase.xiidm\""));
     }
 
     @Test
