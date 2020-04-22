@@ -19,6 +19,7 @@ import java.io.*;
 import java.net.URLDecoder;
 import java.nio.file.Path;
 import java.util.Set;
+import java.util.UUID;
 
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
@@ -30,13 +31,13 @@ public class CaseDataSourceService {
     @Autowired
     private CaseService caseService;
 
-    String getBaseName(String caseName) {
-        DataSource dataSource = getDatasource(caseName);
+    String getBaseName(UUID caseUuid) {
+        DataSource dataSource = getDatasource(caseUuid);
         return dataSource.getBaseName();
     }
 
-    Boolean datasourceExists(String caseName, String suffix, String ext) {
-        DataSource dataSource = getDatasource(caseName);
+    Boolean datasourceExists(UUID caseUuid, String suffix, String ext) {
+        DataSource dataSource = getDatasource(caseUuid);
         try {
             return dataSource.exists(suffix, ext);
         } catch (IOException e) {
@@ -44,8 +45,8 @@ public class CaseDataSourceService {
         }
     }
 
-    Boolean datasourceExists(String caseName, String fileName) {
-        DataSource dataSource = getDatasource(caseName);
+    Boolean datasourceExists(UUID caseUuid, String fileName) {
+        DataSource dataSource = getDatasource(caseUuid);
         try {
             return dataSource.exists(fileName);
         } catch (IOException e) {
@@ -53,8 +54,8 @@ public class CaseDataSourceService {
         }
     }
 
-    byte[] getInputStream(String caseName, String fileName) {
-        DataSource dataSource = getDatasource(caseName);
+    byte[] getInputStream(UUID caseUuid, String fileName) {
+        DataSource dataSource = getDatasource(caseUuid);
         try (InputStream inputStream = dataSource.newInputStream(fileName)) {
             return IOUtils.toByteArray(inputStream);
         } catch (IOException e) {
@@ -62,8 +63,8 @@ public class CaseDataSourceService {
         }
     }
 
-    byte[] getInputStream(String caseName, String suffix, String ext) {
-        DataSource dataSource = getDatasource(caseName);
+    byte[] getInputStream(UUID caseUuid, String suffix, String ext) {
+        DataSource dataSource = getDatasource(caseUuid);
         try (InputStream inputStream = dataSource.newInputStream(suffix, ext)) {
             return IOUtils.toByteArray(inputStream);
         } catch (IOException e) {
@@ -71,8 +72,8 @@ public class CaseDataSourceService {
         }
     }
 
-    Set<String> listName(String caseName, String regex) {
-        DataSource dataSource = getDatasource(caseName);
+    Set<String> listName(UUID caseUuid, String regex) {
+        DataSource dataSource = getDatasource(caseUuid);
         String decodedRegex;
         try {
             decodedRegex = URLDecoder.decode(regex, "UTF-8");
@@ -86,18 +87,14 @@ public class CaseDataSourceService {
         }
     }
 
-    private DataSource initDatasource(String caseName) {
-        Path file = getStorageRootDir().resolve(caseName);
+    private DataSource initDatasource(UUID caseUuid) {
+        Path file = caseService.getCaseFile(caseUuid);
         return Importers.createDataSource(file);
     }
 
-    private Path getStorageRootDir() {
-        return caseService.getStorageRootDir();
-    }
-
-    private DataSource getDatasource(String caseName) {
+    private DataSource getDatasource(UUID caseUuid) {
         caseService.checkStorageInitialization();
-        return initDatasource(caseName);
+        return initDatasource(caseUuid);
     }
 
 }

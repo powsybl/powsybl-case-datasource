@@ -20,6 +20,7 @@ import org.springframework.messaging.MessageChannel;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 
+import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 
 import static org.junit.Assert.assertThat;
@@ -45,7 +46,7 @@ class CaseNotificationTests {
     @Test
     @SuppressWarnings("unchecked")
     void testMessages() {
-        CaseInfos caseInfos = new CaseInfos("testCase.xml", "CGMES");
+        CaseInfos caseInfos = new CaseInfos("testCase.xml", "CGMES", UUID.randomUUID());
 
         this.output.send(CaseInfos.getMessage(caseInfos));
 

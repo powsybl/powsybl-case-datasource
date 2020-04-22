@@ -13,6 +13,8 @@ import lombok.NoArgsConstructor;
 import org.springframework.integration.support.MessageBuilder;
 import org.springframework.messaging.Message;
 
+import java.util.UUID;
+
 /**
  * @author Geoffroy Jamgotchian <geoffroy.jamgotchian at rte-france.com>
  */
@@ -27,6 +29,7 @@ public class CaseInfos {
 
     private String name;
     private String format;
+    private UUID uuid;
 
     public static Message<String> getMessage(CaseInfos caseInfos) {
         return MessageBuilder.withPayload("")
@@ -34,5 +37,4 @@ public class CaseInfos {
                 .setHeader(FORMAT_HEADER_KEY, caseInfos.getFormat())
                 .build();
     }
-
 }

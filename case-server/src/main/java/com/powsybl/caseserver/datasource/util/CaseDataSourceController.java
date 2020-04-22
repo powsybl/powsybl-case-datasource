@@ -18,6 +18,7 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 
 import java.nio.charset.StandardCharsets;
 import java.util.Set;
+import java.util.UUID;
 
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
@@ -31,54 +32,54 @@ public class CaseDataSourceController {
     @Autowired
     private CaseDataSourceService caseDataSourceService;
 
-    @GetMapping(value = "/cases/{caseName}/datasource/baseName")
+    @GetMapping(value = "/cases/{caseUuid}/datasource/baseName")
     @ApiOperation(value = "Get datasource baseName")
-    public ResponseEntity<String> getBaseName(@PathVariable("caseName") String caseName) {
-        String baseName = caseDataSourceService.getBaseName(caseName);
+    public ResponseEntity<String> getBaseName(@PathVariable("caseUuid") UUID caseUuid) {
+        String baseName = caseDataSourceService.getBaseName(caseUuid);
         return ResponseEntity.ok().body(baseName);
     }
 
-    @GetMapping(value = "/cases/{caseName}/datasource/exists", params = {"suffix", "ext"})
+    @GetMapping(value = "/cases/{caseUuid}/datasource/exists", params = {"suffix", "ext"})
     @ApiOperation(value = "check if the file exists in the datasource")
-    public ResponseEntity<Boolean> datasourceExists(@PathVariable("caseName") String caseName,
+    public ResponseEntity<Boolean> datasourceExists(@PathVariable("caseUuid") UUID caseUuid,
                                                     @RequestParam String suffix,
                                                     @RequestParam String ext) {
-        Boolean exists = caseDataSourceService.datasourceExists(caseName, suffix, ext);
+        Boolean exists = caseDataSourceService.datasourceExists(caseUuid, suffix, ext);
         return ResponseEntity.ok().body(exists);
     }
 
-    @GetMapping(value = "/cases/{caseName}/datasource/exists", params = "fileName")
+    @GetMapping(value = "/cases/{caseUuid}/datasource/exists", params = "fileName")
     @ApiOperation(value = "check if the file exists in the datasource")
-    public ResponseEntity<Boolean> datasourceExists(@PathVariable("caseName") String caseName,
+    public ResponseEntity<Boolean> datasourceExists(@PathVariable("caseUuid") UUID caseUuid,
                                                     @RequestParam String fileName) {
-        Boolean exists = caseDataSourceService.datasourceExists(caseName, fileName);
+        Boolean exists = caseDataSourceService.datasourceExists(caseUuid, fileName);
         return ResponseEntity.ok().body(exists);
     }
 
-    @GetMapping(value = "/cases/{caseName}/datasource", params = {"suffix", "ext"})
+    @GetMapping(value = "/cases/{caseUuid}/datasource", params = {"suffix", "ext"})
     @ApiOperation(value = "Get an input stream")
-    public ResponseEntity<StreamingResponseBody> getFileData(@PathVariable("caseName") String caseName,
+    public ResponseEntity<StreamingResponseBody> getFileData(@PathVariable("caseUuid") UUID caseUuid,
                                                       @RequestParam(value = "suffix") String suffix,
                                                       @RequestParam(value = "ext") String ext) {
-        byte[] byteArray = caseDataSourceService.getInputStream(caseName, suffix, ext);
+        byte[] byteArray = caseDataSourceService.getInputStream(caseUuid, suffix, ext);
         StreamingResponseBody stream = outputStream -> outputStream.write(byteArray);
         return ResponseEntity.ok().contentType(new MediaType("text", "plain", StandardCharsets.UTF_8)).body(stream);
     }
 
-    @GetMapping(value = "/cases/{caseName}/datasource", params = "fileName")
+    @GetMapping(value = "/cases/{caseUuid}/datasource", params = "fileName")
     @ApiOperation(value = "Get an input stream")
-    public ResponseEntity<StreamingResponseBody> getFileData(@PathVariable("caseName") String caseName,
+    public ResponseEntity<StreamingResponseBody> getFileData(@PathVariable("caseUuid") UUID caseUuid,
                                                              @RequestParam(value = "fileName") String fileName) {
-        byte[] byteArray = caseDataSourceService.getInputStream(caseName, fileName);
+        byte[] byteArray = caseDataSourceService.getInputStream(caseUuid, fileName);
         StreamingResponseBody stream = outputStream -> outputStream.write(byteArray);
         return ResponseEntity.ok().contentType(new MediaType("text", "plain", StandardCharsets.UTF_8)).body(stream);
     }
 
-    @GetMapping(value = "/cases/{caseName}/datasource/list")
+    @GetMapping(value = "/cases/{caseUuid}/datasource/list")
     @ApiOperation(value = "list the files names matching the regex")
-    public ResponseEntity<Set<String>> listName(@PathVariable("caseName") String caseName,
+    public ResponseEntity<Set<String>> listName(@PathVariable("caseUuid") UUID caseUuid,
                                                 @RequestParam(value = "regex") String regex) {
-        Set<String> nameList = caseDataSourceService.listName(caseName, regex);
+        Set<String> nameList = caseDataSourceService.listName(caseUuid, regex);
         return ResponseEntity.ok().body(nameList);
     }
 

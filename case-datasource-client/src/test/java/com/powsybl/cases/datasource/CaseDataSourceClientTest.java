@@ -23,6 +23,7 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
@@ -43,44 +44,46 @@ public class CaseDataSourceClientTest {
 
     private CaseDataSourceClient caseDataSourceClient;
 
+    private UUID randomUuid = UUID.randomUUID();
+
     @Before
     public void setUp() {
-        caseDataSourceClient = new CaseDataSourceClient(caseServerRest, "myCaseName.zip");
+        caseDataSourceClient = new CaseDataSourceClient(caseServerRest, randomUuid);
 
-        given(caseServerRest.exchange(eq("/v1/cases/{caseName}/datasource/baseName"),
+        given(caseServerRest.exchange(eq("/v1/cases/{caseUuid}/datasource/baseName"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
                 eq(String.class),
-                eq("myCaseName.zip")))
+                eq(randomUuid)))
                 .willReturn(ResponseEntity.ok("myCaseName"));
 
         ParameterizedTypeReference< Set<String>> parameterizedTypeReference = new ParameterizedTypeReference<Set<String>>() { };
 
-        given(caseServerRest.exchange(eq("/v1/cases/myCaseName.zip/datasource/list?caseName=myCaseName.zip&regex=.*"),
+        given(caseServerRest.exchange(eq("/v1/cases/" + randomUuid + "/datasource/list?regex=.*"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
                 eq(parameterizedTypeReference)))
                 .willReturn(ResponseEntity.ok(new HashSet<>(asList("A.xml", "B.xml"))));
 
-        given(caseServerRest.exchange(eq("/v1/cases/myCaseName.zip/datasource?fileName=A.xml"),
+        given(caseServerRest.exchange(eq("/v1/cases/" + randomUuid + "/datasource?fileName=A.xml"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
                 eq(byte[].class)))
                 .willReturn(ResponseEntity.ok("Data in the file".getBytes()));
 
-        given(caseServerRest.exchange(eq("/v1/cases/myCaseName.zip/datasource?suffix=A&ext=xml"),
+        given(caseServerRest.exchange(eq("/v1/cases/" +  randomUuid + "/datasource?suffix=A&ext=xml"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
                 eq(byte[].class)))
                 .willReturn(ResponseEntity.ok("Data in the file".getBytes()));
 
-        given(caseServerRest.exchange(eq("/v1/cases/myCaseName.zip/datasource/exists?fileName=A.xml"),
+        given(caseServerRest.exchange(eq("/v1/cases/"  + randomUuid + "/datasource/exists?fileName=A.xml"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
                 eq(Boolean.class)))
                 .willReturn(ResponseEntity.ok(true));
 
-        given(caseServerRest.exchange(eq("/v1/cases/myCaseName.zip/datasource/exists?suffix=A&ext=xml"),
+        given(caseServerRest.exchange(eq("/v1/cases/"  + randomUuid + "/datasource/exists?suffix=A&ext=xml"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
                 eq(Boolean.class)))

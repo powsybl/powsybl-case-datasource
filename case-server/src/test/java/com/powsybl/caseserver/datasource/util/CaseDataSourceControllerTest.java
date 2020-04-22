@@ -30,9 +30,9 @@ import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.Set;
+import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -61,6 +61,8 @@ public class CaseDataSourceControllerTest {
     private String cgmesName = "CGMES_v2415_MicroGridTestConfiguration_BC_BE_v2.zip";
     private String fileName = "CGMES_v2415_MicroGridTestConfiguration_BC_BE_v2/MicroGridTestConfiguration_BC_BE_DL_V2.xml";
 
+    private static final UUID CASE_UUID = UUID.randomUUID();
+
     private DataSource dataSource;
     private ObjectMapper mapper = new ObjectMapper();
 
@@ -68,16 +70,25 @@ public class CaseDataSourceControllerTest {
     public void setUp() throws URISyntaxException, IOException {
         Path path = fileSystem.getPath(rootDirectory);
         if (!Files.exists(path)) {
-            try {
-                Files.createDirectories(path);
-            } catch (IOException e) {
-                fail();
-            }
+            Files.createDirectories(path);
         }
+        path = fileSystem.getPath(rootDirectory).resolve("public");
+        if (!Files.exists(path)) {
+            Files.createDirectories(path);
+        }
+        path = fileSystem.getPath(rootDirectory).resolve("private");
+        if (!Files.exists(path)) {
+            Files.createDirectories(path);
+        }
+        Path caseDirectory = fileSystem.getPath(rootDirectory).resolve("private").resolve(CASE_UUID.toString());
+        if (!Files.exists(caseDirectory)) {
+            Files.createDirectories(caseDirectory);
+        }
+
         caseService.setFileSystem(fileSystem);
         //insert a cgmes in the FS
         try (InputStream cgmesURL = getClass().getResourceAsStream("/" + cgmesName)) {
-            Path cgmes = path.resolve(cgmesName);
+            Path cgmes = caseDirectory.resolve(cgmesName);
             Files.copy(cgmesURL, cgmes, StandardCopyOption.REPLACE_EXISTING);
         }
         dataSource = Importers.createDataSource(Paths.get(getClass().getResource("/" + cgmesName).toURI()));
@@ -85,7 +96,7 @@ public class CaseDataSourceControllerTest {
 
     @Test
     public void testBaseName() throws Exception {
-        MvcResult mvcResult = mvc.perform(get("/v1/cases/{caseName}/datasource/baseName", cgmesName))
+        MvcResult mvcResult = mvc.perform(get("/v1/cases/{caseUuid}/datasource/baseName", CASE_UUID))
                 .andExpect(status().isOk())
                 .andReturn();
 
@@ -94,7 +105,7 @@ public class CaseDataSourceControllerTest {
 
     @Test
     public void testListName() throws Exception {
-        MvcResult mvcResult = mvc.perform(get("/v1/cases/{caseName}/datasource/list", cgmesName)
+        MvcResult mvcResult = mvc.perform(get("/v1/cases/{caseUuid}/datasource/list", CASE_UUID)
                 .param("regex", ".*"))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -105,7 +116,7 @@ public class CaseDataSourceControllerTest {
 
     @Test
     public void testInputStreamWithFileName() throws Exception {
-        MvcResult mvcResult = mvc.perform(get("/v1/cases/{caseName}/datasource", cgmesName)
+        MvcResult mvcResult = mvc.perform(get("/v1/cases/{caseUuid}/datasource", CASE_UUID)
                 .param("fileName", fileName))
                 .andExpect(request().asyncStarted())
                 .andReturn();
@@ -129,7 +140,7 @@ public class CaseDataSourceControllerTest {
     public void testInputStreamWithSuffixExt() throws Exception {
         String suffix = "/MicroGridTestConfiguration_BC_BE_DL_V2";
         String ext = "xml";
-        MvcResult mvcResult = mvc.perform(get("/v1/cases/{caseName}/datasource", cgmesName)
+        MvcResult mvcResult = mvc.perform(get("/v1/cases/{caseUuid}/datasource", CASE_UUID)
                 .param("suffix", suffix)
                 .param("ext", ext))
                 .andExpect(request().asyncStarted())
@@ -152,7 +163,7 @@ public class CaseDataSourceControllerTest {
 
     @Test
     public void testExistsWithFileName() throws Exception {
-        MvcResult mvcResult = mvc.perform(get("/v1/cases/{caseName}/datasource/exists", cgmesName)
+        MvcResult mvcResult = mvc.perform(get("/v1/cases/{caseUuid}/datasource/exists", CASE_UUID)
                 .param("fileName", fileName))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -160,7 +171,7 @@ public class CaseDataSourceControllerTest {
         Boolean res = mapper.readValue(mvcResult.getResponse().getContentAsString(), Boolean.class);
         assertEquals(dataSource.exists(fileName), res);
 
-        mvcResult = mvc.perform(get("/v1/cases/{caseName}/datasource/exists", cgmesName)
+        mvcResult = mvc.perform(get("/v1/cases/{caseUuid}/datasource/exists", CASE_UUID)
                 .param("fileName", "random"))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -173,7 +184,7 @@ public class CaseDataSourceControllerTest {
     public void testExistsWithSuffixExt() throws Exception {
         String suffix = "random";
         String ext = "uct";
-        MvcResult mvcResult = mvc.perform(get("/v1/cases/{caseName}/datasource/exists", cgmesName)
+        MvcResult mvcResult = mvc.perform(get("/v1/cases/{caseUuid}/datasource/exists", CASE_UUID)
                 .param("suffix", suffix)
                 .param("ext", ext))
                 .andExpect(status().isOk())
