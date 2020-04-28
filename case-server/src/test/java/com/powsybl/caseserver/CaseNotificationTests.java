@@ -20,6 +20,7 @@ import org.springframework.messaging.MessageChannel;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 
+import java.nio.file.Path;
 import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 
@@ -36,6 +37,11 @@ import static org.springframework.integration.test.matcher.PayloadAndHeaderMatch
 @DirtiesContext
 class CaseNotificationTests {
 
+    private static final String TEST_UCTE_CASE_FILE_NAME = "20200430_1530_2D4_D41.uct";
+
+    @Autowired
+    private CaseService caseService;
+
     @Autowired
     @Qualifier("publishCaseImport-out-0")
     private MessageChannel output;
@@ -46,18 +52,20 @@ class CaseNotificationTests {
     @Test
     @SuppressWarnings("unchecked")
     void testMessages() {
-        CaseInfos caseInfos = new CaseInfos("testCase.xml", "CGMES", UUID.randomUUID());
-
-        this.output.send(CaseInfos.getMessage(caseInfos));
+        Path casePath = Path.of(this.getClass().getResource("/" + TEST_UCTE_CASE_FILE_NAME).getPath());
+        String fileBaseName = casePath.getFileName().toString();
+        String format = caseService.getFormat(casePath);
+        CaseInfos caseFileName = caseService.createInfos(fileBaseName, UUID.randomUUID(), format);
+        this.output.send(caseFileName.createMessage());
 
         BlockingQueue<Message<?>> messages = this.collector.forChannel(this.output);
-
         assertThat(messages, receivesPayloadThat(CoreMatchers.is("")));
 
-        Message<String> message = CaseInfos.getMessage(caseInfos);
+        caseFileName = caseService.createInfos(fileBaseName, UUID.randomUUID(), format);
+        Message<String> message = caseFileName.createMessage();
         this.output.send(message);
 
-        Matcher<Message<Object>> sameExceptIgnorableHeaders =  (Matcher<Message<Object>>) (Matcher<?>) sameExceptIgnorableHeaders(message);
+        Matcher<Message<Object>> sameExceptIgnorableHeaders = (Matcher<Message<Object>>) (Matcher<?>) sameExceptIgnorableHeaders(message);
         assertThat(messages, receivesMessageThat(sameExceptIgnorableHeaders));
     }
 

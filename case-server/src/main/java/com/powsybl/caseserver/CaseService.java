@@ -6,6 +6,9 @@
  */
 package com.powsybl.caseserver;
 
+import com.powsybl.caseserver.parsers.FileNameInfos;
+import com.powsybl.caseserver.parsers.FileNameParser;
+import com.powsybl.caseserver.parsers.FileNameParsers;
 import com.powsybl.commons.datasource.DataSource;
 import com.powsybl.computation.ComputationManager;
 import com.powsybl.computation.local.LocalComputationManager;
@@ -42,7 +45,7 @@ public class CaseService {
 
     private ComputationManager computationManager = LocalComputationManager.getDefault();
 
-    private EmitterProcessor<Message<String>> caseInfosPublisher = EmitterProcessor.create();
+    private final EmitterProcessor<Message<String>> caseInfosPublisher = EmitterProcessor.create();
 
     @Bean
     public Supplier<Flux<Message<String>>> publishCaseImport() {
@@ -52,7 +55,7 @@ public class CaseService {
     @Value("${case-store-directory:#{systemProperties['user.home'].concat(\"/cases\")}}")
     private String rootDirectory;
 
-    private Importer getImporterOrThrowsException(Path caseFile) {
+    Importer getImporterOrThrowsException(Path caseFile) {
         DataSource dataSource = Importers.createDataSource(caseFile);
         Importer importer = Importers.findImporter(dataSource, computationManager);
         if (importer == null) {
@@ -70,7 +73,7 @@ public class CaseService {
         checkStorageInitialization();
         try (Stream<Path> walk = Files.walk(getPublicStorageDir())) {
             return walk.filter(Files::isRegularFile)
-                    .map(file -> new CaseInfos(file.getFileName().toString(), getFormat(file), UUID.fromString(file.getParent().getFileName().toString())))
+                    .map(file -> createInfos(file.getFileName().toString(), UUID.fromString(file.getParent().getFileName().toString()), getFormat(file)))
                     .collect(Collectors.toList());
         } catch (IOException e) {
             throw new UncheckedIOException(e);
@@ -171,8 +174,9 @@ public class CaseService {
             throw new UncheckedIOException(e);
         }
 
+        Importer importer;
         try {
-            getImporterOrThrowsException(caseFile);
+            importer = getImporterOrThrowsException(caseFile);
         } catch (CaseException e) {
             try {
                 Files.deleteIfExists(caseFile);
@@ -182,9 +186,25 @@ public class CaseService {
             }
             throw e;
         }
-        CaseInfos caseInfos = new CaseInfos(caseFile.getFileName().toString(), getFormat(caseFile), caseUuid);
-        caseInfosPublisher.onNext(CaseInfos.getMessage(caseInfos));
+
+        sendNotificationMessage(caseFile, caseUuid, importer.getFormat());
+
         return caseUuid;
+    }
+
+    private void sendNotificationMessage(Path caseFile, UUID caseUuid, String format) {
+        CaseInfos caseInfos = createInfos(caseFile.getFileName().toString(), caseUuid, format);
+        caseInfosPublisher.onNext(caseInfos.createMessage());
+    }
+
+    CaseInfos createInfos(String fileBaseName, UUID caseUuid, String format) {
+        FileNameParser parser = FileNameParsers.findParser(fileBaseName);
+        if (parser != null) {
+            FileNameInfos fileNameInfos = parser.parse(fileBaseName);
+            return CaseInfos.create(fileBaseName, caseUuid, format, fileNameInfos);
+        } else {
+            return CaseInfos.builder().name(fileBaseName).uuid(caseUuid).format(format).build();
+        }
     }
 
     Optional<Network> loadNetwork(UUID caseUuid) {

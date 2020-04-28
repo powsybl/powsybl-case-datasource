@@ -17,6 +17,7 @@ public final class CaseException extends RuntimeException {
 
     public enum Type {
         FILE_NOT_IMPORTABLE,
+        FILE_NOT_PARSEABLE,
         STORAGE_DIR_NOT_CREATED,
         ILLEGAL_FILE_NAME,
         DIRECTORY_ALREADY_EXISTS,
@@ -53,6 +54,11 @@ public final class CaseException extends RuntimeException {
     public static CaseException createFileNotImportable(Path file) {
         Objects.requireNonNull(file);
         return new CaseException(Type.FILE_NOT_IMPORTABLE, "This file cannot be imported: " + file);
+    }
+
+    public static CaseException createFileNameNotParseable(Path file) {
+        Objects.requireNonNull(file);
+        return new CaseException(Type.FILE_NOT_PARSEABLE, "This file name cannot be parsed: " + file);
     }
 
     public static CaseException createStorageNotInitialized(Path storageRootDir) {
