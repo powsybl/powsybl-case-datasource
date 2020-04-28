@@ -254,17 +254,18 @@ public class CaseService {
 
     private boolean isStorageCreated() {
         Path storageRootDir = getStorageRootDir();
-        Path publicCases = getPublicStorageDir();
-        Path privateCases = getPrivateStorageDir();
-        return Files.exists(storageRootDir) && Files.isDirectory(storageRootDir)
-                && Files.exists(publicCases) && Files.isDirectory(publicCases)
-                && Files.exists(privateCases) && Files.isDirectory(privateCases);
-
+        return Files.exists(storageRootDir) && Files.isDirectory(storageRootDir);
     }
 
     public void checkStorageInitialization() {
         if (!isStorageCreated()) {
             throw CaseException.createStorageNotInitialized(getStorageRootDir());
+        }
+        try {
+            Files.createDirectories(getPublicStorageDir());
+            Files.createDirectories(getPrivateStorageDir());
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
         }
     }
 
