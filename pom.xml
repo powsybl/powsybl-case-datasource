@@ -69,7 +69,7 @@
         <springfox.version>2.9.2</springfox.version>
         <spring-cloud.version>Hoxton.SR3</spring-cloud.version>
 
-        <powsybl-core.version>3.2.0</powsybl-core.version>
+        <powsybl-core.version>3.3.0</powsybl-core.version>
 
         <sonar.coverage.jacoco.xmlReportPaths>
             ../case-distribution/target/site/jacoco-aggregate/jacoco.xml
