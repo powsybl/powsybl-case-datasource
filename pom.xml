@@ -16,7 +16,6 @@
         <version>3</version>
     </parent>
 
-    <groupId>com.powsybl</groupId>
     <artifactId>powsybl-case</artifactId>
     <version>1.0.0-SNAPSHOT</version>
 
