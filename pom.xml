@@ -14,6 +14,7 @@
         <groupId>com.powsybl</groupId>
         <artifactId>powsybl-parent-ws</artifactId>
         <version>3</version>
+        <relativePath/>
     </parent>
 
     <artifactId>powsybl-case</artifactId>
@@ -75,22 +76,6 @@
         </sonar.exclusions>
     </properties>
 
-    <build>
-        <pluginManagement>
-            <plugins>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-surefire-plugin</artifactId>
-                    <configuration>
-                        <classpathDependencyExcludes>
-                            <classpathDependencyExclude>com.powsybl:powsybl-config-classic</classpathDependencyExclude>
-                        </classpathDependencyExcludes>
-                    </configuration>
-                </plugin>
-            </plugins>
-        </pluginManagement>
-    </build>
-
     <profiles>
         <profile>
             <id>client</id>
@@ -112,21 +97,6 @@
                 <version>${google.guava.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.powsybl</groupId>
-                <artifactId>powsybl-commons</artifactId>
-                <version>${powsybl-core.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.powsybl</groupId>
-                <artifactId>powsybl-iidm-api</artifactId>
-                <version>${powsybl-core.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.powsybl</groupId>
-                <artifactId>powsybl-iidm-xml-converter</artifactId>
-                <version>${powsybl-core.version}</version>
-            </dependency>
-            <dependency>
                 <groupId>io.springfox</groupId>
                 <artifactId>springfox-swagger-ui</artifactId>
                 <version>${springfox.version}</version>
@@ -141,6 +111,7 @@
                 <artifactId>lombok</artifactId>
                 <version>${lombok.version}</version>
             </dependency>
+
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-dependencies</artifactId>
@@ -148,6 +119,23 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+
+            <dependency>
+                <groupId>com.powsybl</groupId>
+                <artifactId>powsybl-commons</artifactId>
+                <version>${powsybl-core.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.powsybl</groupId>
+                <artifactId>powsybl-iidm-api</artifactId>
+                <version>${powsybl-core.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.powsybl</groupId>
+                <artifactId>powsybl-iidm-xml-converter</artifactId>
+                <version>${powsybl-core.version}</version>
+            </dependency>
+
             <dependency>
                 <groupId>org.springframework.cloud</groupId>
                 <artifactId>spring-cloud-dependencies</artifactId>
@@ -159,13 +147,13 @@
             <!-- Runtime dependencies -->
             <dependency>
                 <groupId>com.powsybl</groupId>
-                <artifactId>powsybl-cgmes-conversion</artifactId>
+                <artifactId>powsybl-config-classic</artifactId>
                 <version>${powsybl-core.version}</version>
                 <scope>runtime</scope>
             </dependency>
             <dependency>
                 <groupId>com.powsybl</groupId>
-                <artifactId>powsybl-config-classic</artifactId>
+                <artifactId>powsybl-cgmes-conversion</artifactId>
                 <version>${powsybl-core.version}</version>
                 <scope>runtime</scope>
             </dependency>
@@ -215,13 +203,13 @@
             </dependency>
             <dependency>
                 <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-starter-test</artifactId>
+                <artifactId>spring-boot-test-autoconfigure</artifactId>
                 <version>${springboot.version}</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-test-autoconfigure</artifactId>
+                <artifactId>spring-boot-starter-test</artifactId>
                 <version>${springboot.version}</version>
                 <scope>test</scope>
             </dependency>
