@@ -1,8 +1,8 @@
-/**
- * Copyright (c) 2019, RTE (http://www.rte-france.com)
- * This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/*
+  Copyright (c) 2019, RTE (http://www.rte-france.com)
+  This Source Code Form is subject to the terms of the Mozilla Public
+  License, v. 2.0. If a copy of the MPL was not distributed with this
+  file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 package com.powsybl.caseserver;
 
@@ -17,7 +17,6 @@ public final class CaseException extends RuntimeException {
 
     public enum Type {
         FILE_NOT_IMPORTABLE,
-        FILE_NOT_PARSEABLE,
         STORAGE_DIR_NOT_CREATED,
         ILLEGAL_FILE_NAME,
         DIRECTORY_ALREADY_EXISTS,
@@ -54,11 +53,6 @@ public final class CaseException extends RuntimeException {
     public static CaseException createFileNotImportable(Path file) {
         Objects.requireNonNull(file);
         return new CaseException(Type.FILE_NOT_IMPORTABLE, "This file cannot be imported: " + file);
-    }
-
-    public static CaseException createFileNameNotParseable(Path file) {
-        Objects.requireNonNull(file);
-        return new CaseException(Type.FILE_NOT_PARSEABLE, "This file name cannot be parsed: " + file);
     }
 
     public static CaseException createStorageNotInitialized(Path storageRootDir) {

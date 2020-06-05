@@ -1,8 +1,8 @@
-/**
- * Copyright (c) 2019, RTE (http://www.rte-france.com)
- * This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/*
+  Copyright (c) 2019, RTE (http://www.rte-france.com)
+  This Source Code Form is subject to the terms of the Mozilla Public
+  License, v. 2.0. If a copy of the MPL was not distributed with this
+  file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 package com.powsybl.caseserver;
 
@@ -15,6 +15,21 @@ import com.powsybl.computation.local.LocalComputationManager;
 import com.powsybl.iidm.import_.Importer;
 import com.powsybl.iidm.import_.Importers;
 import com.powsybl.iidm.network.Network;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.DirectoryStream;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,14 +39,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import reactor.core.publisher.EmitterProcessor;
 import reactor.core.publisher.Flux;
-
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.nio.file.*;
-import java.util.*;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
@@ -200,11 +207,12 @@ public class CaseService {
     CaseInfos createInfos(String fileBaseName, UUID caseUuid, String format) {
         FileNameParser parser = FileNameParsers.findParser(fileBaseName);
         if (parser != null) {
-            FileNameInfos fileNameInfos = parser.parse(fileBaseName);
-            return CaseInfos.create(fileBaseName, caseUuid, format, fileNameInfos);
-        } else {
-            return CaseInfos.builder().name(fileBaseName).uuid(caseUuid).format(format).build();
+            Optional<? extends FileNameInfos> fileNameInfos = parser.parse(fileBaseName);
+            if (fileNameInfos.isPresent()) {
+                return CaseInfos.create(fileBaseName, caseUuid, format, fileNameInfos.get());
+            }
         }
+        return CaseInfos.builder().name(fileBaseName).uuid(caseUuid).format(format).build();
     }
 
     Optional<Network> loadNetwork(UUID caseUuid) {

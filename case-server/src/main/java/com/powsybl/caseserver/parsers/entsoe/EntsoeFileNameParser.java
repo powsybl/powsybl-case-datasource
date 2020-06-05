@@ -9,6 +9,7 @@ package com.powsybl.caseserver.parsers.entsoe;
 import com.google.auto.service.AutoService;
 import com.powsybl.caseserver.parsers.FileNameParser;
 import com.powsybl.entsoe.util.EntsoeGeographicalCode;
+import java.util.Optional;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
@@ -39,10 +40,10 @@ public class EntsoeFileNameParser implements FileNameParser {
     }
 
     @Override
-    public EntsoeFileName parse(String fileBaseName) {
+    public Optional<EntsoeFileName> parse(String fileBaseName) {
         Matcher m = FILE_NAME_REGEX.matcher(fileBaseName);
         if (!m.matches()) {
-            return null;
+            return Optional.empty();
         }
         DateTime date = parseDateTime(m.group(1));
         String timeScope = m.group(2).substring(0, 2);
@@ -72,6 +73,6 @@ public class EntsoeFileNameParser implements FileNameParser {
         geographicalCode = EntsoeGeographicalCode.valueOf(m.group(3).substring(0, 2));
         version = Integer.parseInt(m.group(3).substring(2, 3));
 
-        return EntsoeFileName.builder().date(date).forecastDistance(forecastDistance).geographicalCode(geographicalCode).version(version).build();
+        return Optional.of(EntsoeFileName.builder().date(date).forecastDistance(forecastDistance).geographicalCode(geographicalCode).version(version).build());
     }
 }
