@@ -1,12 +1,13 @@
-/**
- * Copyright (c) 2019, RTE (http://www.rte-france.com)
- * This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/*
+  Copyright (c) 2020, RTE (http://www.rte-france.com)
+  This Source Code Form is subject to the terms of the Mozilla Public
+  License, v. 2.0. If a copy of the MPL was not distributed with this
+  file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 package com.powsybl.caseserver;
 
-import com.powsybl.caseserver.parsers.EntsoeFileNameParser;
+import com.powsybl.caseserver.entsoe.EntsoeCaseInfos;
+import com.powsybl.caseserver.parsers.entsoe.EntsoeFileNameParser;
 import com.powsybl.entsoe.util.EntsoeGeographicalCode;
 import com.powsybl.iidm.network.Country;
 import org.junit.jupiter.api.Test;

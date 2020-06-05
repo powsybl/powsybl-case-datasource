@@ -1,27 +1,27 @@
-/**
- * Copyright (c) 2020, RTE (http://www.rte-france.com)
- * This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/*
+  Copyright (c) 2020, RTE (http://www.rte-france.com)
+  This Source Code Form is subject to the terms of the Mozilla Public
+  License, v. 2.0. If a copy of the MPL was not distributed with this
+  file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 package com.powsybl.caseserver;
 
-import com.powsybl.caseserver.parsers.EntsoeFileName;
+import com.powsybl.caseserver.entsoe.EntsoeCaseInfos;
 import com.powsybl.caseserver.parsers.FileNameInfos;
+import com.powsybl.caseserver.parsers.entsoe.EntsoeFileName;
 import io.swagger.annotations.ApiModel;
+import java.util.UUID;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
 import org.springframework.integration.support.MessageBuilder;
 import org.springframework.messaging.Message;
 
-import java.util.UUID;
-
 /**
  * @author Geoffroy Jamgotchian <geoffroy.jamgotchian at rte-france.com>
  */
 @SuperBuilder
-@Getter()
+@Getter
 @ApiModel("Case infos")
 public class CaseInfos {
 

@@ -2,7 +2,7 @@ package com.powsybl.caseserver.parsers;
 
 public interface FileNameInfos {
 
-    public enum Type {
+    enum Type {
         ENTSOE
     }
 

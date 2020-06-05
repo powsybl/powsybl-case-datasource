@@ -1,12 +1,13 @@
-/**
- * Copyright (c) 2019, RTE (http://www.rte-france.com)
- * This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/*
+  Copyright (c) 2019, RTE (http://www.rte-france.com)
+  This Source Code Form is subject to the terms of the Mozilla Public
+  License, v. 2.0. If a copy of the MPL was not distributed with this
+  file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-package com.powsybl.caseserver.parsers;
+package com.powsybl.caseserver.parsers.entsoe;
 
 import com.google.auto.service.AutoService;
+import com.powsybl.caseserver.parsers.FileNameParser;
 import com.powsybl.entsoe.util.EntsoeGeographicalCode;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -45,9 +46,9 @@ public class EntsoeFileNameParser implements FileNameParser {
         }
         DateTime date = parseDateTime(m.group(1));
         String timeScope = m.group(2).substring(0, 2);
-        int forecastDistance = 0;
-        EntsoeGeographicalCode geographicalCode = null;
-        int version = 0;
+        int forecastDistance;
+        EntsoeGeographicalCode geographicalCode;
+        int version;
         switch (timeScope) {
             case "SN":
                 forecastDistance = 0;
@@ -62,14 +63,14 @@ public class EntsoeFileNameParser implements FileNameParser {
                 try { // ID ?
                     int hoursID = Integer.parseInt(timeScope);
                     forecastDistance = 60 * hoursID;
-                } catch (IllegalArgumentException var10) {
+                } catch (IllegalArgumentException e) {
                     forecastDistance = 0;
                 }
                 break;
         }
 
         geographicalCode = EntsoeGeographicalCode.valueOf(m.group(3).substring(0, 2));
-        version = Integer.valueOf(m.group(3).substring(2, 3));
+        version = Integer.parseInt(m.group(3).substring(2, 3));
 
         return EntsoeFileName.builder().date(date).forecastDistance(forecastDistance).geographicalCode(geographicalCode).version(version).build();
     }
