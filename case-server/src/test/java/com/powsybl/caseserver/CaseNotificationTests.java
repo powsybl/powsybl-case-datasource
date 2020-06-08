@@ -7,21 +7,20 @@
 
 package com.powsybl.caseserver;
 
+import java.nio.file.Path;
+import java.util.UUID;
+import java.util.concurrent.BlockingQueue;
 import org.hamcrest.CoreMatchers;
 import org.hamcrest.Matcher;
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cloud.function.context.config.ContextFunctionCatalogAutoConfiguration;
 import org.springframework.cloud.stream.test.binder.MessageCollector;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
-import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.ContextConfiguration;
-
-import java.util.UUID;
-import java.util.concurrent.BlockingQueue;
+import org.springframework.test.context.junit4.SpringRunner;
 
 import static org.junit.Assert.assertThat;
 import static org.springframework.cloud.stream.test.matcher.MessageQueueMatcher.receivesMessageThat;
@@ -31,10 +30,14 @@ import static org.springframework.integration.test.matcher.PayloadAndHeaderMatch
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
-@ContextConfiguration(classes = {CaseController.class, ContextFunctionCatalogAutoConfiguration.class})
-@DirtiesContext
-class CaseNotificationTests {
+@RunWith(SpringRunner.class)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE, classes = CaseController.class)
+public class CaseNotificationTests {
+
+    private static final String TEST_UCTE_CASE_FILE_NAME = "20200430_1530_2D4_D41.uct";
+
+    @Autowired
+    private CaseService caseService;
 
     @Autowired
     @Qualifier("publishCaseImport-out-0")
@@ -45,19 +48,21 @@ class CaseNotificationTests {
 
     @Test
     @SuppressWarnings("unchecked")
-    void testMessages() {
-        CaseInfos caseInfos = new CaseInfos("testCase.xml", "CGMES", UUID.randomUUID());
-
-        this.output.send(CaseInfos.getMessage(caseInfos));
+    public void testMessages() {
+        Path casePath = Path.of(this.getClass().getResource("/" + TEST_UCTE_CASE_FILE_NAME).getPath());
+        String fileBaseName = casePath.getFileName().toString();
+        String format = caseService.getFormat(casePath);
+        CaseInfos caseFileName = caseService.createInfos(fileBaseName, UUID.randomUUID(), format);
+        this.output.send(caseFileName.createMessage());
 
         BlockingQueue<Message<?>> messages = this.collector.forChannel(this.output);
-
         assertThat(messages, receivesPayloadThat(CoreMatchers.is("")));
 
-        Message<String> message = CaseInfos.getMessage(caseInfos);
+        caseFileName = caseService.createInfos(fileBaseName, UUID.randomUUID(), format);
+        Message<String> message = caseFileName.createMessage();
         this.output.send(message);
 
-        Matcher<Message<Object>> sameExceptIgnorableHeaders =  (Matcher<Message<Object>>) (Matcher<?>) sameExceptIgnorableHeaders(message);
+        Matcher<Message<Object>> sameExceptIgnorableHeaders = (Matcher<Message<Object>>) (Matcher<?>) sameExceptIgnorableHeaders(message);
         assertThat(messages, receivesMessageThat(sameExceptIgnorableHeaders));
     }
 

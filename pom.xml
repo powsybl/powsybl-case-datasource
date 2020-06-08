@@ -64,6 +64,8 @@
         <springboot.version>2.2.5.RELEASE</springboot.version>
         <springfox.version>2.9.2</springfox.version>
         <spring-cloud.version>Hoxton.SR3</spring-cloud.version>
+        <rdf4j.version>2.4.4</rdf4j.version>
+        <jackson-datatype-joda.version>2.11.0</jackson-datatype-joda.version>
 
         <powsybl-core.version>3.3.0</powsybl-core.version>
 
@@ -135,6 +137,11 @@
                 <artifactId>powsybl-iidm-xml-converter</artifactId>
                 <version>${powsybl-core.version}</version>
             </dependency>
+            <dependency>
+                <groupId>com.powsybl</groupId>
+                <artifactId>powsybl-entsoe-util</artifactId>
+                <version>${powsybl-core.version}</version>
+            </dependency>
 
             <dependency>
                 <groupId>org.springframework.cloud</groupId>
@@ -171,6 +178,12 @@
             </dependency>
             <dependency>
                 <groupId>com.powsybl</groupId>
+                <artifactId>powsybl-triple-store-impl-rdf4j</artifactId>
+                <version>${powsybl-core.version}</version>
+                <scope>runtime</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.powsybl</groupId>
                 <artifactId>powsybl-ucte-converter</artifactId>
                 <version>${powsybl-core.version}</version>
                 <scope>runtime</scope>
@@ -180,6 +193,11 @@
                 <artifactId>log4j-over-slf4j</artifactId>
                 <version>${slf4j.version}</version>
                 <scope>runtime</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.datatype</groupId>
+                <artifactId>jackson-datatype-joda</artifactId>
+                <version>${jackson-datatype-joda.version}</version>
             </dependency>
 
             <!-- Test dependencies -->

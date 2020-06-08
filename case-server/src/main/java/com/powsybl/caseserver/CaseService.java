@@ -6,12 +6,30 @@
  */
 package com.powsybl.caseserver;
 
+import com.powsybl.caseserver.parsers.FileNameInfos;
+import com.powsybl.caseserver.parsers.FileNameParser;
+import com.powsybl.caseserver.parsers.FileNameParsers;
 import com.powsybl.commons.datasource.DataSource;
 import com.powsybl.computation.ComputationManager;
 import com.powsybl.computation.local.LocalComputationManager;
 import com.powsybl.iidm.import_.Importer;
 import com.powsybl.iidm.import_.Importers;
 import com.powsybl.iidm.network.Network;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.DirectoryStream;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -21,14 +39,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import reactor.core.publisher.EmitterProcessor;
 import reactor.core.publisher.Flux;
-
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.nio.file.*;
-import java.util.*;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
@@ -42,7 +52,7 @@ public class CaseService {
 
     private ComputationManager computationManager = LocalComputationManager.getDefault();
 
-    private EmitterProcessor<Message<String>> caseInfosPublisher = EmitterProcessor.create();
+    private final EmitterProcessor<Message<String>> caseInfosPublisher = EmitterProcessor.create();
 
     @Bean
     public Supplier<Flux<Message<String>>> publishCaseImport() {
@@ -52,7 +62,7 @@ public class CaseService {
     @Value("${case-store-directory:#{systemProperties['user.home'].concat(\"/cases\")}}")
     private String rootDirectory;
 
-    private Importer getImporterOrThrowsException(Path caseFile) {
+    Importer getImporterOrThrowsException(Path caseFile) {
         DataSource dataSource = Importers.createDataSource(caseFile);
         Importer importer = Importers.findImporter(dataSource, computationManager);
         if (importer == null) {
@@ -70,7 +80,7 @@ public class CaseService {
         checkStorageInitialization();
         try (Stream<Path> walk = Files.walk(getPublicStorageDir())) {
             return walk.filter(Files::isRegularFile)
-                    .map(file -> new CaseInfos(file.getFileName().toString(), getFormat(file), UUID.fromString(file.getParent().getFileName().toString())))
+                    .map(file -> createInfos(file.getFileName().toString(), UUID.fromString(file.getParent().getFileName().toString()), getFormat(file)))
                     .collect(Collectors.toList());
         } catch (IOException e) {
             throw new UncheckedIOException(e);
@@ -171,8 +181,9 @@ public class CaseService {
             throw new UncheckedIOException(e);
         }
 
+        Importer importer;
         try {
-            getImporterOrThrowsException(caseFile);
+            importer = getImporterOrThrowsException(caseFile);
         } catch (CaseException e) {
             try {
                 Files.deleteIfExists(caseFile);
@@ -182,9 +193,26 @@ public class CaseService {
             }
             throw e;
         }
-        CaseInfos caseInfos = new CaseInfos(caseFile.getFileName().toString(), getFormat(caseFile), caseUuid);
-        caseInfosPublisher.onNext(CaseInfos.getMessage(caseInfos));
+
+        sendNotificationMessage(caseFile, caseUuid, importer.getFormat());
+
         return caseUuid;
+    }
+
+    private void sendNotificationMessage(Path caseFile, UUID caseUuid, String format) {
+        CaseInfos caseInfos = createInfos(caseFile.getFileName().toString(), caseUuid, format);
+        caseInfosPublisher.onNext(caseInfos.createMessage());
+    }
+
+    CaseInfos createInfos(String fileBaseName, UUID caseUuid, String format) {
+        FileNameParser parser = FileNameParsers.findParser(fileBaseName);
+        if (parser != null) {
+            Optional<? extends FileNameInfos> fileNameInfos = parser.parse(fileBaseName);
+            if (fileNameInfos.isPresent()) {
+                return CaseInfos.create(fileBaseName, caseUuid, format, fileNameInfos.get());
+            }
+        }
+        return CaseInfos.builder().name(fileBaseName).uuid(caseUuid).format(format).build();
     }
 
     Optional<Network> loadNetwork(UUID caseUuid) {
