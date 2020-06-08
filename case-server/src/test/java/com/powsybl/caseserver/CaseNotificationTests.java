@@ -31,7 +31,7 @@ import static org.springframework.integration.test.matcher.PayloadAndHeaderMatch
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE,  classes = CaseController.class)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE, classes = CaseController.class)
 public class CaseNotificationTests {
 
     private static final String TEST_UCTE_CASE_FILE_NAME = "20200430_1530_2D4_D41.uct";
