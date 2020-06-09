@@ -39,7 +39,6 @@ import java.util.UUID;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
@@ -55,6 +54,7 @@ public class CaseControllerTest {
     private static final String TEST_CASE = "testCase.xiidm";
     private static final String NOT_A_NETWORK = "notANetwork.txt";
     private static final String STILL_NOT_A_NETWORK = "stillNotANetwork.xiidm";
+    private static final String TEST_CASE_URL = "/v1/cases/ae17bc33-77e2-4aca-b890-0b8cecd15175";
 
     private static final String GET_CASE_URL = "/v1/cases/{caseUuid}";
     private static final String GET_CASE_FORMAT_URL = "/v1/cases/{caseName}/format";
@@ -168,29 +168,20 @@ public class CaseControllerTest {
                 .andReturn();
 
         // retrieve a case as a network
+        String testCaseContent = new String(ByteStreams.toByteArray(getClass().getResourceAsStream("/" + TEST_CASE)), StandardCharsets.UTF_8);
         MvcResult mvcResult =  mvc.perform(get(GET_CASE_URL, firstCaseUuid)
                 .param("xiidm", "false"))
                 .andExpect(status().isOk())
-                .andExpect(request().asyncStarted())
-                .andReturn();
-
-        String testCaseContent = new String(ByteStreams.toByteArray(getClass().getResourceAsStream("/" + TEST_CASE)), StandardCharsets.UTF_8);
-        mvc.perform(asyncDispatch(mvcResult))
-                .andExpect(status().isOk())
                 .andExpect(content().xml(testCaseContent))
                 .andReturn();
 
-        // retrieve a case (async)
+        // retrieve a case
         mvcResult = mvc.perform(get(GET_CASE_URL, firstCaseUuid))
-                .andExpect(request().asyncStarted())
-                .andReturn();
-
-        mvc.perform(asyncDispatch(mvcResult))
                 .andExpect(status().isOk())
                 .andExpect(content().xml(testCaseContent))
                 .andReturn();
 
-        // retrieve a non existing case (async)
+        // retrieve a non existing case
         mvc.perform(get(GET_CASE_URL, UUID.randomUUID()))
                 .andExpect(status().isNoContent())
                 .andReturn();

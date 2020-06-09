@@ -18,7 +18,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -68,7 +67,7 @@ public class CaseController {
 
     @GetMapping(value = "/cases/{caseUuid}")
     @ApiOperation(value = "Get a case")
-    public ResponseEntity<StreamingResponseBody> getCase(@PathVariable("caseUuid") UUID caseUuid,
+    public ResponseEntity<byte[]> getCase(@PathVariable("caseUuid") UUID caseUuid,
                                                          @RequestParam(value = "xiidm", required = false, defaultValue = "true") boolean xiidmFormat) {
         LOGGER.debug("getCase request received with parameter caseUuid = {}", caseUuid);
         if (xiidmFormat) {
@@ -79,10 +78,9 @@ public class CaseController {
             try (ByteArrayOutputStream os = new ByteArrayOutputStream()) {
                 NetworkXml.write(network, os);
                 os.flush();
-                StreamingResponseBody stream = outputStream -> outputStream.write(os.toByteArray());
                 return ResponseEntity.ok()
                         .contentType(MediaType.APPLICATION_XML)
-                        .body(stream);
+                        .body(os.toByteArray());
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             }
@@ -91,10 +89,9 @@ public class CaseController {
             if (bytes == null) {
                 return ResponseEntity.noContent().build();
             }
-            StreamingResponseBody stream = outputStream -> outputStream.write(bytes);
             return ResponseEntity.ok()
                     .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                    .body(stream);
+                    .body(bytes);
         }
     }
 
