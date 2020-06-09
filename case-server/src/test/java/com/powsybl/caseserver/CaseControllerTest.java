@@ -39,7 +39,6 @@ import java.util.UUID;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
@@ -171,7 +170,6 @@ public class CaseControllerTest {
         MvcResult mvcResult =  mvc.perform(get(GET_CASE_URL, firstCaseUuid)
                 .param("xiidm", "false"))
                 .andExpect(status().isOk())
-                .andExpect(request().asyncStarted())
                 .andReturn();
 
         String testCaseContent = new String(ByteStreams.toByteArray(getClass().getResourceAsStream("/" + TEST_CASE)), StandardCharsets.UTF_8);
@@ -180,9 +178,9 @@ public class CaseControllerTest {
                 .andExpect(content().xml(testCaseContent))
                 .andReturn();
 
-        // retrieve a case (async)
+        // retrieve a case
         mvcResult = mvc.perform(get(GET_CASE_URL, firstCaseUuid))
-                .andExpect(request().asyncStarted())
+                .andExpect(status().isOk())
                 .andReturn();
 
         mvc.perform(asyncDispatch(mvcResult))
