@@ -168,18 +168,25 @@ public class CaseControllerTest {
                 .andReturn();
 
         // retrieve a case as a network
-        String testCaseContent = new String(ByteStreams.toByteArray(getClass().getResourceAsStream("/" + TEST_CASE)), StandardCharsets.UTF_8);
-        mvc.perform(get(GET_CASE_URL, firstCaseUuid)
+        MvcResult mvcResult =  mvc.perform(get(GET_CASE_URL, firstCaseUuid)
                 .param("xiidm", "false"))
                 .andExpect(status().isOk())
                 .andExpect(request().asyncStarted())
+                .andReturn();
+
+        String testCaseContent = new String(ByteStreams.toByteArray(getClass().getResourceAsStream("/" + TEST_CASE)), StandardCharsets.UTF_8);
+        mvc.perform(asyncDispatch(mvcResult))
+                .andExpect(status().isOk())
                 .andExpect(content().xml(testCaseContent))
                 .andReturn();
 
-        // retrieve a case
-        mvc.perform(get(GET_CASE_URL, firstCaseUuid))
-                .andExpect(status().isOk())
+        // retrieve a case (async)
+        mvcResult = mvc.perform(get(GET_CASE_URL, firstCaseUuid))
                 .andExpect(request().asyncStarted())
+                .andReturn();
+
+        mvc.perform(asyncDispatch(mvcResult))
+                .andExpect(status().isOk())
                 .andExpect(content().xml(testCaseContent))
                 .andReturn();
 
@@ -214,7 +221,7 @@ public class CaseControllerTest {
                 .andReturn().getResponse().getContentAsString();
 
         // list the cases and expect one case since the case imported just before is public
-        MvcResult mvcResult = mvc.perform(get("/v1/cases"))
+        mvcResult = mvc.perform(get("/v1/cases"))
                 .andExpect(status().isOk())
                 .andReturn();
 
