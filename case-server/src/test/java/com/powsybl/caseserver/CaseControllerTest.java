@@ -172,12 +172,14 @@ public class CaseControllerTest {
         mvc.perform(get(GET_CASE_URL, firstCaseUuid)
                 .param("xiidm", "false"))
                 .andExpect(status().isOk())
+                .andExpect(request().asyncStarted())
                 .andExpect(content().xml(testCaseContent))
                 .andReturn();
 
         // retrieve a case
         mvc.perform(get(GET_CASE_URL, firstCaseUuid))
                 .andExpect(status().isOk())
+                .andExpect(request().asyncStarted())
                 .andExpect(content().xml(testCaseContent))
                 .andReturn();
 
