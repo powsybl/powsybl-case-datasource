@@ -168,17 +168,20 @@ public class CaseControllerTest {
 
         // retrieve a case as a network
         String testCaseContent = new String(ByteStreams.toByteArray(getClass().getResourceAsStream("/" + TEST_CASE)), StandardCharsets.UTF_8);
-        mvc.perform(get(GET_CASE_URL, firstCaseUuid))
+        mvc.perform(get(GET_CASE_URL, firstCaseUuid)
+                .param("xiidm", "false"))
                 .andExpect(status().isOk())
                 .andExpect(content().xml(testCaseContent))
                 .andReturn();
 
         // retrieve a case
-        String testCaseURL = new String(ByteStreams.toByteArray(getClass().getResourceAsStream("/" + TEST_CASE)), StandardCharsets.UTF_8);
+        MvcResult mvcResult = mvc.perform(get(GET_CASE_URL, firstCaseUuid))
+                .andExpect(request().asyncStarted())
+                .andReturn();
         System.out.println(testCaseContent);
         mvc.perform(get(GET_CASE_URL, firstCaseUuid))
                 .andExpect(status().isOk())
-                .andExpect(content().xml(testCaseURL))
+                .andExpect(content().xml(mvcResult.getResponse().getContentAsString()))
                 .andReturn();
 
         // retrieve a non existing case
@@ -212,7 +215,7 @@ public class CaseControllerTest {
                 .andReturn().getResponse().getContentAsString();
 
         // list the cases and expect one case since the case imported just before is public
-        MvcResult   mvcResult = mvc.perform(get("/v1/cases"))
+        mvcResult = mvc.perform(get("/v1/cases"))
                 .andExpect(status().isOk())
                 .andReturn();
 
