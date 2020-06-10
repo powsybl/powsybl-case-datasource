@@ -7,6 +7,7 @@
 package com.powsybl.caseserver;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.io.ByteStreams;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
 import com.powsybl.computation.ComputationManager;
@@ -29,6 +30,7 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -165,26 +167,19 @@ public class CaseControllerTest {
                 .andReturn();
 
         // retrieve a case as a network
-        MvcResult mvcResult =  mvc.perform(get(GET_CASE_URL, firstCaseUuid)
-                .param("xiidm", "false"))
+        String testCaseContent = new String(ByteStreams.toByteArray(getClass().getResourceAsStream("/" + TEST_CASE)), StandardCharsets.UTF_8);
+        mvc.perform(get(GET_CASE_URL, firstCaseUuid))
                 .andExpect(status().isOk())
+                .andExpect(content().xml(testCaseContent))
                 .andReturn();
-
-//        String testCaseContent = new String(ByteStreams.toByteArray(getClass().getResourceAsStream("/" + TEST_CASE)), StandardCharsets.UTF_8);
-//        mvc.perform(asyncDispatch(mvcResult))
-//                .andExpect(status().isOk())
-//                .andExpect(content().xml(testCaseContent))
-//                .andReturn();
 
         // retrieve a case
-        mvcResult = mvc.perform(get(GET_CASE_URL, firstCaseUuid))
+        String testCaseURL = new String(ByteStreams.toByteArray(getClass().getResourceAsStream("/" + TEST_CASE)), StandardCharsets.UTF_8);
+        System.out.println(testCaseContent);
+        mvc.perform(get(GET_CASE_URL, firstCaseUuid))
                 .andExpect(status().isOk())
+                .andExpect(content().xml(testCaseURL))
                 .andReturn();
-
-//        mvc.perform(asyncDispatch(mvcResult))
-//                .andExpect(status().isOk())
-//                .andExpect(content().xml(testCaseContent))
-//                .andReturn();
 
         // retrieve a non existing case
         mvc.perform(get(GET_CASE_URL, UUID.randomUUID()))
@@ -217,7 +212,7 @@ public class CaseControllerTest {
                 .andReturn().getResponse().getContentAsString();
 
         // list the cases and expect one case since the case imported just before is public
-        mvcResult = mvc.perform(get("/v1/cases"))
+        MvcResult   mvcResult = mvc.perform(get("/v1/cases"))
                 .andExpect(status().isOk())
                 .andReturn();
 
