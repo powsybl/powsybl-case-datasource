@@ -168,19 +168,15 @@ public class CaseControllerTest {
                 .andReturn();
 
         // retrieve a case as a network
+        String testCaseContent = new String(ByteStreams.toByteArray(getClass().getResourceAsStream("/" + TEST_CASE)), StandardCharsets.UTF_8);
         MvcResult mvcResult =  mvc.perform(get(GET_CASE_URL, firstCaseUuid)
                 .param("xiidm", "false"))
-                .andExpect(status().isOk())
-                .andReturn();
-
-        String testCaseContent = new String(ByteStreams.toByteArray(getClass().getResourceAsStream("/" + TEST_CASE)), StandardCharsets.UTF_8);
-        mvc.perform(asyncDispatch(mvcResult))
                 .andExpect(status().isOk())
                 .andExpect(content().xml(testCaseContent))
                 .andReturn();
 
-        // retrieve a case (async)
-        mvc.perform(get(GET_CASE_URL, firstCaseUuid))
+        // retrieve a case
+        mvcResult = mvc.perform(get(GET_CASE_URL, firstCaseUuid))
                 .andExpect(status().isOk())
                 .andExpect(content().xml(testCaseContent))
                 .andReturn();
