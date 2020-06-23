@@ -18,15 +18,18 @@ import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cloud.stream.binder.test.OutputDestination;
+import org.springframework.cloud.stream.binder.test.TestChannelBinderConfiguration;
 import org.springframework.http.MediaType;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.MessageHeaders;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -45,9 +48,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
  */
 @RunWith(SpringRunner.class)
-@EnableWebMvc
-@WebMvcTest(CaseController.class)
-@ContextConfiguration(classes = {CaseController.class, CaseService.class})
+@AutoConfigureMockMvc
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK, classes =
+    { CaseController.class, CaseService.class, TestChannelBinderConfiguration.class })
 @TestPropertySource(properties = {"case-store-directory=/cases"})
 public class CaseControllerTest {
 
@@ -66,6 +69,9 @@ public class CaseControllerTest {
 
     @Autowired
     private CaseService caseService;
+
+    @Autowired
+    private OutputDestination outputDestination;
 
     @Value("${case-store-directory}")
     private String rootDirectory;
@@ -135,6 +141,14 @@ public class CaseControllerTest {
 
         UUID firstCaseUuid = UUID.fromString(firstCase.substring(1, firstCase.length() - 1));
 
+        // assert that the broker message has been sent
+        Message<byte[]> messageImportPrivate = outputDestination.receive(1000);
+        assertEquals("", new String(messageImportPrivate.getPayload()));
+        MessageHeaders headersPrivateCase = messageImportPrivate.getHeaders();
+        assertEquals("testCase.xiidm", headersPrivateCase.get(CaseInfos.NAME_HEADER_KEY));
+        assertEquals(firstCaseUuid, headersPrivateCase.get(CaseInfos.UUID_HEADER_KEY));
+        assertEquals("XIIDM", headersPrivateCase.get(CaseInfos.FORMAT_HEADER_KEY));
+
         // retrieve case format
         mvc.perform(get(GET_CASE_FORMAT_URL, firstCaseUuid))
                 .andExpect(status().isOk())
@@ -196,20 +210,39 @@ public class CaseControllerTest {
                 .andReturn();
 
         // import a case to delete it
-        mvc.perform(multipart("/v1/cases/private")
+        String secondCase = mvc.perform(multipart("/v1/cases/private")
                 .file(createMockMultipartFile(TEST_CASE)))
                 .andExpect(status().isOk())
-                .andReturn();
+                .andReturn().getResponse().getContentAsString();
+        UUID secondCaseUuid = UUID.fromString(secondCase.substring(1, secondCase.length() - 1));
+
+        // assert that the broker message has been sent
+        Message<byte[]> messageImportPrivate2 = outputDestination.receive(1000);
+        assertEquals("", new String(messageImportPrivate2.getPayload()));
+        MessageHeaders headersPrivateCase2 = messageImportPrivate2.getHeaders();
+        assertEquals("testCase.xiidm", headersPrivateCase2.get(CaseInfos.NAME_HEADER_KEY));
+        assertEquals(secondCaseUuid, headersPrivateCase2.get(CaseInfos.UUID_HEADER_KEY));
+        assertEquals("XIIDM", headersPrivateCase2.get(CaseInfos.FORMAT_HEADER_KEY));
 
         // delete all cases
         mvc.perform(delete("/v1/cases"))
                 .andExpect(status().isOk());
 
         // import a case to public
-        mvc.perform(multipart("/v1/cases/public")
+        String publicCase = mvc.perform(multipart("/v1/cases/public")
                 .file(createMockMultipartFile(TEST_CASE)))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
+
+        UUID publicCaseUuid = UUID.fromString(publicCase.substring(1, publicCase.length() - 1));
+
+        // assert that the broker message has been sent
+        Message<byte[]> messageImportPublic = outputDestination.receive(1000);
+        assertEquals("", new String(messageImportPublic.getPayload()));
+        MessageHeaders headersPublicCase = messageImportPublic.getHeaders();
+        assertEquals("testCase.xiidm", headersPublicCase.get(CaseInfos.NAME_HEADER_KEY));
+        assertEquals(publicCaseUuid, headersPublicCase.get(CaseInfos.UUID_HEADER_KEY));
+        assertEquals("XIIDM", headersPublicCase.get(CaseInfos.FORMAT_HEADER_KEY));
 
         // list the cases and expect one case since the case imported just before is public
         mvcResult = mvc.perform(get("/v1/cases"))
