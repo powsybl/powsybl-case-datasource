@@ -14,7 +14,6 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Set;
@@ -58,21 +57,19 @@ public class CaseDataSourceController {
 
     @GetMapping(value = "/cases/{caseUuid}/datasource", params = {"suffix", "ext"})
     @ApiOperation(value = "Get an input stream")
-    public ResponseEntity<StreamingResponseBody> getFileData(@PathVariable("caseUuid") UUID caseUuid,
+    public ResponseEntity<byte[]> getFileData(@PathVariable("caseUuid") UUID caseUuid,
                                                       @RequestParam(value = "suffix") String suffix,
                                                       @RequestParam(value = "ext") String ext) {
         byte[] byteArray = caseDataSourceService.getInputStream(caseUuid, suffix, ext);
-        StreamingResponseBody stream = outputStream -> outputStream.write(byteArray);
-        return ResponseEntity.ok().contentType(new MediaType("text", "plain", StandardCharsets.UTF_8)).body(stream);
+        return ResponseEntity.ok().contentType(new MediaType("text", "plain", StandardCharsets.UTF_8)).body(byteArray);
     }
 
     @GetMapping(value = "/cases/{caseUuid}/datasource", params = "fileName")
     @ApiOperation(value = "Get an input stream")
-    public ResponseEntity<StreamingResponseBody> getFileData(@PathVariable("caseUuid") UUID caseUuid,
+    public ResponseEntity<byte[]> getFileData(@PathVariable("caseUuid") UUID caseUuid,
                                                              @RequestParam(value = "fileName") String fileName) {
         byte[] byteArray = caseDataSourceService.getInputStream(caseUuid, fileName);
-        StreamingResponseBody stream = outputStream -> outputStream.write(byteArray);
-        return ResponseEntity.ok().contentType(new MediaType("text", "plain", StandardCharsets.UTF_8)).body(stream);
+        return ResponseEntity.ok().contentType(new MediaType("text", "plain", StandardCharsets.UTF_8)).body(byteArray);
     }
 
     @GetMapping(value = "/cases/{caseUuid}/datasource/list")
