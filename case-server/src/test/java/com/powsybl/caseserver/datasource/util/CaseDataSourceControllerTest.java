@@ -33,7 +33,6 @@ import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -118,10 +117,6 @@ public class CaseDataSourceControllerTest {
     public void testInputStreamWithFileName() throws Exception {
         MvcResult mvcResult = mvc.perform(get("/v1/cases/{caseUuid}/datasource", CASE_UUID)
                 .param("fileName", fileName))
-                .andExpect(request().asyncStarted())
-                .andReturn();
-
-        mvcResult = mvc.perform(asyncDispatch(mvcResult))
                 .andExpect(status().isOk())
                 .andReturn();
 
@@ -143,10 +138,6 @@ public class CaseDataSourceControllerTest {
         MvcResult mvcResult = mvc.perform(get("/v1/cases/{caseUuid}/datasource", CASE_UUID)
                 .param("suffix", suffix)
                 .param("ext", ext))
-                .andExpect(request().asyncStarted())
-                .andReturn();
-
-        mvcResult = mvc.perform(asyncDispatch(mvcResult))
                 .andExpect(status().isOk())
                 .andReturn();
 
