@@ -46,6 +46,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
+ * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
 @RunWith(SpringRunner.class)
 @AutoConfigureMockMvc
@@ -183,14 +184,14 @@ public class CaseControllerTest {
 
         // retrieve a case as a network
         String testCaseContent = new String(ByteStreams.toByteArray(getClass().getResourceAsStream("/" + TEST_CASE)), StandardCharsets.UTF_8);
-        MvcResult mvcResult =  mvc.perform(get(GET_CASE_URL, firstCaseUuid)
+        mvc.perform(get(GET_CASE_URL, firstCaseUuid)
                 .param("xiidm", "false"))
                 .andExpect(status().isOk())
                 .andExpect(content().xml(testCaseContent))
                 .andReturn();
 
         // retrieve a case
-        mvcResult = mvc.perform(get(GET_CASE_URL, firstCaseUuid))
+        mvc.perform(get(GET_CASE_URL, firstCaseUuid))
                 .andExpect(status().isOk())
                 .andExpect(content().xml(testCaseContent))
                 .andReturn();
@@ -245,7 +246,7 @@ public class CaseControllerTest {
         assertEquals("XIIDM", headersPublicCase.get(CaseInfos.FORMAT_HEADER_KEY));
 
         // list the cases and expect one case since the case imported just before is public
-        mvcResult = mvc.perform(get("/v1/cases"))
+        MvcResult mvcResult = mvc.perform(get("/v1/cases"))
                 .andExpect(status().isOk())
                 .andReturn();
 
@@ -275,6 +276,175 @@ public class CaseControllerTest {
             fail();
         } catch (CaseException ignored) {
         }
+    }
 
+    @Test
+    public void searchCaseTest() throws Exception {
+        // create the storage dir
+        createStorageDir();
+
+        // delete all cases
+        mvc.perform(delete("/v1/cases"))
+                .andExpect(status().isOk());
+
+        // import IIDM test case
+        String publicCase = mvc.perform(multipart("/v1/cases/public")
+                .file(createMockMultipartFile("testCase.xiidm")))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        UUID publicCaseUuid = UUID.fromString(publicCase.substring(1, publicCase.length() - 1));
+
+        // assert that broker message has been sent and properties are the right ones
+        Message<byte[]> messageImportPublic = outputDestination.receive(1000);
+        assertEquals("", new String(messageImportPublic.getPayload()));
+        MessageHeaders headersPublicCase = messageImportPublic.getHeaders();
+        assertEquals("testCase.xiidm", headersPublicCase.get(CaseInfos.NAME_HEADER_KEY));
+        assertEquals(publicCaseUuid, headersPublicCase.get(CaseInfos.UUID_HEADER_KEY));
+        assertEquals("XIIDM", headersPublicCase.get(CaseInfos.FORMAT_HEADER_KEY));
+
+        // import CGMES french file
+        publicCase = mvc.perform(multipart("/v1/cases/public")
+                .file(createMockMultipartFile("20200212_1030_FO3_FR1.zip")))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        publicCaseUuid = UUID.fromString(publicCase.substring(1, publicCase.length() - 1));
+
+        // assert that broker message has been sent and properties are the right ones
+        messageImportPublic = outputDestination.receive(1000);
+        assertEquals("", new String(messageImportPublic.getPayload()));
+        headersPublicCase = messageImportPublic.getHeaders();
+        assertEquals("20200212_1030_FO3_FR1.zip", headersPublicCase.get(CaseInfos.NAME_HEADER_KEY));
+        assertEquals(publicCaseUuid, headersPublicCase.get(CaseInfos.UUID_HEADER_KEY));
+        assertEquals("CGMES", headersPublicCase.get(CaseInfos.FORMAT_HEADER_KEY));
+
+        // import UCTE french file
+        publicCase = mvc.perform(multipart("/v1/cases/public")
+                .file(createMockMultipartFile("20200103_0915_FO5_FR0.UCT")))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        publicCaseUuid = UUID.fromString(publicCase.substring(1, publicCase.length() - 1));
+
+        // assert that broker message has been sent and properties are the right ones
+        messageImportPublic = outputDestination.receive(1000);
+        assertEquals("", new String(messageImportPublic.getPayload()));
+        headersPublicCase = messageImportPublic.getHeaders();
+        assertEquals("20200103_0915_FO5_FR0.UCT", headersPublicCase.get(CaseInfos.NAME_HEADER_KEY));
+        assertEquals(publicCaseUuid, headersPublicCase.get(CaseInfos.UUID_HEADER_KEY));
+        assertEquals("UCTE", headersPublicCase.get(CaseInfos.FORMAT_HEADER_KEY));
+
+        // import UCTE german file
+        publicCase = mvc.perform(multipart("/v1/cases/public")
+                .file(createMockMultipartFile("20200103_0915_SN5_D80.UCT")))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        publicCaseUuid = UUID.fromString(publicCase.substring(1, publicCase.length() - 1));
+
+        // assert that broker message has been sent and properties are the right ones
+        messageImportPublic = outputDestination.receive(1000);
+        assertEquals("", new String(messageImportPublic.getPayload()));
+        headersPublicCase = messageImportPublic.getHeaders();
+        assertEquals("20200103_0915_SN5_D80.UCT", headersPublicCase.get(CaseInfos.NAME_HEADER_KEY));
+        assertEquals(publicCaseUuid, headersPublicCase.get(CaseInfos.UUID_HEADER_KEY));
+        assertEquals("UCTE", headersPublicCase.get(CaseInfos.FORMAT_HEADER_KEY));
+
+        // import UCTE swiss file
+        publicCase = mvc.perform(multipart("/v1/cases/public")
+                .file(createMockMultipartFile("20200103_0915_135_CH2.UCT")))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        publicCaseUuid = UUID.fromString(publicCase.substring(1, publicCase.length() - 1));
+
+        // assert that broker message has been sent and properties are the right ones
+        messageImportPublic = outputDestination.receive(1000);
+        assertEquals("", new String(messageImportPublic.getPayload()));
+        headersPublicCase = messageImportPublic.getHeaders();
+        assertEquals("20200103_0915_135_CH2.UCT", headersPublicCase.get(CaseInfos.NAME_HEADER_KEY));
+        assertEquals(publicCaseUuid, headersPublicCase.get(CaseInfos.UUID_HEADER_KEY));
+        assertEquals("UCTE", headersPublicCase.get(CaseInfos.FORMAT_HEADER_KEY));
+
+        // list the cases
+        MvcResult mvcResult = mvc.perform(get("/v1/cases"))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        // assert that the 5 previously imported cases are present
+        String response = mvcResult.getResponse().getContentAsString();
+        assertTrue(response.contains("{\"name\":\"testCase.xiidm\""));
+        assertTrue(response.contains("{\"name\":\"20200212_1030_FO3_FR1.zip\""));
+        assertTrue(response.contains("{\"name\":\"20200103_0915_FO5_FR0.UCT\""));
+        assertTrue(response.contains("{\"name\":\"20200103_0915_SN5_D80.UCT\""));
+        assertTrue(response.contains("{\"name\":\"20200103_0915_135_CH2.UCT\""));
+
+        // search the cases
+        mvcResult = mvc.perform(get("/v1/cases/search")
+                .param("query", "date: tso:"))
+                .andExpect(status().isOk())
+                .andReturn();
+        assertEquals("[]", mvcResult.getResponse().getContentAsString());
+
+        mvcResult = mvc.perform(get("/v1/cases/search")
+                .param("query", "date:20140116_0830 tso:ES"))
+                .andExpect(status().isOk())
+                .andReturn();
+        assertEquals("[]", mvcResult.getResponse().getContentAsString());
+
+        mvcResult = mvc.perform(get("/v1/cases/search")
+                .param("query", "date:20140116_0830 tso:FR"))
+                .andExpect(status().isOk())
+                .andReturn();
+        assertEquals("[]", mvcResult.getResponse().getContentAsString());
+
+        mvcResult = mvc.perform(get("/v1/cases/search")
+                .param("query", "date:20200212_1030 tso:PT"))
+                .andExpect(status().isOk())
+                .andReturn();
+        assertEquals("[]", mvcResult.getResponse().getContentAsString());
+
+        mvcResult = mvc.perform(get("/v1/cases/search")
+                .param("query", "date:20200212_1030 tso:FR"))
+                .andExpect(status().isOk())
+                .andReturn();
+        response = mvcResult.getResponse().getContentAsString();
+        assertTrue(response.contains("{\"name\":\"20200212_1030_FO3_FR1.zip\""));
+        assertFalse(response.contains("{\"name\":\"20200103_0915_FO5_FR0.UCT\""));
+        assertFalse(response.contains("{\"name\":\"20200103_0915_SN5_D80.UCT\""));
+        assertFalse(response.contains("{\"name\":\"20200103_0915_135_CH2.UCT\""));
+
+        mvcResult = mvc.perform(get("/v1/cases/search")
+                .param("query", "date:20200103_0915 tso:CH"))
+                .andExpect(status().isOk())
+                .andReturn();
+        response = mvcResult.getResponse().getContentAsString();
+        assertFalse(response.contains("{\"name\":\"20200212_1030_FO3_FR1.zip\""));
+        assertFalse(response.contains("{\"name\":\"20200103_0915_FO5_FR0.UCT\""));
+        assertFalse(response.contains("{\"name\":\"20200103_0915_SN5_D80.UCT\""));
+        assertTrue(response.contains("{\"name\":\"20200103_0915_135_CH2.UCT\""));
+
+        mvcResult = mvc.perform(get("/v1/cases/search")
+                .param("query", "date:20200103_0915 tso:FR|CH|D8"))
+                .andExpect(status().isOk())
+                .andReturn();
+        response = mvcResult.getResponse().getContentAsString();
+        assertTrue(response.contains("{\"name\":\"20200103_0915_FO5_FR0.UCT\""));
+        assertTrue(response.contains("{\"name\":\"20200103_0915_SN5_D80.UCT\""));
+        assertTrue(response.contains("{\"name\":\"20200103_0915_135_CH2.UCT\""));
+
+        // delete all cases
+        mvc.perform(delete("/v1/cases"))
+                .andExpect(status().isOk());
+
+        mvcResult = mvc.perform(get("/v1/cases/search")
+                .param("query", "date:20200103_0915 tso:FR|CH|D8"))
+                .andExpect(status().isOk())
+                .andReturn();
+        response = mvcResult.getResponse().getContentAsString();
+        assertFalse(response.contains("{\"name\":\"20200103_0915_FO5_FR0.UCT\""));
+        assertFalse(response.contains("{\"name\":\"20200103_0915_SN5_D80.UCT\""));
+        assertFalse(response.contains("{\"name\":\"20200103_0915_135_CH2.UCT\""));
     }
 }
