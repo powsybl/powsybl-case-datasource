@@ -326,7 +326,11 @@ public class CaseService {
         List<DateTime> dates = new ArrayList<>();
         List<EntsoeGeographicalCode> entsoeCodes = new ArrayList<>();
 
-        String[] searchFields = query.split(" ");
+        // the query is an elasticsearch form query, so here it will be :
+        // date:XXX AND tsos:(X)
+        // date:XXX AND tsos:(X OR Y OR Z)
+        //
+        String[] searchFields = query.split(" AND ");
         for (String searchField : searchFields) {
             String[] field = searchField.split(":");
             if (field.length > 1) {
@@ -335,10 +339,15 @@ public class CaseService {
                     if (!StringUtils.isEmpty(date)) {
                         dates.add(parseDateTime(date));
                     }
-                } else if (field[0].equals("tso")) {
-                    String[] tsos = field[1].trim().split("\\|");
-                    for (String tso : tsos) {
-                        entsoeCodes.add(EntsoeGeographicalCode.valueOf(tso.trim()));
+                } else if (field[0].equals("tsos")) {
+                    String tmp = field[1].trim();
+                    if (tmp.length() > 1) {
+                        String[] tsos = tmp.substring(1, tmp.length() - 1).split(" OR ");
+                        for (String tso : tsos) {
+                            if (!StringUtils.isEmpty(tso)) {
+                                entsoeCodes.add(EntsoeGeographicalCode.valueOf(tso.trim()));
+                            }
+                        }
                     }
                 }
             }

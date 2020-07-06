@@ -138,13 +138,9 @@ public class CaseController {
 
     @GetMapping(value = "/cases/search")
     @ApiOperation(value = "Search cases by metadata")
-    public ResponseEntity<List<CaseInfos>> searchCases(@RequestParam(value = "query") String query) {
+    public ResponseEntity<List<CaseInfos>> searchCases(@RequestParam(value = "q") String query) {
         LOGGER.debug("search cases request received");
         List<CaseInfos> cases = caseService.searchCases(query);
-        if (cases == null) {
-            return ResponseEntity.noContent().build();
-        }
         return ResponseEntity.ok().body(cases);
     }
-
 }

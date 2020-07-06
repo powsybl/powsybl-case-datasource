@@ -382,31 +382,31 @@ public class CaseControllerTest {
 
         // search the cases
         mvcResult = mvc.perform(get("/v1/cases/search")
-                .param("query", "date: tso:"))
+                .param("q", "date: AND tsos:()"))
                 .andExpect(status().isOk())
                 .andReturn();
         assertEquals("[]", mvcResult.getResponse().getContentAsString());
 
         mvcResult = mvc.perform(get("/v1/cases/search")
-                .param("query", "date:20140116_0830 tso:ES"))
+                .param("q", "date:20140116_0830 AND tsos:(ES)"))
                 .andExpect(status().isOk())
                 .andReturn();
         assertEquals("[]", mvcResult.getResponse().getContentAsString());
 
         mvcResult = mvc.perform(get("/v1/cases/search")
-                .param("query", "date:20140116_0830 tso:FR"))
+                .param("q", "date:20140116_0830 AND tsos:(FR)"))
                 .andExpect(status().isOk())
                 .andReturn();
         assertEquals("[]", mvcResult.getResponse().getContentAsString());
 
         mvcResult = mvc.perform(get("/v1/cases/search")
-                .param("query", "date:20200212_1030 tso:PT"))
+                .param("q", "date:20200212_1030 AND tsos:(PT)"))
                 .andExpect(status().isOk())
                 .andReturn();
         assertEquals("[]", mvcResult.getResponse().getContentAsString());
 
         mvcResult = mvc.perform(get("/v1/cases/search")
-                .param("query", "date:20200212_1030 tso:FR"))
+                .param("q", "date:20200212_1030 AND tsos:(FR)"))
                 .andExpect(status().isOk())
                 .andReturn();
         response = mvcResult.getResponse().getContentAsString();
@@ -416,7 +416,7 @@ public class CaseControllerTest {
         assertFalse(response.contains("{\"name\":\"20200103_0915_135_CH2.UCT\""));
 
         mvcResult = mvc.perform(get("/v1/cases/search")
-                .param("query", "date:20200103_0915 tso:CH"))
+                .param("q", "date:20200103_0915 AND tsos:(CH)"))
                 .andExpect(status().isOk())
                 .andReturn();
         response = mvcResult.getResponse().getContentAsString();
@@ -426,7 +426,7 @@ public class CaseControllerTest {
         assertTrue(response.contains("{\"name\":\"20200103_0915_135_CH2.UCT\""));
 
         mvcResult = mvc.perform(get("/v1/cases/search")
-                .param("query", "date:20200103_0915 tso:FR|CH|D8"))
+                .param("q", "date:20200103_0915 AND tsos:(FR OR CH OR D8)"))
                 .andExpect(status().isOk())
                 .andReturn();
         response = mvcResult.getResponse().getContentAsString();
@@ -439,7 +439,7 @@ public class CaseControllerTest {
                 .andExpect(status().isOk());
 
         mvcResult = mvc.perform(get("/v1/cases/search")
-                .param("query", "date:20200103_0915 tso:FR|CH|D8"))
+                .param("q", "date:20200103_0915 AND tsos:(FR OR CH OR D8)"))
                 .andExpect(status().isOk())
                 .andReturn();
         response = mvcResult.getResponse().getContentAsString();
