@@ -385,7 +385,12 @@ public class CaseControllerTest {
                 .param("q", "date: AND tsos:()"))
                 .andExpect(status().isOk())
                 .andReturn();
-        assertEquals("[]", mvcResult.getResponse().getContentAsString());
+        response = mvcResult.getResponse().getContentAsString();
+        assertTrue(response.contains("{\"name\":\"testCase.xiidm\""));
+        assertTrue(response.contains("{\"name\":\"20200212_1030_FO3_FR1.zip\""));
+        assertTrue(response.contains("{\"name\":\"20200103_0915_FO5_FR0.UCT\""));
+        assertTrue(response.contains("{\"name\":\"20200103_0915_SN5_D80.UCT\""));
+        assertTrue(response.contains("{\"name\":\"20200103_0915_135_CH2.UCT\""));
 
         mvcResult = mvc.perform(get("/v1/cases/search")
                 .param("q", "date:20140116_0830 AND tsos:(ES)"))

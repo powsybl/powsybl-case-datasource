@@ -358,8 +358,18 @@ public class CaseService {
                     .map(file -> createInfos(file.getFileName().toString(), UUID.fromString(file.getParent().getFileName().toString()), getFormat(file)))
                     .filter(caseInfos -> {
                         if (caseInfos instanceof EntsoeCaseInfos) {
-                            return dates.contains(((EntsoeCaseInfos) caseInfos).getDate()) &&
-                                    entsoeCodes.contains(((EntsoeCaseInfos) caseInfos).getGeographicalCode());
+                            if (!dates.isEmpty() && !entsoeCodes.isEmpty()) {
+                                return dates.contains(((EntsoeCaseInfos) caseInfos).getDate()) &&
+                                        entsoeCodes.contains(((EntsoeCaseInfos) caseInfos).getGeographicalCode());
+                            } else if (dates.isEmpty() && entsoeCodes.isEmpty()) {
+                                return true;
+                            } else if (!dates.isEmpty() && entsoeCodes.isEmpty()) {
+                                return dates.contains(((EntsoeCaseInfos) caseInfos).getDate());
+                            } else if (dates.isEmpty() && !entsoeCodes.isEmpty()) {
+                                return entsoeCodes.contains(((EntsoeCaseInfos) caseInfos).getGeographicalCode());
+                            }
+                        } else if (caseInfos instanceof CaseInfos) {
+                            return entsoeCodes.isEmpty() && dates.isEmpty();
                         }
                         return false;
                     }).collect(Collectors.toList());
