@@ -10,6 +10,7 @@ import com.powsybl.caseserver.entsoe.EntsoeCaseInfos;
 import com.powsybl.caseserver.parsers.FileNameInfos;
 import com.powsybl.caseserver.parsers.FileNameParser;
 import com.powsybl.caseserver.parsers.FileNameParsers;
+import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.datasource.DataSource;
 import com.powsybl.computation.ComputationManager;
 import com.powsybl.computation.local.LocalComputationManager;
@@ -19,6 +20,8 @@ import com.powsybl.iidm.import_.Importers;
 import com.powsybl.iidm.network.Network;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.nio.file.DirectoryStream;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
@@ -326,11 +329,18 @@ public class CaseService {
         List<DateTime> dates = new ArrayList<>();
         List<EntsoeGeographicalCode> entsoeCodes = new ArrayList<>();
 
+        String decodedQuery;
+        try {
+            decodedQuery = URLDecoder.decode(query, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            throw new PowsyblException("Error when decoding the query string");
+        }
+
         // the query is an elasticsearch form query, so here it will be :
         // date:XXX AND tsos:(X)
         // date:XXX AND tsos:(X OR Y OR Z)
         //
-        String[] searchFields = query.split(" AND ");
+        String[] searchFields = decodedQuery.split(" AND ");
         for (String searchField : searchFields) {
             String[] field = searchField.split(":");
             if (field.length > 1) {
