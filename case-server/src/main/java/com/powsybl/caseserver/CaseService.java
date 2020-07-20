@@ -6,22 +6,28 @@
  */
 package com.powsybl.caseserver;
 
+import com.powsybl.caseserver.entsoe.EntsoeCaseInfos;
 import com.powsybl.caseserver.parsers.FileNameInfos;
 import com.powsybl.caseserver.parsers.FileNameParser;
 import com.powsybl.caseserver.parsers.FileNameParsers;
+import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.datasource.DataSource;
 import com.powsybl.computation.ComputationManager;
 import com.powsybl.computation.local.LocalComputationManager;
+import com.powsybl.entsoe.util.EntsoeGeographicalCode;
 import com.powsybl.iidm.import_.Importer;
 import com.powsybl.iidm.import_.Importers;
 import com.powsybl.iidm.network.Network;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.nio.file.DirectoryStream;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -30,6 +36,9 @@ import java.util.UUID;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import org.apache.commons.lang3.StringUtils;
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -40,8 +49,11 @@ import org.springframework.web.multipart.MultipartFile;
 import reactor.core.publisher.EmitterProcessor;
 import reactor.core.publisher.Flux;
 
+import static com.powsybl.caseserver.parsers.entsoe.EntsoeFileNameParser.parseDateTime;
+
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
+ * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
 @Service
 public class CaseService {
@@ -309,6 +321,70 @@ public class CaseService {
         Objects.requireNonNull(caseName);
         if (!caseName.matches("^[\\w0-9\\-]+(\\.[\\w0-9]+)*$")) {
             throw CaseException.createIllegalCaseName(caseName);
+        }
+    }
+
+    List<CaseInfos> searchCases(String query) {
+        checkStorageInitialization();
+        List<DateTime> dates = new ArrayList<>();
+        List<EntsoeGeographicalCode> entsoeCodes = new ArrayList<>();
+
+        String decodedQuery;
+        try {
+            decodedQuery = URLDecoder.decode(query, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            throw new PowsyblException("Error when decoding the query string");
+        }
+
+        // the query is an elasticsearch form query, so here it will be :
+        // date:XXX AND tsos:(X)
+        // date:XXX AND tsos:(X OR Y OR Z)
+        //
+        String[] searchFields = decodedQuery.split(" AND ");
+        for (String searchField : searchFields) {
+            String[] field = searchField.split(":");
+            if (field.length > 1) {
+                if (field[0].equals("date")) {
+                    String date = field[1].trim();
+                    if (!StringUtils.isEmpty(date)) {
+                        dates.add(parseDateTime(date));
+                    }
+                } else if (field[0].equals("tsos")) {
+                    String tmp = field[1].trim();
+                    if (tmp.length() > 1) {
+                        String[] tsos = tmp.substring(1, tmp.length() - 1).split(" OR ");
+                        for (String tso : tsos) {
+                            if (!StringUtils.isEmpty(tso)) {
+                                entsoeCodes.add(EntsoeGeographicalCode.valueOf(tso.trim()));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        try (Stream<Path> walk = Files.walk(getPublicStorageDir())) {
+            return walk.filter(Files::isRegularFile)
+                    .map(file -> createInfos(file.getFileName().toString(), UUID.fromString(file.getParent().getFileName().toString()), getFormat(file)))
+                    .filter(caseInfos -> {
+                        if (caseInfos instanceof EntsoeCaseInfos) {
+                            if (!dates.isEmpty() && !entsoeCodes.isEmpty()) {
+                                return dates.contains(((EntsoeCaseInfos) caseInfos).getDate()) &&
+                                        entsoeCodes.contains(((EntsoeCaseInfos) caseInfos).getGeographicalCode());
+                            } else if (dates.isEmpty() && entsoeCodes.isEmpty()) {
+                                return true;
+                            } else if (!dates.isEmpty() && entsoeCodes.isEmpty()) {
+                                return dates.contains(((EntsoeCaseInfos) caseInfos).getDate());
+                            } else if (dates.isEmpty() && !entsoeCodes.isEmpty()) {
+                                return entsoeCodes.contains(((EntsoeCaseInfos) caseInfos).getGeographicalCode());
+                            }
+                        } else if (caseInfos instanceof CaseInfos) {
+                            return entsoeCodes.isEmpty() && dates.isEmpty();
+                        }
+                        return false;
+                    }).collect(Collectors.toList());
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
         }
     }
 }

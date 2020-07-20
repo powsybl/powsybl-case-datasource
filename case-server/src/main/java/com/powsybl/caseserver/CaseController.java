@@ -30,6 +30,7 @@ import static com.powsybl.caseserver.CaseException.createDirectoryNotFound;
 
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
+ * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
 @RestController
 @RequestMapping(value = "/" + CaseConstants.API_VERSION)
@@ -133,5 +134,13 @@ public class CaseController {
         LOGGER.debug("deleteCases request received");
         caseService.deleteAllCases();
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping(value = "/cases/search")
+    @ApiOperation(value = "Search cases by metadata")
+    public ResponseEntity<List<CaseInfos>> searchCases(@RequestParam(value = "q") String query) {
+        LOGGER.debug("search cases request received");
+        List<CaseInfos> cases = caseService.searchCases(query);
+        return ResponseEntity.ok().body(cases);
     }
 }
