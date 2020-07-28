@@ -19,3 +19,9 @@ spring:
         publishCaseImport-out-0:
           destination: case.import
 
+  data:
+    elasticsearch:
+      host: localhost
+      port: 9200
+      index: case-server
+      type: matadatas

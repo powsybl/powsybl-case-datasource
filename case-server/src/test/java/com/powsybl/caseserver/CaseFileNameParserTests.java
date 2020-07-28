@@ -6,7 +6,10 @@
  */
 package com.powsybl.caseserver;
 
-import com.powsybl.caseserver.entsoe.EntsoeCaseInfos;
+import com.powsybl.caseserver.dao.elasticsearch.CaseInfosDAOImpl;
+import com.powsybl.caseserver.dao.elasticsearch.RestClientConfig;
+import com.powsybl.caseserver.dto.CaseInfos;
+import com.powsybl.caseserver.dto.entsoe.EntsoeCaseInfos;
 import com.powsybl.caseserver.parsers.FileNameInfos;
 import com.powsybl.caseserver.parsers.FileNameParser;
 import com.powsybl.caseserver.parsers.entsoe.EntsoeFileNameParser;
@@ -29,7 +32,7 @@ import static org.junit.Assert.assertTrue;
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE,  classes = CaseService.class)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE,  classes = {CaseService.class, CaseInfosDAOImpl.class, RestClientConfig.class})
 public class CaseFileNameParserTests {
 
     private static final String SN_UCTE_CASE_FILE_NAME      = "20200103_0915_SN5_D80.UCT";

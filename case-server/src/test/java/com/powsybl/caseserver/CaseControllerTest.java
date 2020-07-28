@@ -10,6 +10,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.ByteStreams;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
+import com.powsybl.caseserver.dao.elasticsearch.CaseInfosDAOImpl;
+import com.powsybl.caseserver.dto.CaseInfos;
 import com.powsybl.computation.ComputationManager;
 import org.junit.After;
 import org.junit.Before;
@@ -51,7 +53,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @RunWith(SpringRunner.class)
 @AutoConfigureMockMvc
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK, classes =
-    { CaseController.class, CaseService.class, TestChannelBinderConfiguration.class })
+    { CaseController.class, CaseService.class, TestChannelBinderConfiguration.class, CaseInfosDAOImpl.class })
 @TestPropertySource(properties = {"case-store-directory=/cases"})
 public class CaseControllerTest {
 
@@ -250,7 +252,7 @@ public class CaseControllerTest {
                 .andExpect(status().isOk())
                 .andReturn();
 
-        assertTrue(mvcResult.getResponse().getContentAsString().startsWith("[{\"name\":\"testCase.xiidm\""));
+        assertTrue(mvcResult.getResponse().getContentAsString().contains("\"name\":\"testCase.xiidm\""));
     }
 
     @Test
@@ -374,11 +376,11 @@ public class CaseControllerTest {
 
         // assert that the 5 previously imported cases are present
         String response = mvcResult.getResponse().getContentAsString();
-        assertTrue(response.contains("{\"name\":\"testCase.xiidm\""));
-        assertTrue(response.contains("{\"name\":\"20200212_1030_FO3_FR1.zip\""));
-        assertTrue(response.contains("{\"name\":\"20200103_0915_FO5_FR0.UCT\""));
-        assertTrue(response.contains("{\"name\":\"20200103_0915_SN5_D80.UCT\""));
-        assertTrue(response.contains("{\"name\":\"20200103_0915_135_CH2.UCT\""));
+        assertTrue(response.contains("\"name\":\"testCase.xiidm\""));
+        assertTrue(response.contains("\"name\":\"20200212_1030_FO3_FR1.zip\""));
+        assertTrue(response.contains("\"name\":\"20200103_0915_FO5_FR0.UCT\""));
+        assertTrue(response.contains("\"name\":\"20200103_0915_SN5_D80.UCT\""));
+        assertTrue(response.contains("\"name\":\"20200103_0915_135_CH2.UCT\""));
 
         // search the cases
         mvcResult = mvc.perform(get("/v1/cases/search")
@@ -386,33 +388,33 @@ public class CaseControllerTest {
                 .andExpect(status().isOk())
                 .andReturn();
         response = mvcResult.getResponse().getContentAsString();
-        assertTrue(response.contains("{\"name\":\"testCase.xiidm\""));
-        assertTrue(response.contains("{\"name\":\"20200212_1030_FO3_FR1.zip\""));
-        assertTrue(response.contains("{\"name\":\"20200103_0915_FO5_FR0.UCT\""));
-        assertTrue(response.contains("{\"name\":\"20200103_0915_SN5_D80.UCT\""));
-        assertTrue(response.contains("{\"name\":\"20200103_0915_135_CH2.UCT\""));
+        assertTrue(response.contains("\"name\":\"testCase.xiidm\""));
+        assertTrue(response.contains("\"name\":\"20200212_1030_FO3_FR1.zip\""));
+        assertTrue(response.contains("\"name\":\"20200103_0915_FO5_FR0.UCT\""));
+        assertTrue(response.contains("\"name\":\"20200103_0915_SN5_D80.UCT\""));
+        assertTrue(response.contains("\"name\":\"20200103_0915_135_CH2.UCT\""));
 
         mvcResult = mvc.perform(get("/v1/cases/search")
                 .param("q", "date:20200103_0915"))
                 .andExpect(status().isOk())
                 .andReturn();
         response = mvcResult.getResponse().getContentAsString();
-        assertFalse(response.contains("{\"name\":\"testCase.xiidm\""));
-        assertFalse(response.contains("{\"name\":\"20200212_1030_FO3_FR1.zip\""));
-        assertTrue(response.contains("{\"name\":\"20200103_0915_FO5_FR0.UCT\""));
-        assertTrue(response.contains("{\"name\":\"20200103_0915_SN5_D80.UCT\""));
-        assertTrue(response.contains("{\"name\":\"20200103_0915_135_CH2.UCT\""));
+        assertFalse(response.contains("\"name\":\"testCase.xiidm\""));
+        assertFalse(response.contains("\"name\":\"20200212_1030_FO3_FR1.zip\""));
+        assertTrue(response.contains("\"name\":\"20200103_0915_FO5_FR0.UCT\""));
+        assertTrue(response.contains("\"name\":\"20200103_0915_SN5_D80.UCT\""));
+        assertTrue(response.contains("\"name\":\"20200103_0915_135_CH2.UCT\""));
 
         mvcResult = mvc.perform(get("/v1/cases/search")
                 .param("q", "tsos:(FR)"))
                 .andExpect(status().isOk())
                 .andReturn();
         response = mvcResult.getResponse().getContentAsString();
-        assertFalse(response.contains("{\"name\":\"testCase.xiidm\""));
-        assertTrue(response.contains("{\"name\":\"20200212_1030_FO3_FR1.zip\""));
-        assertTrue(response.contains("{\"name\":\"20200103_0915_FO5_FR0.UCT\""));
-        assertFalse(response.contains("{\"name\":\"20200103_0915_SN5_D80.UCT\""));
-        assertFalse(response.contains("{\"name\":\"20200103_0915_135_CH2.UCT\""));
+        assertFalse(response.contains("\"name\":\"testCase.xiidm\""));
+        assertTrue(response.contains("\"name\":\"20200212_1030_FO3_FR1.zip\""));
+        assertTrue(response.contains("\"name\":\"20200103_0915_FO5_FR0.UCT\""));
+        assertFalse(response.contains("\"name\":\"20200103_0915_SN5_D80.UCT\""));
+        assertFalse(response.contains("\"name\":\"20200103_0915_135_CH2.UCT\""));
 
         mvcResult = mvc.perform(get("/v1/cases/search")
                 .param("q", "date:20140116_0830 AND tsos:(ES)"))
@@ -437,29 +439,29 @@ public class CaseControllerTest {
                 .andExpect(status().isOk())
                 .andReturn();
         response = mvcResult.getResponse().getContentAsString();
-        assertTrue(response.contains("{\"name\":\"20200212_1030_FO3_FR1.zip\""));
-        assertFalse(response.contains("{\"name\":\"20200103_0915_FO5_FR0.UCT\""));
-        assertFalse(response.contains("{\"name\":\"20200103_0915_SN5_D80.UCT\""));
-        assertFalse(response.contains("{\"name\":\"20200103_0915_135_CH2.UCT\""));
+        assertTrue(response.contains("\"name\":\"20200212_1030_FO3_FR1.zip\""));
+        assertFalse(response.contains("\"name\":\"20200103_0915_FO5_FR0.UCT\""));
+        assertFalse(response.contains("\"name\":\"20200103_0915_SN5_D80.UCT\""));
+        assertFalse(response.contains("\"name\":\"20200103_0915_135_CH2.UCT\""));
 
         mvcResult = mvc.perform(get("/v1/cases/search")
                 .param("q", "date:20200103_0915 AND tsos:(CH)"))
                 .andExpect(status().isOk())
                 .andReturn();
         response = mvcResult.getResponse().getContentAsString();
-        assertFalse(response.contains("{\"name\":\"20200212_1030_FO3_FR1.zip\""));
-        assertFalse(response.contains("{\"name\":\"20200103_0915_FO5_FR0.UCT\""));
-        assertFalse(response.contains("{\"name\":\"20200103_0915_SN5_D80.UCT\""));
-        assertTrue(response.contains("{\"name\":\"20200103_0915_135_CH2.UCT\""));
+        assertFalse(response.contains("\"name\":\"20200212_1030_FO3_FR1.zip\""));
+        assertFalse(response.contains("\"name\":\"20200103_0915_FO5_FR0.UCT\""));
+        assertFalse(response.contains("\"name\":\"20200103_0915_SN5_D80.UCT\""));
+        assertTrue(response.contains("\"name\":\"20200103_0915_135_CH2.UCT\""));
 
         mvcResult = mvc.perform(get("/v1/cases/search")
                 .param("q", "date:20200103_0915 AND tsos:(FR OR CH OR D8)"))
                 .andExpect(status().isOk())
                 .andReturn();
         response = mvcResult.getResponse().getContentAsString();
-        assertTrue(response.contains("{\"name\":\"20200103_0915_FO5_FR0.UCT\""));
-        assertTrue(response.contains("{\"name\":\"20200103_0915_SN5_D80.UCT\""));
-        assertTrue(response.contains("{\"name\":\"20200103_0915_135_CH2.UCT\""));
+        assertTrue(response.contains("\"name\":\"20200103_0915_FO5_FR0.UCT\""));
+        assertTrue(response.contains("\"name\":\"20200103_0915_SN5_D80.UCT\""));
+        assertTrue(response.contains("\"name\":\"20200103_0915_135_CH2.UCT\""));
 
         // delete all cases
         mvc.perform(delete("/v1/cases"))
@@ -470,8 +472,8 @@ public class CaseControllerTest {
                 .andExpect(status().isOk())
                 .andReturn();
         response = mvcResult.getResponse().getContentAsString();
-        assertFalse(response.contains("{\"name\":\"20200103_0915_FO5_FR0.UCT\""));
-        assertFalse(response.contains("{\"name\":\"20200103_0915_SN5_D80.UCT\""));
-        assertFalse(response.contains("{\"name\":\"20200103_0915_135_CH2.UCT\""));
+        assertFalse(response.contains("\"name\":\"20200103_0915_FO5_FR0.UCT\""));
+        assertFalse(response.contains("\"name\":\"20200103_0915_SN5_D80.UCT\""));
+        assertFalse(response.contains("\"name\":\"20200103_0915_135_CH2.UCT\""));
     }
 }

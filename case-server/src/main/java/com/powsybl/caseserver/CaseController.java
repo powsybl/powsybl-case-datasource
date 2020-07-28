@@ -6,6 +6,7 @@
  */
 package com.powsybl.caseserver;
 
+import com.powsybl.caseserver.dto.CaseInfos;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.xml.NetworkXml;
 import io.swagger.annotations.Api;

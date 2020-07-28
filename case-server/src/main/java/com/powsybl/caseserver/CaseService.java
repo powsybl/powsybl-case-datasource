@@ -6,7 +6,9 @@
  */
 package com.powsybl.caseserver;
 
-import com.powsybl.caseserver.entsoe.EntsoeCaseInfos;
+import com.powsybl.caseserver.dao.CaseInfosDAO;
+import com.powsybl.caseserver.dto.CaseInfos;
+import com.powsybl.caseserver.dto.entsoe.EntsoeCaseInfos;
 import com.powsybl.caseserver.parsers.FileNameInfos;
 import com.powsybl.caseserver.parsers.FileNameParser;
 import com.powsybl.caseserver.parsers.FileNameParsers;
@@ -41,6 +43,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.messaging.Message;
@@ -65,6 +68,9 @@ public class CaseService {
     private ComputationManager computationManager = LocalComputationManager.getDefault();
 
     private final EmitterProcessor<Message<String>> caseInfosPublisher = EmitterProcessor.create();
+
+    @Autowired
+    private CaseInfosDAO caseInfosDAO;
 
     @Bean
     public Supplier<Flux<Message<String>>> publishCaseImport() {
@@ -206,14 +212,16 @@ public class CaseService {
             throw e;
         }
 
-        sendNotificationMessage(caseFile, caseUuid, importer.getFormat());
+        CaseInfos caseInfos = createInfos(caseFile.getFileName().toString(), caseUuid, importer.getFormat());
+        try {
+            caseInfosDAO.addCaseInfos(caseInfos);
+        } catch (IOException e) {
+            LOGGER.error(e.toString(), e);
+        }
+
+        caseInfosPublisher.onNext(caseInfos.createMessage());
 
         return caseUuid;
-    }
-
-    private void sendNotificationMessage(Path caseFile, UUID caseUuid, String format) {
-        CaseInfos caseInfos = createInfos(caseFile.getFileName().toString(), caseUuid, format);
-        caseInfosPublisher.onNext(caseInfos.createMessage());
     }
 
     CaseInfos createInfos(String fileBaseName, UUID caseUuid, String format) {

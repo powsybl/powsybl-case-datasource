@@ -4,9 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-package com.powsybl.caseserver.entsoe;
+package com.powsybl.caseserver.dto.entsoe;
 
-import com.powsybl.caseserver.CaseInfos;
+import com.powsybl.caseserver.dto.CaseInfos;
 import com.powsybl.entsoe.util.EntsoeGeographicalCode;
 import com.powsybl.iidm.network.Country;
 import io.swagger.annotations.ApiModel;
@@ -14,6 +14,8 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
 import org.joda.time.DateTime;
+import org.springframework.data.annotation.TypeAlias;
+import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.messaging.Message;
 
 /**
@@ -24,6 +26,8 @@ import org.springframework.messaging.Message;
 @SuperBuilder
 @Getter
 @ApiModel("Case infos")
+@Document(indexName = "${spring.data.elasticsearch.index}", type = "${spring.data.elasticsearch.type}")
+@TypeAlias(value = "EntsoeCaseInfos")
 public class EntsoeCaseInfos extends CaseInfos {
 
     private static final String DATE_HEADER_KEY         = "date";

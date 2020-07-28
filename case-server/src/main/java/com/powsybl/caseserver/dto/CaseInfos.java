@@ -4,9 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-package com.powsybl.caseserver;
+package com.powsybl.caseserver.dto;
 
-import com.powsybl.caseserver.entsoe.EntsoeCaseInfos;
+import com.powsybl.caseserver.dto.entsoe.EntsoeCaseInfos;
 import com.powsybl.caseserver.parsers.FileNameInfos;
 import com.powsybl.caseserver.parsers.entsoe.EntsoeFileName;
 import io.swagger.annotations.ApiModel;
@@ -14,6 +14,9 @@ import java.util.UUID;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.TypeAlias;
+import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.integration.support.MessageBuilder;
 import org.springframework.messaging.Message;
 
@@ -23,14 +26,17 @@ import org.springframework.messaging.Message;
 @SuperBuilder
 @Getter
 @ApiModel("Case infos")
+@Document(indexName = "${spring.data.elasticsearch.index}", type = "${spring.data.elasticsearch.type}")
+@TypeAlias(value = "CaseInfos")
 public class CaseInfos {
 
-    protected static final String NAME_HEADER_KEY   = "name";
-    protected static final String UUID_HEADER_KEY   = "uuid";
-    protected static final String FORMAT_HEADER_KEY = "format";
+    public static final String NAME_HEADER_KEY   = "name";
+    public static final String UUID_HEADER_KEY   = "uuid";
+    public static final String FORMAT_HEADER_KEY = "format";
 
-    @NonNull protected String   name;
+    @Id
     @NonNull protected UUID     uuid;
+    @NonNull protected String   name;
     @NonNull protected String   format;
 
     public static CaseInfos create(String fileBaseName, UUID caseUuid, String format, FileNameInfos fileNameInfos) {
