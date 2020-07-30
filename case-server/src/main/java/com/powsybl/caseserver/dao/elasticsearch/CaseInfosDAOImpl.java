@@ -46,16 +46,31 @@ public class CaseInfosDAOImpl implements CaseInfosDAO {
 
     @Override
     public List<CaseInfos> getAllCaseInfos() {
-        List<CaseInfos> res = new ArrayList<CaseInfos>();
+        List<CaseInfos> res = new ArrayList<>();
         caseInfosRepository.findAll().forEach(res::add);
         return res;
     }
 
     @Override
     public List<CaseInfos> searchCaseInfos(@NonNull String query) {
-        List<CaseInfos> res = new ArrayList<CaseInfos>();
+        List<CaseInfos> res = new ArrayList<>();
         caseInfosRepository.search(QueryBuilders.queryStringQuery(query)).forEach(res::add);
         return res;
+    }
+
+    @Override
+    public void deleteCaseInfos(@NonNull CaseInfos ci) {
+        caseInfosRepository.delete(ci);
+    }
+
+    @Override
+    public void deleteCaseInfosByUuid(@NonNull  String uuid) {
+        caseInfosRepository.deleteById(uuid);
+    }
+
+    @Override
+    public void deleteAllCaseInfos() {
+        caseInfosRepository.deleteAll();
     }
 
 }

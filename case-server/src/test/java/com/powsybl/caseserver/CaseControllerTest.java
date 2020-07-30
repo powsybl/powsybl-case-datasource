@@ -12,7 +12,18 @@ import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
 import com.powsybl.caseserver.dao.elasticsearch.CaseInfosDAOImpl;
 import com.powsybl.caseserver.dto.CaseInfos;
+import com.powsybl.caseserver.parsers.entsoe.EntsoeFileNameParser;
+import com.powsybl.commons.PowsyblException;
 import com.powsybl.computation.ComputationManager;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.FileSystem;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.UUID;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -33,18 +44,16 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.FileSystem;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.UUID;
-
 import static org.hamcrest.Matchers.startsWith;
-import static org.junit.Assert.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
@@ -384,7 +393,7 @@ public class CaseControllerTest {
 
         // search the cases
         mvcResult = mvc.perform(get("/v1/cases/search")
-                .param("q", "date: AND tsos:()"))
+                .param("q", "*"))
                 .andExpect(status().isOk())
                 .andReturn();
         response = mvcResult.getResponse().getContentAsString();
@@ -394,8 +403,9 @@ public class CaseControllerTest {
         assertTrue(response.contains("\"name\":\"20200103_0915_SN5_D80.UCT\""));
         assertTrue(response.contains("\"name\":\"20200103_0915_135_CH2.UCT\""));
 
+        String t = getDateSearchTerm("20200103_0915");
         mvcResult = mvc.perform(get("/v1/cases/search")
-                .param("q", "date:20200103_0915"))
+                .param("q", getDateSearchTerm("20200103_0915")))
                 .andExpect(status().isOk())
                 .andReturn();
         response = mvcResult.getResponse().getContentAsString();
@@ -406,7 +416,7 @@ public class CaseControllerTest {
         assertTrue(response.contains("\"name\":\"20200103_0915_135_CH2.UCT\""));
 
         mvcResult = mvc.perform(get("/v1/cases/search")
-                .param("q", "tsos:(FR)"))
+                .param("q", "geographicalCode:(FR)"))
                 .andExpect(status().isOk())
                 .andReturn();
         response = mvcResult.getResponse().getContentAsString();
@@ -417,25 +427,25 @@ public class CaseControllerTest {
         assertFalse(response.contains("\"name\":\"20200103_0915_135_CH2.UCT\""));
 
         mvcResult = mvc.perform(get("/v1/cases/search")
-                .param("q", "date:20140116_0830 AND tsos:(ES)"))
+                .param("q",  getDateSearchTerm("20140116_0830") + " AND geographicalCode:(ES)"))
                 .andExpect(status().isOk())
                 .andReturn();
         assertEquals("[]", mvcResult.getResponse().getContentAsString());
 
         mvcResult = mvc.perform(get("/v1/cases/search")
-                .param("q", "date:20140116_0830 AND tsos:(FR)"))
+                .param("q", getDateSearchTerm("20140116_0830") + " AND geographicalCode:(FR)"))
                 .andExpect(status().isOk())
                 .andReturn();
         assertEquals("[]", mvcResult.getResponse().getContentAsString());
 
         mvcResult = mvc.perform(get("/v1/cases/search")
-                .param("q", "date:20200212_1030 AND tsos:(PT)"))
+                .param("q", getDateSearchTerm("20200212_1030") + " AND geographicalCode:(PT)"))
                 .andExpect(status().isOk())
                 .andReturn();
         assertEquals("[]", mvcResult.getResponse().getContentAsString());
 
         mvcResult = mvc.perform(get("/v1/cases/search")
-                .param("q", "date:20200212_1030 AND tsos:(FR)"))
+                .param("q", getDateSearchTerm("20200212_1030") + " AND geographicalCode:(FR)"))
                 .andExpect(status().isOk())
                 .andReturn();
         response = mvcResult.getResponse().getContentAsString();
@@ -445,7 +455,7 @@ public class CaseControllerTest {
         assertFalse(response.contains("\"name\":\"20200103_0915_135_CH2.UCT\""));
 
         mvcResult = mvc.perform(get("/v1/cases/search")
-                .param("q", "date:20200103_0915 AND tsos:(CH)"))
+                .param("q", getDateSearchTerm("20200103_0915") + " AND geographicalCode:(CH)"))
                 .andExpect(status().isOk())
                 .andReturn();
         response = mvcResult.getResponse().getContentAsString();
@@ -455,7 +465,7 @@ public class CaseControllerTest {
         assertTrue(response.contains("\"name\":\"20200103_0915_135_CH2.UCT\""));
 
         mvcResult = mvc.perform(get("/v1/cases/search")
-                .param("q", "date:20200103_0915 AND tsos:(FR OR CH OR D8)"))
+                .param("q", getDateSearchTerm("20200103_0915") + " AND geographicalCode:(FR OR CH OR D8)"))
                 .andExpect(status().isOk())
                 .andReturn();
         response = mvcResult.getResponse().getContentAsString();
@@ -468,12 +478,21 @@ public class CaseControllerTest {
                 .andExpect(status().isOk());
 
         mvcResult = mvc.perform(get("/v1/cases/search")
-                .param("q", "date:20200103_0915 AND tsos:(FR OR CH OR D8)"))
+                .param("q", getDateSearchTerm("20200103_0915") + " AND geographicalCode:(FR OR CH OR D8)"))
                 .andExpect(status().isOk())
                 .andReturn();
         response = mvcResult.getResponse().getContentAsString();
         assertFalse(response.contains("\"name\":\"20200103_0915_FO5_FR0.UCT\""));
         assertFalse(response.contains("\"name\":\"20200103_0915_SN5_D80.UCT\""));
         assertFalse(response.contains("\"name\":\"20200103_0915_135_CH2.UCT\""));
+    }
+
+    private String getDateSearchTerm(String entsoeFormatDate) {
+        String utcFormattedDate = EntsoeFileNameParser.parseDateTime(entsoeFormatDate).toDateTimeISO().toString();
+        try {
+            return "date:\"" + URLEncoder.encode(utcFormattedDate, "UTF-8") + "\"";
+        } catch (UnsupportedEncodingException e) {
+            throw new PowsyblException("Error when decoding the query string");
+        }
     }
 }

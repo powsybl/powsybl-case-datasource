@@ -10,6 +10,7 @@ import com.powsybl.caseserver.dto.entsoe.EntsoeCaseInfos;
 import com.powsybl.caseserver.parsers.FileNameInfos;
 import com.powsybl.caseserver.parsers.entsoe.EntsoeFileName;
 import io.swagger.annotations.ApiModel;
+import java.util.Objects;
 import java.util.UUID;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -41,6 +42,31 @@ public class CaseInfos {
     @NonNull protected String   name;
     @NonNull protected String   format;
 
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+
+        if (obj == null) {
+            return false;
+        }
+
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+
+        CaseInfos other = (CaseInfos) obj;
+        return  Objects.equals(this.uuid, other.uuid) &&
+                Objects.equals(this.name, other.name) &&
+                Objects.equals(this.format, other.format);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(uuid, name, format);
+    }
+
     public static CaseInfos create(String fileBaseName, UUID caseUuid, String format, FileNameInfos fileNameInfos) {
         switch (fileNameInfos.getType()) {
             case ENTSOE:
@@ -63,5 +89,4 @@ public class CaseInfos {
     public Message<String> createMessage() {
         return createMessageBuilder().build();
     }
-
 }

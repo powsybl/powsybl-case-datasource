@@ -10,6 +10,7 @@ import com.powsybl.caseserver.dto.CaseInfos;
 import com.powsybl.entsoe.util.EntsoeGeographicalCode;
 import com.powsybl.iidm.network.Country;
 import io.swagger.annotations.ApiModel;
+import java.util.Objects;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
@@ -32,11 +33,11 @@ import org.springframework.messaging.Message;
 @TypeAlias(value = "EntsoeCaseInfos")
 public class EntsoeCaseInfos extends CaseInfos {
 
-    private static final String DATE_HEADER_KEY         = "date";
-    private static final String FO_DISTANCE_HEADER_KEY  = "forecastDistance";
-    private static final String GEO_CODE_HEADER_KEY     = "geographicalCode";
-    private static final String COUNTRY_HEADER_KEY      = "country";
-    private static final String VERSION_HEADER_KEY      = "version";
+    public static final String DATE_HEADER_KEY         = "date";
+    public static final String FO_DISTANCE_HEADER_KEY  = "forecastDistance";
+    public static final String GEO_CODE_HEADER_KEY     = "geographicalCode";
+    public static final String COUNTRY_HEADER_KEY      = "country";
+    public static final String VERSION_HEADER_KEY      = "version";
 
     @NonNull private DateTime date;
     @NonNull private Integer forecastDistance;
@@ -56,5 +57,23 @@ public class EntsoeCaseInfos extends CaseInfos {
             .setHeader(COUNTRY_HEADER_KEY,      getCountry())
             .setHeader(VERSION_HEADER_KEY,      getVersion())
             .build();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!super.equals(obj)) {
+            return false;
+        }
+
+        EntsoeCaseInfos other = (EntsoeCaseInfos) obj;
+        return this.date.isEqual(other.date) &&
+                Objects.equals(this.forecastDistance, other.forecastDistance) &&
+                Objects.equals(this.geographicalCode, other.geographicalCode) &&
+                Objects.equals(this.version, other.version);
+    }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode() + Objects.hash(date, forecastDistance, geographicalCode, version);
     }
 }

@@ -7,15 +7,11 @@
 package com.powsybl.caseserver.dao.elasticsearch;
 
 import java.net.InetSocketAddress;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormatter;
+import org.joda.time.format.ISODateTimeFormat;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.data.elasticsearch.ElasticsearchAutoConfiguration;
@@ -42,8 +38,6 @@ import org.springframework.data.elasticsearch.repository.config.EnableElasticsea
 @EnableElasticsearchRepositories
 @EnableAutoConfiguration(exclude = {ElasticsearchAutoConfiguration.class})
 public class ESConfig extends AbstractElasticsearchConfiguration {
-
-    private static SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
 
     @Value("${spring.data.elasticsearch.host}")
     private String esHost;
@@ -81,7 +75,7 @@ public class ESConfig extends AbstractElasticsearchConfiguration {
         INSTANCE;
         @Override
         public String convert(DateTime date) {
-            return formatter.format(date.toDate());
+            return date.toDateTimeISO().toString();
         }
     }
 
@@ -90,11 +84,8 @@ public class ESConfig extends AbstractElasticsearchConfiguration {
         INSTANCE;
         @Override
         public DateTime convert(String s) {
-            try {
-                return new DateTime(formatter.parse(s));
-            } catch (ParseException e) {
-                return null;
-            }
+            DateTimeFormatter parser = ISODateTimeFormat.dateTimeParser();
+            return parser.parseDateTime(s);
         }
     }
 

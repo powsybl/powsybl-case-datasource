@@ -25,4 +25,10 @@ public interface CaseInfosDAO {
     Optional<CaseInfos> getCaseInfosByUuid(@NonNull  String uuid);
 
     List<CaseInfos> searchCaseInfos(@NonNull String query);
+
+    void deleteCaseInfos(@NonNull CaseInfos ci);
+
+    void deleteCaseInfosByUuid(@NonNull  String uuid);
+
+    void deleteAllCaseInfos();
 }
