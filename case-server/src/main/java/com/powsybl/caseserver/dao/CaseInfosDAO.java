@@ -7,7 +7,8 @@
 package com.powsybl.caseserver.dao;
 
 import com.powsybl.caseserver.dto.CaseInfos;
-import java.io.IOException;
+import java.util.List;
+import java.util.Optional;
 import org.springframework.lang.NonNull;
 
 /**
@@ -17,9 +18,11 @@ import org.springframework.lang.NonNull;
  */
 public interface CaseInfosDAO {
 
-    void addCaseInfos(@NonNull CaseInfos ci) throws IOException;
-/*
+    void addCaseInfos(@NonNull CaseInfos ci);
+
     List<CaseInfos> getAllCaseInfos();
-    CaseInfos getCaseInfosById(String uuid);
-*/
+
+    Optional<CaseInfos> getCaseInfosByUuid(@NonNull  String uuid);
+
+    List<CaseInfos> searchCaseInfos(@NonNull String query);
 }

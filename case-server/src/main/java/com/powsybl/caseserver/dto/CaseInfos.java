@@ -12,6 +12,7 @@ import com.powsybl.caseserver.parsers.entsoe.EntsoeFileName;
 import io.swagger.annotations.ApiModel;
 import java.util.UUID;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
 import org.springframework.data.annotation.Id;
@@ -24,9 +25,10 @@ import org.springframework.messaging.Message;
  * @author Geoffroy Jamgotchian <geoffroy.jamgotchian at rte-france.com>
  */
 @SuperBuilder
+@NoArgsConstructor
 @Getter
 @ApiModel("Case infos")
-@Document(indexName = "${spring.data.elasticsearch.index}", type = "${spring.data.elasticsearch.type}")
+@Document(indexName = "case-server", type = "metadatas")
 @TypeAlias(value = "CaseInfos")
 public class CaseInfos {
 

@@ -8,21 +8,17 @@ package com.powsybl.caseserver.dao.elasticsearch;
 
 import com.powsybl.caseserver.dao.CaseInfosDAO;
 import com.powsybl.caseserver.dto.CaseInfos;
-import java.io.IOException;
-import org.elasticsearch.action.index.IndexRequest;
-import org.elasticsearch.action.index.IndexResponse;
-import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.common.xcontent.XContentType;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import org.elasticsearch.index.query.QueryBuilders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
-import org.springframework.data.elasticsearch.core.EntityMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Repository;
-
-import static org.elasticsearch.action.support.WriteRequest.RefreshPolicy.IMMEDIATE;
 
 /**
  * A class to implement metadatas transfer in the DB elasticsearch
@@ -34,29 +30,32 @@ public class CaseInfosDAOImpl implements CaseInfosDAO {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CaseInfosDAOImpl.class);
 
-    @Value("${spring.data.elasticsearch.index}")
-    private String index;
-
-    @Value("${spring.data.elasticsearch.type}")
-    private String mappingType;
-
     @Autowired
-    private RestHighLevelClient elasticsearchClient;
-
-    @Autowired
-    private EntityMapper entityMapper;
-
-    @Autowired
-    private ElasticsearchOperations elasticsearchOperations;
+    private CaseInfosRepository caseInfosRepository;
 
     @Override
-    public void addCaseInfos(CaseInfos ci) throws IOException  {
-        IndexRequest request = new IndexRequest(index, mappingType, ci.getUuid().toString())
-                .source(entityMapper.mapObject(ci), XContentType.JSON)
-                .setRefreshPolicy(IMMEDIATE);
-
-        IndexResponse res = elasticsearchClient.index(request, RequestOptions.DEFAULT);
-
-        LOGGER.debug(res.toString());
+    public void addCaseInfos(@NonNull CaseInfos ci) {
+        caseInfosRepository.save(ci);
     }
+
+    @Override
+    public Optional<CaseInfos> getCaseInfosByUuid(@NonNull String uuid) {
+        Page<CaseInfos> res = caseInfosRepository.findByUuid(uuid,  PageRequest.of(0, 1));
+        return res.get().findFirst();
+    }
+
+    @Override
+    public List<CaseInfos> getAllCaseInfos() {
+        List<CaseInfos> res = new ArrayList<CaseInfos>();
+        caseInfosRepository.findAll().forEach(res::add);
+        return res;
+    }
+
+    @Override
+    public List<CaseInfos> searchCaseInfos(@NonNull String query) {
+        List<CaseInfos> res = new ArrayList<CaseInfos>();
+        caseInfosRepository.search(QueryBuilders.queryStringQuery(query)).forEach(res::add);
+        return res;
+    }
+
 }

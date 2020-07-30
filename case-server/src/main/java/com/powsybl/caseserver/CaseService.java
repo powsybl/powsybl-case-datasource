@@ -213,12 +213,7 @@ public class CaseService {
         }
 
         CaseInfos caseInfos = createInfos(caseFile.getFileName().toString(), caseUuid, importer.getFormat());
-        try {
-            caseInfosDAO.addCaseInfos(caseInfos);
-        } catch (IOException e) {
-            LOGGER.error(e.toString(), e);
-        }
-
+        caseInfosDAO.addCaseInfos(caseInfos);
         caseInfosPublisher.onNext(caseInfos.createMessage());
 
         return caseUuid;

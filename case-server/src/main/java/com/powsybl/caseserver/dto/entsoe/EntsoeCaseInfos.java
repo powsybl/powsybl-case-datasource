@@ -11,6 +11,7 @@ import com.powsybl.entsoe.util.EntsoeGeographicalCode;
 import com.powsybl.iidm.network.Country;
 import io.swagger.annotations.ApiModel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
 import org.joda.time.DateTime;
@@ -24,9 +25,10 @@ import org.springframework.messaging.Message;
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
 @SuperBuilder
+@NoArgsConstructor
 @Getter
 @ApiModel("Case infos")
-@Document(indexName = "${spring.data.elasticsearch.index}", type = "${spring.data.elasticsearch.type}")
+@Document(indexName = "case-server", type = "metadatas")
 @TypeAlias(value = "EntsoeCaseInfos")
 public class EntsoeCaseInfos extends CaseInfos {
 
