@@ -6,6 +6,7 @@
  */
 package com.powsybl.caseserver.dao.elasticsearch;
 
+import com.powsybl.caseserver.dao.CaseInfosDAO;
 import java.net.InetSocketAddress;
 import java.util.Arrays;
 import org.elasticsearch.client.RestHighLevelClient;
@@ -13,8 +14,7 @@ import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.data.elasticsearch.ElasticsearchAutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.converter.Converter;
@@ -34,16 +34,28 @@ import org.springframework.data.elasticsearch.repository.config.EnableElasticsea
  *
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
+
 @Configuration
 @EnableElasticsearchRepositories
-@EnableAutoConfiguration(exclude = {ElasticsearchAutoConfiguration.class})
 public class ESConfig extends AbstractElasticsearchConfiguration {
 
-    @Value("${spring.data.elasticsearch.host}")
+    @Value("#{'${spring.data.elasticsearch.embedded:false}' ? 'localhost' : '${spring.data.elasticsearch.host}'}")
     private String esHost;
 
-    @Value("${spring.data.elasticsearch.port}")
+    @Value("#{'${spring.data.elasticsearch.embedded:false}' ? '${spring.data.elasticsearch.embedded.port:}' : '${spring.data.elasticsearch.port}'}")
     private int esPort;
+
+    @Bean
+    @ConditionalOnExpression("'${spring.data.elasticsearch.enabled:false}' == 'true'")
+    public CaseInfosDAO caseInfosDAOImpl() {
+        return new CaseInfosDAOImpl();
+    }
+
+    @Bean
+    @ConditionalOnExpression("'${spring.data.elasticsearch.enabled:false}' == 'false'")
+    public CaseInfosDAO caseInfosDAONullImpl() {
+        return new CaseInfosDAO() { };
+    }
 
     @Bean
     public RestHighLevelClient elasticsearchClient() {

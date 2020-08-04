@@ -12,20 +12,21 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.lang.NonNull;
-import org.springframework.stereotype.Repository;
 
 /**
  * A class to implement metadatas transfer in the DB elasticsearch
  *
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
-@Repository
+@ComponentScan(basePackageClasses = {CaseInfosRepository.class})
 public class CaseInfosDAOImpl implements CaseInfosDAO {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CaseInfosDAOImpl.class);
@@ -34,12 +35,13 @@ public class CaseInfosDAOImpl implements CaseInfosDAO {
     private CaseInfosRepository caseInfosRepository;
 
     @Override
-    public void addCaseInfos(@NonNull CaseInfos ci) {
+    public CaseInfos addCaseInfos(@NonNull final CaseInfos ci) {
         caseInfosRepository.save(ci);
+        return ci;
     }
 
     @Override
-    public Optional<CaseInfos> getCaseInfosByUuid(@NonNull String uuid) {
+    public Optional<CaseInfos> getCaseInfosByUuid(@NonNull final String uuid) {
         Page<CaseInfos> res = caseInfosRepository.findByUuid(uuid,  PageRequest.of(0, 1));
         return res.get().findFirst();
     }
@@ -52,14 +54,21 @@ public class CaseInfosDAOImpl implements CaseInfosDAO {
     }
 
     @Override
-    public List<CaseInfos> searchCaseInfos(@NonNull String query) {
+    public List<CaseInfos> searchCaseInfos(@NonNull final String query) {
         List<CaseInfos> res = new ArrayList<>();
         caseInfosRepository.search(QueryBuilders.queryStringQuery(query)).forEach(res::add);
         return res;
     }
 
     @Override
-    public void deleteCaseInfos(@NonNull CaseInfos ci) {
+    public List<CaseInfos> searchCaseInfosByDate(@NonNull final DateTime date) {
+        List<CaseInfos> res = new ArrayList<>();
+        caseInfosRepository.search(QueryBuilders.queryStringQuery(CaseInfosDAO.getDateSearchTerm(date))).forEach(res::add);
+        return res;
+    }
+
+    @Override
+    public void deleteCaseInfos(@NonNull final CaseInfos ci) {
         caseInfosRepository.delete(ci);
     }
 
@@ -70,7 +79,6 @@ public class CaseInfosDAOImpl implements CaseInfosDAO {
 
     @Override
     public void deleteAllCaseInfos() {
-        caseInfosRepository.deleteAll();
+        caseInfosRepository.deleteAll(getAllCaseInfos());
     }
-
 }

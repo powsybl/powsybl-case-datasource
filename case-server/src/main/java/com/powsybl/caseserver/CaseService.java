@@ -7,6 +7,7 @@
 package com.powsybl.caseserver;
 
 import com.powsybl.caseserver.dao.CaseInfosDAO;
+import com.powsybl.caseserver.dao.elasticsearch.CaseInfosDAOImpl;
 import com.powsybl.caseserver.dto.CaseInfos;
 import com.powsybl.caseserver.parsers.FileNameInfos;
 import com.powsybl.caseserver.parsers.FileNameParser;
@@ -15,7 +16,6 @@ import com.powsybl.commons.PowsyblException;
 import com.powsybl.commons.datasource.DataSource;
 import com.powsybl.computation.ComputationManager;
 import com.powsybl.computation.local.LocalComputationManager;
-import com.powsybl.entsoe.util.EntsoeGeographicalCode;
 import com.powsybl.iidm.import_.Importer;
 import com.powsybl.iidm.import_.Importers;
 import com.powsybl.iidm.network.Network;
@@ -28,7 +28,6 @@ import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -37,12 +36,12 @@ import java.util.UUID;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -54,6 +53,7 @@ import reactor.core.publisher.Flux;
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
 @Service
+@ComponentScan(basePackageClasses = {CaseInfosDAOImpl.class})
 public class CaseService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CaseService.class);
@@ -333,8 +333,6 @@ public class CaseService {
     */
     List<CaseInfos> searchCases(String query) {
         checkStorageInitialization();
-        List<DateTime> dates = new ArrayList<>();
-        List<EntsoeGeographicalCode> entsoeCodes = new ArrayList<>();
 
         String decodedQuery;
         try {

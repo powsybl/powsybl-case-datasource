@@ -21,6 +21,7 @@ spring:
 
   data:
     elasticsearch:
+      enabled : false
       host: localhost
       port: 9200
       index: case-server

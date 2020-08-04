@@ -7,8 +7,12 @@
 package com.powsybl.caseserver.dao;
 
 import com.powsybl.caseserver.dto.CaseInfos;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import org.joda.time.DateTime;
 import org.springframework.lang.NonNull;
 
 /**
@@ -18,17 +22,34 @@ import org.springframework.lang.NonNull;
  */
 public interface CaseInfosDAO {
 
-    void addCaseInfos(@NonNull CaseInfos ci);
+    default CaseInfos addCaseInfos(@NonNull final CaseInfos ci) {
+        return ci;
+    }
 
-    List<CaseInfos> getAllCaseInfos();
+    default List<CaseInfos> getAllCaseInfos() {
+        return Collections.emptyList();
+    }
 
-    Optional<CaseInfos> getCaseInfosByUuid(@NonNull  String uuid);
+    default Optional<CaseInfos> getCaseInfosByUuid(@NonNull final String uuid) {
+        return Optional.empty();
+    }
 
-    List<CaseInfos> searchCaseInfos(@NonNull String query);
+    default List<CaseInfos> searchCaseInfos(@NonNull final String query) {
+        return Collections.emptyList();
+    }
 
-    void deleteCaseInfos(@NonNull CaseInfos ci);
+    default List<CaseInfos> searchCaseInfosByDate(@NonNull final DateTime date) {
+        return Collections.emptyList();
+    }
 
-    void deleteCaseInfosByUuid(@NonNull  String uuid);
+    default void deleteCaseInfos(@NonNull final CaseInfos ci) { }
 
-    void deleteAllCaseInfos();
+    default void deleteCaseInfosByUuid(@NonNull final String uuid) { }
+
+    default void deleteAllCaseInfos() { }
+
+    static String getDateSearchTerm(@NonNull final DateTime... dates) {
+        return Arrays.stream(dates).map(date -> "\"" + date.toDateTimeISO().toString() + "\"").collect(Collectors.joining(" OR ", "date:", "")).toString();
+    }
+
 }

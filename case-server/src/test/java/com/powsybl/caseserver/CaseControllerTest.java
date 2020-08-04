@@ -10,7 +10,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.ByteStreams;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
-import com.powsybl.caseserver.dao.elasticsearch.CaseInfosDAOImpl;
 import com.powsybl.caseserver.dto.CaseInfos;
 import com.powsybl.caseserver.parsers.entsoe.EntsoeFileNameParser;
 import com.powsybl.commons.PowsyblException;
@@ -61,8 +60,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @RunWith(SpringRunner.class)
 @AutoConfigureMockMvc
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK, classes =
-    { CaseController.class, CaseService.class, TestChannelBinderConfiguration.class, CaseInfosDAOImpl.class })
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK, properties = {"spring.data.elasticsearch.enabled=true"},
+        classes = { EmbeddedElasticsearch.class, CaseController.class, TestChannelBinderConfiguration.class})
 @TestPropertySource(properties = {"case-store-directory=/cases"})
 public class CaseControllerTest {
 
