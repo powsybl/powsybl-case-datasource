@@ -67,7 +67,7 @@
         <rdf4j.version>2.4.4</rdf4j.version>
         <jackson-datatype-joda.version>2.11.0</jackson-datatype-joda.version>
 
-        <powsybl-core.version>3.4.0</powsybl-core.version>
+        <powsybl-core.version>3.5.0</powsybl-core.version>
 
         <sonar.coverage.jacoco.xmlReportPaths>
             ../case-distribution/target/site/jacoco-aggregate/jacoco.xml
