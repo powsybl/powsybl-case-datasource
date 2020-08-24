@@ -4,15 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-package com.powsybl.caseserver.dao.elasticsearch;
+package com.powsybl.caseserver.elasticsearch;
 
-import com.powsybl.caseserver.dao.CaseInfosDAO;
+import com.google.common.collect.Lists;
 import com.powsybl.caseserver.dto.CaseInfos;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import org.elasticsearch.index.query.QueryBuilders;
-import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,9 +25,9 @@ import org.springframework.lang.NonNull;
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
 @ComponentScan(basePackageClasses = {CaseInfosRepository.class})
-public class CaseInfosDAOImpl implements CaseInfosDAO {
+public class CaseInfosServiceImpl implements CaseInfosService {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(CaseInfosDAOImpl.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(CaseInfosServiceImpl.class);
 
     @Autowired
     private CaseInfosRepository caseInfosRepository;
@@ -48,23 +46,12 @@ public class CaseInfosDAOImpl implements CaseInfosDAO {
 
     @Override
     public List<CaseInfos> getAllCaseInfos() {
-        List<CaseInfos> res = new ArrayList<>();
-        caseInfosRepository.findAll().forEach(res::add);
-        return res;
+        return Lists.newArrayList(caseInfosRepository.findAll());
     }
 
     @Override
     public List<CaseInfos> searchCaseInfos(@NonNull final String query) {
-        List<CaseInfos> res = new ArrayList<>();
-        caseInfosRepository.search(QueryBuilders.queryStringQuery(query)).forEach(res::add);
-        return res;
-    }
-
-    @Override
-    public List<CaseInfos> searchCaseInfosByDate(@NonNull final DateTime date) {
-        List<CaseInfos> res = new ArrayList<>();
-        caseInfosRepository.search(QueryBuilders.queryStringQuery(CaseInfosDAO.getDateSearchTerm(date))).forEach(res::add);
-        return res;
+        return Lists.newArrayList(caseInfosRepository.search(QueryBuilders.queryStringQuery(query)));
     }
 
     @Override

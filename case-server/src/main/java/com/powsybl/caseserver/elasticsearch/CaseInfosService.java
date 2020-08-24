@@ -4,11 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-package com.powsybl.caseserver.dao;
+package com.powsybl.caseserver.elasticsearch;
 
 import com.powsybl.caseserver.dto.CaseInfos;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -20,33 +19,21 @@ import org.springframework.lang.NonNull;
  *
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
-public interface CaseInfosDAO {
+public interface CaseInfosService {
 
-    default CaseInfos addCaseInfos(@NonNull final CaseInfos ci) {
-        return ci;
-    }
+    CaseInfos addCaseInfos(@NonNull final CaseInfos ci);
 
-    default List<CaseInfos> getAllCaseInfos() {
-        return Collections.emptyList();
-    }
+    List<CaseInfos> getAllCaseInfos();
 
-    default Optional<CaseInfos> getCaseInfosByUuid(@NonNull final String uuid) {
-        return Optional.empty();
-    }
+    Optional<CaseInfos> getCaseInfosByUuid(@NonNull final String uuid);
 
-    default List<CaseInfos> searchCaseInfos(@NonNull final String query) {
-        return Collections.emptyList();
-    }
+    List<CaseInfos> searchCaseInfos(@NonNull final String query);
 
-    default List<CaseInfos> searchCaseInfosByDate(@NonNull final DateTime date) {
-        return Collections.emptyList();
-    }
+    void deleteCaseInfos(@NonNull final CaseInfos ci);
 
-    default void deleteCaseInfos(@NonNull final CaseInfos ci) { }
+    void deleteCaseInfosByUuid(@NonNull final String uuid);
 
-    default void deleteCaseInfosByUuid(@NonNull final String uuid) { }
-
-    default void deleteAllCaseInfos() { }
+    void deleteAllCaseInfos();
 
     static String getDateSearchTerm(@NonNull final DateTime... dates) {
         return Arrays.stream(dates).map(date -> "\"" + date.toDateTimeISO().toString() + "\"").collect(Collectors.joining(" OR ", "date:", "")).toString();

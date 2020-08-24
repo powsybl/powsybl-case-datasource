@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-package com.powsybl.caseserver.dao.elasticsearch;
+package com.powsybl.caseserver.elasticsearch;
 
 import com.powsybl.caseserver.dto.CaseInfos;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;

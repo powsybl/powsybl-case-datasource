@@ -4,9 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-package com.powsybl.caseserver.dao.elasticsearch;
+package com.powsybl.caseserver.elasticsearch;
 
-import com.powsybl.caseserver.dao.CaseInfosDAO;
 import java.net.InetSocketAddress;
 import java.util.Arrays;
 import org.elasticsearch.client.RestHighLevelClient;
@@ -47,17 +46,18 @@ public class ESConfig extends AbstractElasticsearchConfiguration {
 
     @Bean
     @ConditionalOnExpression("'${spring.data.elasticsearch.enabled:false}' == 'true'")
-    public CaseInfosDAO caseInfosDAOImpl() {
-        return new CaseInfosDAOImpl();
+    public CaseInfosService caseInfosServiceImpl() {
+        return new CaseInfosServiceImpl();
     }
 
     @Bean
     @ConditionalOnExpression("'${spring.data.elasticsearch.enabled:false}' == 'false'")
-    public CaseInfosDAO caseInfosDAONullImpl() {
-        return new CaseInfosDAO() { };
+    public CaseInfosService caseInfosServiceMock() {
+        return new CaseInfosServiceMock();
     }
 
     @Bean
+    @Override
     public RestHighLevelClient elasticsearchClient() {
         ClientConfiguration clientConfiguration = ClientConfiguration.builder()
                 .connectedTo(InetSocketAddress.createUnresolved(esHost, esPort))

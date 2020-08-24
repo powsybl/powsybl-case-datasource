@@ -68,6 +68,7 @@
         <spring-data-elasticsearch.version>3.2.9.RELEASE</spring-data-elasticsearch.version>
         <rdf4j.version>2.4.4</rdf4j.version>
         <jackson-datatype-joda.version>2.11.0</jackson-datatype-joda.version>
+        <log4j2-mock-version>0.0.2</log4j2-mock-version>
 
         <powsybl-core.version>3.4.0</powsybl-core.version>
 
@@ -247,7 +248,7 @@
             <dependency>
                 <groupId>de.dentrassi.elasticsearch</groupId>
                 <artifactId>log4j2-mock</artifactId>
-                <version>0.0.2</version>
+                <version>${log4j2-mock-version}</version>
                 <scope>test</scope>
             </dependency>
         </dependencies>

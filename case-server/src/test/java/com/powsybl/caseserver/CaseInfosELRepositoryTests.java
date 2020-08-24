@@ -6,9 +6,10 @@
  */
 package com.powsybl.caseserver;
 
-import com.powsybl.caseserver.dao.CaseInfosDAO;
+import com.powsybl.caseserver.elasticsearch.CaseInfosService;
 import com.powsybl.caseserver.dto.CaseInfos;
 import com.powsybl.caseserver.dto.entsoe.EntsoeCaseInfos;
+import com.powsybl.caseserver.elasticsearch.CaseInfosServiceImpl;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
@@ -27,7 +28,7 @@ import static org.junit.Assert.assertTrue;
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE,  properties = {"spring.data.elasticsearch.enabled=true"})
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE, properties = {"spring.data.elasticsearch.enabled=true"})
 public class CaseInfosELRepositoryTests {
 
     private static final String SN_UCTE_CASE_FILE_NAME      = "20200103_0915_SN5_D80.UCT";
@@ -42,52 +43,52 @@ public class CaseInfosELRepositoryTests {
     private CaseService caseService;
 
     @Autowired
-    private CaseInfosDAO caseInfosDAO;
+    private CaseInfosServiceImpl caseInfosService;
 
     @Test
     public void testAddDeleteCaseInfos() {
-        EntsoeCaseInfos caseInfos1 = (EntsoeCaseInfos) caseInfosDAO.addCaseInfos(createInfos(SN_UCTE_CASE_FILE_NAME));
-        Optional<CaseInfos> caseInfosAfter1 = caseInfosDAO.getCaseInfosByUuid(caseInfos1.getUuid().toString());
+        EntsoeCaseInfos caseInfos1 = (EntsoeCaseInfos) caseInfosService.addCaseInfos(createInfos(SN_UCTE_CASE_FILE_NAME));
+        Optional<CaseInfos> caseInfosAfter1 = caseInfosService.getCaseInfosByUuid(caseInfos1.getUuid().toString());
         assertFalse(caseInfosAfter1.isEmpty());
         assertEquals(caseInfos1, caseInfosAfter1.get());
 
-        EntsoeCaseInfos caseInfos2 = (EntsoeCaseInfos) caseInfosDAO.addCaseInfos(createInfos(ID2_UCTE_CASE_FILE_NAME));
-        Optional<CaseInfos> caseInfosAfter2 = caseInfosDAO.getCaseInfosByUuid(caseInfos2.getUuid().toString());
+        EntsoeCaseInfos caseInfos2 = (EntsoeCaseInfos) caseInfosService.addCaseInfos(createInfos(ID2_UCTE_CASE_FILE_NAME));
+        Optional<CaseInfos> caseInfosAfter2 = caseInfosService.getCaseInfosByUuid(caseInfos2.getUuid().toString());
         assertFalse(caseInfosAfter2.isEmpty());
         assertEquals(caseInfos2, caseInfosAfter2.get());
 
-        caseInfosDAO.deleteCaseInfosByUuid(caseInfos1.getUuid().toString());
-        caseInfosAfter1 = caseInfosDAO.getCaseInfosByUuid(caseInfos1.getUuid().toString());
+        caseInfosService.deleteCaseInfosByUuid(caseInfos1.getUuid().toString());
+        caseInfosAfter1 = caseInfosService.getCaseInfosByUuid(caseInfos1.getUuid().toString());
         assertTrue(caseInfosAfter1.isEmpty());
 
-        caseInfosDAO.deleteCaseInfos(caseInfos2);
-        caseInfosAfter2 = caseInfosDAO.getCaseInfosByUuid(caseInfos2.getUuid().toString());
+        caseInfosService.deleteCaseInfos(caseInfos2);
+        caseInfosAfter2 = caseInfosService.getCaseInfosByUuid(caseInfos2.getUuid().toString());
         assertTrue(caseInfosAfter2.isEmpty());
 
-        caseInfosDAO.addCaseInfos(caseInfos1);
-        caseInfosDAO.addCaseInfos(caseInfos2);
-        List<CaseInfos> all = caseInfosDAO.getAllCaseInfos();
+        caseInfosService.addCaseInfos(caseInfos1);
+        caseInfosService.addCaseInfos(caseInfos2);
+        List<CaseInfos> all = caseInfosService.getAllCaseInfos();
         assertFalse(all.isEmpty());
-        caseInfosDAO.deleteAllCaseInfos();
-        all = caseInfosDAO.getAllCaseInfos();
+        caseInfosService.deleteAllCaseInfos();
+        all = caseInfosService.getAllCaseInfos();
         assertTrue(all.isEmpty());
     }
 
     @Test
     public void searchCaseInfos() {
-        caseInfosDAO.deleteAllCaseInfos();
-        List<CaseInfos> all = caseInfosDAO.getAllCaseInfos();
+        caseInfosService.deleteAllCaseInfos();
+        List<CaseInfos> all = caseInfosService.getAllCaseInfos();
         assertTrue(all.isEmpty());
 
-        EntsoeCaseInfos ucte1 = (EntsoeCaseInfos) caseInfosDAO.addCaseInfos(createInfos(SN_UCTE_CASE_FILE_NAME));
-        EntsoeCaseInfos ucte2 = (EntsoeCaseInfos) caseInfosDAO.addCaseInfos(createInfos(ID1_UCTE_CASE_FILE_NAME));
-        EntsoeCaseInfos ucte3 = (EntsoeCaseInfos) caseInfosDAO.addCaseInfos(createInfos(ID2_UCTE_CASE_FILE_NAME));
-        EntsoeCaseInfos ucte4 = (EntsoeCaseInfos) caseInfosDAO.addCaseInfos(createInfos(FO1_UCTE_CASE_FILE_NAME));
-        EntsoeCaseInfos ucte5 = (EntsoeCaseInfos) caseInfosDAO.addCaseInfos(createInfos(FO2_UCTE_CASE_FILE_NAME));
-        EntsoeCaseInfos ucte6 = (EntsoeCaseInfos) caseInfosDAO.addCaseInfos(createInfos(D4_UCTE_CASE_FILE_NAME));
-        EntsoeCaseInfos cgmes = (EntsoeCaseInfos) caseInfosDAO.addCaseInfos(createInfos(TEST_CGMES_CASE_FILE_NAME));
+        EntsoeCaseInfos ucte1 = (EntsoeCaseInfos) caseInfosService.addCaseInfos(createInfos(SN_UCTE_CASE_FILE_NAME));
+        EntsoeCaseInfos ucte2 = (EntsoeCaseInfos) caseInfosService.addCaseInfos(createInfos(ID1_UCTE_CASE_FILE_NAME));
+        EntsoeCaseInfos ucte3 = (EntsoeCaseInfos) caseInfosService.addCaseInfos(createInfos(ID2_UCTE_CASE_FILE_NAME));
+        EntsoeCaseInfos ucte4 = (EntsoeCaseInfos) caseInfosService.addCaseInfos(createInfos(FO1_UCTE_CASE_FILE_NAME));
+        EntsoeCaseInfos ucte5 = (EntsoeCaseInfos) caseInfosService.addCaseInfos(createInfos(FO2_UCTE_CASE_FILE_NAME));
+        EntsoeCaseInfos ucte6 = (EntsoeCaseInfos) caseInfosService.addCaseInfos(createInfos(D4_UCTE_CASE_FILE_NAME));
+        EntsoeCaseInfos cgmes = (EntsoeCaseInfos) caseInfosService.addCaseInfos(createInfos(TEST_CGMES_CASE_FILE_NAME));
 
-        all = caseInfosDAO.searchCaseInfos("*");
+        all = caseInfosService.searchCaseInfos("*");
         assertFalse(all.isEmpty());
         assertTrue(all.contains(ucte1));
         assertTrue(all.contains(ucte2));
@@ -97,54 +98,54 @@ public class CaseInfosELRepositoryTests {
         assertTrue(all.contains(ucte6));
         assertTrue(all.contains(cgmes));
 
-        List<CaseInfos> list = caseInfosDAO.searchCaseInfosByDate(ucte1.getDate());
+        List<CaseInfos> list = caseInfosService.searchCaseInfos(CaseInfosService.getDateSearchTerm(ucte1.getDate()));
         assertTrue(list.size() == 3 && list.contains(ucte1) && list.contains(ucte2) && list.contains(ucte4));
-        list = caseInfosDAO.searchCaseInfosByDate(ucte3.getDate());
+        list = caseInfosService.searchCaseInfos(CaseInfosService.getDateSearchTerm(ucte3.getDate()));
         assertTrue(list.size() == 1 && list.contains(ucte3));
-        list = caseInfosDAO.searchCaseInfosByDate(ucte5.getDate());
+        list = caseInfosService.searchCaseInfos(CaseInfosService.getDateSearchTerm(ucte5.getDate()));
         assertTrue(list.size() == 1 && list.contains(ucte5));
-        list = caseInfosDAO.searchCaseInfosByDate(ucte6.getDate());
+        list = caseInfosService.searchCaseInfos(CaseInfosService.getDateSearchTerm(ucte6.getDate()));
         assertTrue(list.size() == 1 && list.contains(ucte6));
-        list = caseInfosDAO.searchCaseInfosByDate(cgmes.getDate());
+        list = caseInfosService.searchCaseInfos(CaseInfosService.getDateSearchTerm(cgmes.getDate()));
         assertTrue(list.size() == 1 && list.contains(cgmes));
 
-        list = caseInfosDAO.searchCaseInfos("geographicalCode:(D8)");
+        list = caseInfosService.searchCaseInfos("geographicalCode:(D8)");
         assertTrue(list.size() == 1 && list.contains(ucte1));
-        list = caseInfosDAO.searchCaseInfos("geographicalCode:(CH)");
+        list = caseInfosService.searchCaseInfos("geographicalCode:(CH)");
         assertTrue(list.size() == 2 && list.contains(ucte2) && list.contains(ucte3));
-        list = caseInfosDAO.searchCaseInfos("geographicalCode:(FR)");
+        list = caseInfosService.searchCaseInfos("geographicalCode:(FR)");
         assertTrue(list.size() == 3 && list.contains(ucte4) && list.contains(ucte5) && list.contains(cgmes));
-        list = caseInfosDAO.searchCaseInfos("geographicalCode:(D4)");
+        list = caseInfosService.searchCaseInfos("geographicalCode:(D4)");
         assertTrue(list.size() == 1 && list.contains(ucte6));
 
-        list = caseInfosDAO.searchCaseInfos(CaseInfosDAO.getDateSearchTerm(ucte1.getDate()) + " AND geographicalCode:(D8)");
+        list = caseInfosService.searchCaseInfos(CaseInfosService.getDateSearchTerm(ucte1.getDate()) + " AND geographicalCode:(D8)");
         assertTrue(list.size() == 1 && list.contains(ucte1));
-        list = caseInfosDAO.searchCaseInfos(CaseInfosDAO.getDateSearchTerm(ucte3.getDate()) + " AND geographicalCode:(CH)");
+        list = caseInfosService.searchCaseInfos(CaseInfosService.getDateSearchTerm(ucte3.getDate()) + " AND geographicalCode:(CH)");
         assertTrue(list.size() == 1 && list.contains(ucte3));
-        list = caseInfosDAO.searchCaseInfos(CaseInfosDAO.getDateSearchTerm(ucte5.getDate()) + " AND geographicalCode:(FR)");
+        list = caseInfosService.searchCaseInfos(CaseInfosService.getDateSearchTerm(ucte5.getDate()) + " AND geographicalCode:(FR)");
         assertTrue(list.size() == 1 && list.contains(ucte5));
-        list = caseInfosDAO.searchCaseInfos(CaseInfosDAO.getDateSearchTerm(ucte6.getDate()) + " AND geographicalCode:(D4)");
+        list = caseInfosService.searchCaseInfos(CaseInfosService.getDateSearchTerm(ucte6.getDate()) + " AND geographicalCode:(D4)");
         assertTrue(list.size() == 1 && list.contains(ucte6));
 
-        list = caseInfosDAO.searchCaseInfos(CaseInfosDAO.getDateSearchTerm(ucte4.getDate()) + " AND geographicalCode:(FR OR CH OR D8)");
+        list = caseInfosService.searchCaseInfos(CaseInfosService.getDateSearchTerm(ucte4.getDate()) + " AND geographicalCode:(FR OR CH OR D8)");
         assertTrue(list.size() == 3 && list.contains(ucte1) && list.contains(ucte2) && list.contains(ucte4));
-        list = caseInfosDAO.searchCaseInfos(CaseInfosDAO.getDateSearchTerm(ucte4.getDate()) + " AND geographicalCode:(FR OR CH)");
+        list = caseInfosService.searchCaseInfos(CaseInfosService.getDateSearchTerm(ucte4.getDate()) + " AND geographicalCode:(FR OR CH)");
         assertTrue(list.size() == 2 && list.contains(ucte2) && list.contains(ucte4));
-        list = caseInfosDAO.searchCaseInfos(CaseInfosDAO.getDateSearchTerm(ucte4.getDate()) + " AND geographicalCode:(FR OR D8)");
+        list = caseInfosService.searchCaseInfos(CaseInfosService.getDateSearchTerm(ucte4.getDate()) + " AND geographicalCode:(FR OR D8)");
         assertTrue(list.size() == 2 && list.contains(ucte1) && list.contains(ucte4));
-        list = caseInfosDAO.searchCaseInfos(CaseInfosDAO.getDateSearchTerm(ucte4.getDate()) + " AND geographicalCode:(CH OR D8)");
+        list = caseInfosService.searchCaseInfos(CaseInfosService.getDateSearchTerm(ucte4.getDate()) + " AND geographicalCode:(CH OR D8)");
         assertTrue(list.size() == 2 && list.contains(ucte1) && list.contains(ucte2));
 
-        list = caseInfosDAO.searchCaseInfos("geographicalCode:(D4 OR D8)");
+        list = caseInfosService.searchCaseInfos("geographicalCode:(D4 OR D8)");
         assertTrue(list.size() == 2 && list.contains(ucte1) && list.contains(ucte6));
 
-        list = caseInfosDAO.searchCaseInfos(CaseInfosDAO.getDateSearchTerm(ucte6.getDate()) + " OR " + CaseInfosDAO.getDateSearchTerm(cgmes.getDate()));
+        list = caseInfosService.searchCaseInfos(CaseInfosService.getDateSearchTerm(ucte6.getDate()) + " OR " + CaseInfosService.getDateSearchTerm(cgmes.getDate()));
         assertTrue(list.size() == 2 && list.contains(ucte6) && list.contains(cgmes));
 
-        list = caseInfosDAO.searchCaseInfos(CaseInfosDAO.getDateSearchTerm(ucte6.getDate(), cgmes.getDate()));
+        list = caseInfosService.searchCaseInfos(CaseInfosService.getDateSearchTerm(ucte6.getDate(), cgmes.getDate()));
         assertTrue(list.size() == 2 && list.contains(ucte6) && list.contains(cgmes));
 
-        list = caseInfosDAO.searchCaseInfos(CaseInfosDAO.getDateSearchTerm(ucte1.getDate()) + " AND geographicalCode:D8 AND forecastDistance:0");
+        list = caseInfosService.searchCaseInfos(CaseInfosService.getDateSearchTerm(ucte1.getDate()) + " AND geographicalCode:D8 AND forecastDistance:0");
         assertTrue(list.size() == 1 && list.contains(ucte1));
     }
 

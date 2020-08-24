@@ -6,8 +6,8 @@
  */
 package com.powsybl.caseserver;
 
-import com.powsybl.caseserver.dao.CaseInfosDAO;
-import com.powsybl.caseserver.dao.elasticsearch.CaseInfosDAOImpl;
+import com.powsybl.caseserver.elasticsearch.CaseInfosService;
+import com.powsybl.caseserver.elasticsearch.CaseInfosServiceImpl;
 import com.powsybl.caseserver.dto.CaseInfos;
 import com.powsybl.caseserver.parsers.FileNameInfos;
 import com.powsybl.caseserver.parsers.FileNameParser;
@@ -53,7 +53,7 @@ import reactor.core.publisher.Flux;
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
 @Service
-@ComponentScan(basePackageClasses = {CaseInfosDAOImpl.class})
+@ComponentScan(basePackageClasses = {CaseInfosServiceImpl.class})
 public class CaseService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CaseService.class);
@@ -65,7 +65,7 @@ public class CaseService {
     private final EmitterProcessor<Message<String>> caseInfosPublisher = EmitterProcessor.create();
 
     @Autowired
-    private CaseInfosDAO caseInfosDAO;
+    private CaseInfosService caseInfosService;
 
     @Bean
     public Supplier<Flux<Message<String>>> publishCaseImport() {
@@ -208,7 +208,7 @@ public class CaseService {
         }
 
         CaseInfos caseInfos = createInfos(caseFile.getFileName().toString(), caseUuid, importer.getFormat());
-        caseInfosDAO.addCaseInfos(caseInfos);
+        caseInfosService.addCaseInfos(caseInfos);
         caseInfosPublisher.onNext(caseInfos.createMessage());
 
         return caseUuid;
@@ -263,7 +263,7 @@ public class CaseService {
         Path caseDirectory = getCaseDirectory(caseUuid);
         deleteDirectoryRecursively(caseDirectory);
 
-        caseInfosDAO.deleteCaseInfosByUuid(caseUuid.toString());
+        caseInfosService.deleteCaseInfosByUuid(caseUuid.toString());
     }
 
     void deleteAllCases() {
@@ -279,7 +279,7 @@ public class CaseService {
             }
         }
 
-        caseInfosDAO.deleteAllCaseInfos();
+        caseInfosService.deleteAllCaseInfos();
     }
 
     public Path getStorageRootDir() {
@@ -341,6 +341,6 @@ public class CaseService {
             throw new PowsyblException("Error when decoding the query string");
         }
 
-        return caseInfosDAO.searchCaseInfos(decodedQuery);
+        return caseInfosService.searchCaseInfos(decodedQuery);
     }
 }
