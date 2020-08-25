@@ -8,7 +8,7 @@ package com.powsybl.caseserver;
 
 import com.powsybl.caseserver.dto.CaseInfos;
 import com.powsybl.caseserver.dto.entsoe.EntsoeCaseInfos;
-import com.powsybl.caseserver.elasticsearch.CaseInfosServiceMock;
+import com.powsybl.caseserver.elasticsearch.CaseInfosService;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
@@ -35,7 +35,7 @@ public class CaseInfosELRepositoryMockTests {
     private CaseService caseService;
 
     @Autowired
-    private CaseInfosServiceMock caseInfosService;
+    private CaseInfosService caseInfosService;
 
     @Test
     public void testServiceMock() {

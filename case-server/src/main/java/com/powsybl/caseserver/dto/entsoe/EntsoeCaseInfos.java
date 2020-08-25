@@ -74,6 +74,6 @@ public class EntsoeCaseInfos extends CaseInfos {
 
     @Override
     public int hashCode() {
-        return super.hashCode() + Objects.hash(date, forecastDistance, geographicalCode, version);
+        return super.hashCode() + Objects.hash(date.getMillis(), forecastDistance, geographicalCode, version);
     }
 }

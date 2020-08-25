@@ -69,6 +69,7 @@
         <rdf4j.version>2.4.4</rdf4j.version>
         <jackson-datatype-joda.version>2.11.0</jackson-datatype-joda.version>
         <log4j2-mock-version>0.0.2</log4j2-mock-version>
+        <guava-testlib-version>29.0-jre</guava-testlib-version>
 
         <powsybl-core.version>3.5.0</powsybl-core.version>
 
@@ -249,6 +250,12 @@
                 <groupId>de.dentrassi.elasticsearch</groupId>
                 <artifactId>log4j2-mock</artifactId>
                 <version>${log4j2-mock-version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.google.guava</groupId>
+                <artifactId>guava-testlib</artifactId>
+                <version>${guava-testlib-version}</version>
                 <scope>test</scope>
             </dependency>
         </dependencies>
