@@ -6,9 +6,9 @@
  */
 package com.powsybl.caseserver;
 
+import com.powsybl.caseserver.dto.CaseInfos;
 import com.powsybl.caseserver.elasticsearch.CaseInfosService;
 import com.powsybl.caseserver.elasticsearch.CaseInfosServiceImpl;
-import com.powsybl.caseserver.dto.CaseInfos;
 import com.powsybl.caseserver.parsers.FileNameInfos;
 import com.powsybl.caseserver.parsers.FileNameParser;
 import com.powsybl.caseserver.parsers.FileNameParsers;
@@ -42,6 +42,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -65,6 +66,7 @@ public class CaseService {
     private final EmitterProcessor<Message<String>> caseInfosPublisher = EmitterProcessor.create();
 
     @Autowired
+    @Lazy
     private CaseInfosService caseInfosService;
 
     @Bean
