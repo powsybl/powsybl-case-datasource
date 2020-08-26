@@ -4,16 +4,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-package com.powsybl.caseserver.entsoe;
+package com.powsybl.caseserver.dto.entsoe;
 
-import com.powsybl.caseserver.CaseInfos;
+import com.powsybl.caseserver.dto.CaseInfos;
 import com.powsybl.entsoe.util.EntsoeGeographicalCode;
 import com.powsybl.iidm.network.Country;
 import io.swagger.annotations.ApiModel;
+import java.util.Objects;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
 import org.joda.time.DateTime;
+import org.springframework.data.annotation.TypeAlias;
+import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.messaging.Message;
 
 /**
@@ -22,15 +26,18 @@ import org.springframework.messaging.Message;
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
 @SuperBuilder
+@NoArgsConstructor
 @Getter
 @ApiModel("Case infos")
+@Document(indexName = "case-server", type = "metadatas")
+@TypeAlias(value = "EntsoeCaseInfos")
 public class EntsoeCaseInfos extends CaseInfos {
 
-    private static final String DATE_HEADER_KEY         = "date";
-    private static final String FO_DISTANCE_HEADER_KEY  = "forecastDistance";
-    private static final String GEO_CODE_HEADER_KEY     = "geographicalCode";
-    private static final String COUNTRY_HEADER_KEY      = "country";
-    private static final String VERSION_HEADER_KEY      = "version";
+    public static final String DATE_HEADER_KEY         = "date";
+    public static final String FO_DISTANCE_HEADER_KEY  = "forecastDistance";
+    public static final String GEO_CODE_HEADER_KEY     = "geographicalCode";
+    public static final String COUNTRY_HEADER_KEY      = "country";
+    public static final String VERSION_HEADER_KEY      = "version";
 
     @NonNull private DateTime date;
     @NonNull private Integer forecastDistance;
@@ -50,5 +57,23 @@ public class EntsoeCaseInfos extends CaseInfos {
             .setHeader(COUNTRY_HEADER_KEY,      getCountry())
             .setHeader(VERSION_HEADER_KEY,      getVersion())
             .build();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!super.equals(obj)) {
+            return false;
+        }
+
+        EntsoeCaseInfos other = (EntsoeCaseInfos) obj;
+        return this.date.isEqual(other.date) &&
+                Objects.equals(this.forecastDistance, other.forecastDistance) &&
+                Objects.equals(this.geographicalCode, other.geographicalCode) &&
+                Objects.equals(this.version, other.version);
+    }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode() + Objects.hash(date.getMillis(), forecastDistance, geographicalCode, version);
     }
 }

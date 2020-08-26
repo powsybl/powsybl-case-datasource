@@ -64,8 +64,12 @@
         <springboot.version>2.2.5.RELEASE</springboot.version>
         <springfox.version>2.9.2</springfox.version>
         <spring-cloud.version>Hoxton.SR3</spring-cloud.version>
+        <elasticsearch.version>6.8.6</elasticsearch.version>
+        <spring-data-elasticsearch.version>3.2.9.RELEASE</spring-data-elasticsearch.version>
         <rdf4j.version>2.4.4</rdf4j.version>
         <jackson-datatype-joda.version>2.11.0</jackson-datatype-joda.version>
+        <log4j2-mock-version>0.0.2</log4j2-mock-version>
+        <guava-testlib-version>29.0-jre</guava-testlib-version>
 
         <powsybl-core.version>3.5.0</powsybl-core.version>
 
@@ -151,6 +155,17 @@
                 <scope>import</scope>
             </dependency>
 
+            <dependency>
+                <groupId>org.elasticsearch</groupId>
+                <artifactId>elasticsearch</artifactId>
+                <version>${elasticsearch.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.data</groupId>
+                <artifactId>spring-data-elasticsearch</artifactId>
+                <version>${spring-data-elasticsearch.version}</version>
+            </dependency>
+
             <!-- Runtime dependencies -->
             <dependency>
                 <groupId>com.powsybl</groupId>
@@ -229,6 +244,18 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-starter-test</artifactId>
                 <version>${springboot.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>de.dentrassi.elasticsearch</groupId>
+                <artifactId>log4j2-mock</artifactId>
+                <version>${log4j2-mock-version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.google.guava</groupId>
+                <artifactId>guava-testlib</artifactId>
+                <version>${guava-testlib-version}</version>
                 <scope>test</scope>
             </dependency>
         </dependencies>
