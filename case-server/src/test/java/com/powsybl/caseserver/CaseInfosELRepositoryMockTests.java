@@ -7,6 +7,7 @@
 package com.powsybl.caseserver;
 
 import com.powsybl.caseserver.dto.CaseInfos;
+import com.powsybl.caseserver.dto.cgmes.CgmesCaseInfos;
 import com.powsybl.caseserver.dto.entsoe.EntsoeCaseInfos;
 import com.powsybl.caseserver.elasticsearch.CaseInfosService;
 import java.nio.file.Path;
@@ -30,6 +31,7 @@ public class CaseInfosELRepositoryMockTests {
 
     private static final String SN_UCTE_CASE_FILE_NAME  = "20200103_0915_SN5_D80.UCT";
     private static final String ID2_UCTE_CASE_FILE_NAME = "20200424_1330_135_CH2.UCT";
+    private static final String CGMES_CASE_FILE_NAME = "20200424T1330Z_2D_RTEFRANCE_001.zip";
 
     @Autowired
     private CaseService caseService;
@@ -47,6 +49,10 @@ public class CaseInfosELRepositoryMockTests {
         Optional<CaseInfos> caseInfosAfter2 = caseInfosService.getCaseInfosByUuid(caseInfos2.getUuid().toString());
         assertTrue(caseInfosAfter2.isEmpty());
 
+        CgmesCaseInfos caseInfos3 = (CgmesCaseInfos) caseInfosService.addCaseInfos(createInfos(CGMES_CASE_FILE_NAME));
+        Optional<CaseInfos> caseInfosAfter3 = caseInfosService.getCaseInfosByUuid(caseInfos3.getUuid().toString());
+        assertTrue(caseInfosAfter3.isEmpty());
+
         caseInfosService.deleteCaseInfosByUuid(caseInfos1.getUuid().toString());
         caseInfosAfter1 = caseInfosService.getCaseInfosByUuid(caseInfos1.getUuid().toString());
         assertTrue(caseInfosAfter1.isEmpty());
@@ -55,8 +61,13 @@ public class CaseInfosELRepositoryMockTests {
         caseInfosAfter2 = caseInfosService.getCaseInfosByUuid(caseInfos2.getUuid().toString());
         assertTrue(caseInfosAfter2.isEmpty());
 
+        caseInfosService.deleteCaseInfos(caseInfos3);
+        caseInfosAfter3 = caseInfosService.getCaseInfosByUuid(caseInfos3.getUuid().toString());
+        assertTrue(caseInfosAfter3.isEmpty());
+
         caseInfosService.addCaseInfos(caseInfos1);
         caseInfosService.addCaseInfos(caseInfos2);
+        caseInfosService.addCaseInfos(caseInfos3);
 
         List<CaseInfos> all = caseInfosService.searchCaseInfos("*");
         assertTrue(all.isEmpty());

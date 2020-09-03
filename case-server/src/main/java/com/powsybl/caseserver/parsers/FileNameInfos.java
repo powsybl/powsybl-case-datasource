@@ -9,11 +9,13 @@ package com.powsybl.caseserver.parsers;
 /**
  *
  * @author Slimane Amar <slimane.amar at rte-france.com>
+ * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
 public interface FileNameInfos {
 
     enum Type {
-        ENTSOE
+        ENTSOE,
+        CGMES
     }
 
     Type getType();

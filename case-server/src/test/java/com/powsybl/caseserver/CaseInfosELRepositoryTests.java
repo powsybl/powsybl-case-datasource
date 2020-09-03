@@ -8,12 +8,14 @@ package com.powsybl.caseserver;
 
 import com.google.common.testing.EqualsTester;
 import com.powsybl.caseserver.dto.CaseInfos;
+import com.powsybl.caseserver.dto.cgmes.CgmesCaseInfos;
 import com.powsybl.caseserver.dto.entsoe.EntsoeCaseInfos;
 import com.powsybl.caseserver.elasticsearch.CaseInfosService;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,7 +39,7 @@ public class CaseInfosELRepositoryTests {
     private static final String FO1_UCTE_CASE_FILE_NAME     = "20200103_0915_FO5_FR0.UCT";
     private static final String FO2_UCTE_CASE_FILE_NAME     = "20200110_0430_FO5_FR0.uct";
     private static final String D4_UCTE_CASE_FILE_NAME      = "20200430_1530_2D4_D41.uct";
-    private static final String TEST_CGMES_CASE_FILE_NAME   = "20200212_1030_FO3_FR1.zip";
+    private static final String TEST_CGMES_CASE_FILE_NAME   = "20200424T1330Z_2D_RTEFRANCE_001.zip";
 
     @Autowired
     private CaseService caseService;
@@ -88,7 +90,7 @@ public class CaseInfosELRepositoryTests {
         EntsoeCaseInfos ucte4 = (EntsoeCaseInfos) caseInfosService.addCaseInfos(createInfos(FO1_UCTE_CASE_FILE_NAME));
         EntsoeCaseInfos ucte5 = (EntsoeCaseInfos) caseInfosService.addCaseInfos(createInfos(FO2_UCTE_CASE_FILE_NAME));
         EntsoeCaseInfos ucte6 = (EntsoeCaseInfos) caseInfosService.addCaseInfos(createInfos(D4_UCTE_CASE_FILE_NAME));
-        EntsoeCaseInfos cgmes = (EntsoeCaseInfos) caseInfosService.addCaseInfos(createInfos(TEST_CGMES_CASE_FILE_NAME));
+        CgmesCaseInfos cgmes = (CgmesCaseInfos) caseInfosService.addCaseInfos(createInfos(TEST_CGMES_CASE_FILE_NAME));
 
         all = caseInfosService.searchCaseInfos("*");
         assertFalse(all.isEmpty());
@@ -116,9 +118,11 @@ public class CaseInfosELRepositoryTests {
         list = caseInfosService.searchCaseInfos("geographicalCode:(CH)");
         assertTrue(list.size() == 2 && list.contains(ucte2) && list.contains(ucte3));
         list = caseInfosService.searchCaseInfos("geographicalCode:(FR)");
-        assertTrue(list.size() == 3 && list.contains(ucte4) && list.contains(ucte5) && list.contains(cgmes));
+        assertTrue(list.size() == 2 && list.contains(ucte4) && list.contains(ucte5));
         list = caseInfosService.searchCaseInfos("geographicalCode:(D4)");
         assertTrue(list.size() == 1 && list.contains(ucte6));
+        list = caseInfosService.searchCaseInfos("tso:(FR)");
+        assertTrue(list.size() == 1 && list.contains(cgmes));
 
         list = caseInfosService.searchCaseInfos(CaseInfosService.getDateSearchTerm(ucte1.getDate()) + " AND geographicalCode:(D8)");
         assertTrue(list.size() == 1 && list.contains(ucte1));
@@ -128,6 +132,8 @@ public class CaseInfosELRepositoryTests {
         assertTrue(list.size() == 1 && list.contains(ucte5));
         list = caseInfosService.searchCaseInfos(CaseInfosService.getDateSearchTerm(ucte6.getDate()) + " AND geographicalCode:(D4)");
         assertTrue(list.size() == 1 && list.contains(ucte6));
+        list = caseInfosService.searchCaseInfos(CaseInfosService.getDateSearchTerm(cgmes.getDate()) + " AND tso:(FR) AND businessProcess:(2D)");
+        assertTrue(list.size() == 1 && list.contains(cgmes));
 
         list = caseInfosService.searchCaseInfos(CaseInfosService.getDateSearchTerm(ucte4.getDate()) + " AND geographicalCode:(FR OR CH OR D8)");
         assertTrue(list.size() == 3 && list.contains(ucte1) && list.contains(ucte2) && list.contains(ucte4));
@@ -137,6 +143,10 @@ public class CaseInfosELRepositoryTests {
         assertTrue(list.size() == 2 && list.contains(ucte1) && list.contains(ucte4));
         list = caseInfosService.searchCaseInfos(CaseInfosService.getDateSearchTerm(ucte4.getDate()) + " AND geographicalCode:(CH OR D8)");
         assertTrue(list.size() == 2 && list.contains(ucte1) && list.contains(ucte2));
+        list = caseInfosService.searchCaseInfos(CaseInfosService.getDateSearchTerm(cgmes.getDate()) + " AND tso:(ES OR FR OR PT)");
+        assertTrue(list.size() == 1 && list.contains(cgmes));
+        list = caseInfosService.searchCaseInfos(CaseInfosService.getDateSearchTerm(cgmes.getDate()) + " AND tso:(ES OR FR OR PT) AND businessProcess:(2D) AND format:CGMES");
+        assertTrue(list.size() == 1 && list.contains(cgmes));
 
         list = caseInfosService.searchCaseInfos("geographicalCode:(D4 OR D8)");
         assertTrue(list.size() == 2 && list.contains(ucte1) && list.contains(ucte6));

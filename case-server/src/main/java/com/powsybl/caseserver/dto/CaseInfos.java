@@ -6,8 +6,10 @@
  */
 package com.powsybl.caseserver.dto;
 
+import com.powsybl.caseserver.dto.cgmes.CgmesCaseInfos;
 import com.powsybl.caseserver.dto.entsoe.EntsoeCaseInfos;
 import com.powsybl.caseserver.parsers.FileNameInfos;
+import com.powsybl.caseserver.parsers.cgmes.CgmesFileName;
 import com.powsybl.caseserver.parsers.entsoe.EntsoeFileName;
 import io.swagger.annotations.ApiModel;
 import java.util.Objects;
@@ -74,6 +76,11 @@ public class CaseInfos {
                 return EntsoeCaseInfos.builder().name(fileBaseName).uuid(caseUuid).format(format)
                         .date(entsoeFileName.getDate()).forecastDistance(entsoeFileName.getForecastDistance())
                         .geographicalCode(entsoeFileName.getGeographicalCode()).version(entsoeFileName.getVersion()).build();
+            case CGMES:
+                CgmesFileName cgmesFileName = (CgmesFileName) fileNameInfos;
+                return CgmesCaseInfos.builder().name(fileBaseName).uuid(caseUuid).format(format)
+                        .date(cgmesFileName.getDate()).businessProcess(cgmesFileName.getBuisinessProcess())
+                        .tso(cgmesFileName.getTso()).version(cgmesFileName.getVersion()).build();
             default:
                 return CaseInfos.builder().name(fileBaseName).uuid(caseUuid).format(format).build();
         }
