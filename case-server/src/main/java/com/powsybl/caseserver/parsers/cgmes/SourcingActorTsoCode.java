@@ -18,7 +18,9 @@ public enum SourcingActorTsoCode {
 
     FR("RTEFRANCE", "RTEFRANCE-FR"),
     ES("REE", "REE-ES"),
-    PT("REN", "REN-PT");
+    PT("REN", "REN-PT"),
+    BE("BE"),
+    NL("NL");
 
     private static final Map<String, SourcingActorTsoCode> BY_SOURCING_ACTOR = new HashMap<>();
 
