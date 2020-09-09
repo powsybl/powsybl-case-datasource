@@ -39,6 +39,7 @@ public class EmbeddedElasticsearch extends ExternalResource {
         Node node = new NodeClientFactoryBean.TestNode(
                 Settings.builder()
                         .put("transport.type", "netty4")
+                        .put("discovery.type", "single-node")
                         .put("http.type", "netty4")
                         .put("path.home", pathHome)
                         .put("path.data", pathData)
