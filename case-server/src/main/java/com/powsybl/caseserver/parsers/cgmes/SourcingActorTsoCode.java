@@ -20,7 +20,8 @@ public enum SourcingActorTsoCode {
     ES("REE", "REE-ES"),
     PT("REN", "REN-PT"),
     BE("BE"),
-    NL("NL");
+    NL("NL"),
+    UNDEFINED();
 
     private static final Map<String, SourcingActorTsoCode> BY_SOURCING_ACTOR = new HashMap<>();
 
@@ -39,6 +40,7 @@ public enum SourcingActorTsoCode {
     }
 
     public static SourcingActorTsoCode tsoFromSourcingActor(String sourcingActor) {
-        return BY_SOURCING_ACTOR.get(sourcingActor);
+        SourcingActorTsoCode tsoCode = BY_SOURCING_ACTOR.get(sourcingActor);
+        return tsoCode != null ? tsoCode : UNDEFINED;
     }
 }
