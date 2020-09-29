@@ -31,7 +31,6 @@ public enum SourcingActorTsoCode {
     DKE("DKE", "Energinet-DKE"),
     DKW("DKW", "Energinet-DKW"),
     Kontiscan("Energinet-Kontiscan"),
-    PE("ENTSOE", "ENTSOE-PE"),
     BG("ESO", "ESO-BG"),
     FI("FI", "Fingrid-SI"),
     HR("HOPS", "HOPS-HR"),
