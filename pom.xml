@@ -56,12 +56,13 @@
 
         <java.version>11</java.version>
 
-        <google.guava.version>20.0</google.guava.version>
+        <google.guava.version>29.0-jre</google.guava.version>
         <jimfs.version>1.1</jimfs.version>
-        <junit.version>4.12</junit.version>
+        <!-- 4.13.1 is incompatible with spring-boot-starter-test -->
+        <junit.version>4.13</junit.version>
         <lombok.version>1.18.10</lombok.version>
         <slf4j.version>1.7.30</slf4j.version>
-        <springboot.version>2.2.5.RELEASE</springboot.version>
+        <springboot.version>2.2.9.RELEASE</springboot.version>
         <springfox.version>2.9.2</springfox.version>
         <spring-cloud.version>Hoxton.SR3</spring-cloud.version>
         <elasticsearch.version>6.8.6</elasticsearch.version>
@@ -71,7 +72,7 @@
         <log4j2-mock-version>0.0.2</log4j2-mock-version>
         <guava-testlib-version>29.0-jre</guava-testlib-version>
 
-        <powsybl-core.version>3.6.0</powsybl-core.version>
+        <powsybl-core.version>3.7.1</powsybl-core.version>
 
         <sonar.coverage.jacoco.xmlReportPaths>
             ../case-distribution/target/site/jacoco-aggregate/jacoco.xml
