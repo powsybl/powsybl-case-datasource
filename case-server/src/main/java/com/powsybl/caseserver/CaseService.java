@@ -71,7 +71,7 @@ public class CaseService {
     @Lazy
     private CaseInfosService caseInfosService;
 
-    @Value("#{${max-public-cases:systemProperties['maxPublicCases']?: '1000'}}")
+    @Value("#{${max-public-cases:systemProperties['maxPublicCases']?: '-1'}}")
     Integer maxPublicCases;
 
     @Bean
