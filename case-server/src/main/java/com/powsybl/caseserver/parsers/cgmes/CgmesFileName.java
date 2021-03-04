@@ -23,7 +23,7 @@ public class CgmesFileName implements FileNameInfos {
 
     @NonNull private DateTime date;
     @NonNull private String buisinessProcess;
-    @NonNull private SourcingActorTsoCode tso;
+    @NonNull private String tso;
     @NonNull private Integer version;
 
     public Type getType() {

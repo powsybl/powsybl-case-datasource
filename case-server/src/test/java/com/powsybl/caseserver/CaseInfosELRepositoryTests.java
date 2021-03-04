@@ -121,7 +121,7 @@ public class CaseInfosELRepositoryTests {
         assertTrue(list.size() == 2 && list.contains(ucte4) && list.contains(ucte5));
         list = caseInfosService.searchCaseInfos("geographicalCode:(D4)");
         assertTrue(list.size() == 1 && list.contains(ucte6));
-        list = caseInfosService.searchCaseInfos("tso:(FR)");
+        list = caseInfosService.searchCaseInfos("tso:(RTEFRANCE)");
         assertTrue(list.size() == 1 && list.contains(cgmes));
 
         list = caseInfosService.searchCaseInfos(CaseInfosService.getDateSearchTerm(ucte1.getDate()) + " AND geographicalCode:(D8)");
@@ -132,7 +132,7 @@ public class CaseInfosELRepositoryTests {
         assertTrue(list.size() == 1 && list.contains(ucte5));
         list = caseInfosService.searchCaseInfos(CaseInfosService.getDateSearchTerm(ucte6.getDate()) + " AND geographicalCode:(D4)");
         assertTrue(list.size() == 1 && list.contains(ucte6));
-        list = caseInfosService.searchCaseInfos(CaseInfosService.getDateSearchTerm(cgmes.getDate()) + " AND tso:(FR) AND businessProcess:(2D)");
+        list = caseInfosService.searchCaseInfos(CaseInfosService.getDateSearchTerm(cgmes.getDate()) + " AND tso:(RTEFRANCE) AND businessProcess:(2D)");
         assertTrue(list.size() == 1 && list.contains(cgmes));
 
         list = caseInfosService.searchCaseInfos(CaseInfosService.getDateSearchTerm(ucte4.getDate()) + " AND geographicalCode:(FR OR CH OR D8)");
@@ -143,9 +143,9 @@ public class CaseInfosELRepositoryTests {
         assertTrue(list.size() == 2 && list.contains(ucte1) && list.contains(ucte4));
         list = caseInfosService.searchCaseInfos(CaseInfosService.getDateSearchTerm(ucte4.getDate()) + " AND geographicalCode:(CH OR D8)");
         assertTrue(list.size() == 2 && list.contains(ucte1) && list.contains(ucte2));
-        list = caseInfosService.searchCaseInfos(CaseInfosService.getDateSearchTerm(cgmes.getDate()) + " AND tso:(ES OR FR OR PT)");
+        list = caseInfosService.searchCaseInfos(CaseInfosService.getDateSearchTerm(cgmes.getDate()) + " AND tso:(REE OR RTEFRANCE OR REN)");
         assertTrue(list.size() == 1 && list.contains(cgmes));
-        list = caseInfosService.searchCaseInfos(CaseInfosService.getDateSearchTerm(cgmes.getDate()) + " AND tso:(ES OR FR OR PT) AND businessProcess:(2D) AND format:CGMES");
+        list = caseInfosService.searchCaseInfos(CaseInfosService.getDateSearchTerm(cgmes.getDate()) + " AND tso:(REE OR RTEFRANCE OR REN) AND businessProcess:(2D) AND format:CGMES");
         assertTrue(list.size() == 1 && list.contains(cgmes));
 
         list = caseInfosService.searchCaseInfos("geographicalCode:(D4 OR D8)");
