@@ -12,22 +12,20 @@ import com.powsybl.caseserver.dto.entsoe.EntsoeCaseInfos;
 import com.powsybl.caseserver.parsers.FileNameInfos;
 import com.powsybl.caseserver.parsers.FileNameParser;
 import com.powsybl.caseserver.parsers.cgmes.CgmesFileNameParser;
-import com.powsybl.caseserver.parsers.cgmes.SourcingActorTsoCode;
 import com.powsybl.caseserver.parsers.entsoe.EntsoeFileNameParser;
 import com.powsybl.entsoe.util.EntsoeGeographicalCode;
 import com.powsybl.iidm.network.Country;
-import java.nio.file.Path;
-import java.util.Optional;
-import java.util.UUID;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import java.nio.file.Path;
+import java.util.Optional;
+import java.util.UUID;
+
+import static org.junit.Assert.*;
 
 /**
  * @author Slimane Amar <slimane.amar at rte-france.com>
@@ -102,7 +100,7 @@ public class CaseFileNameParserTests {
         assertEquals("CGMES", caseInfos.getFormat());
         assertTrue(caseInfos.getDate().isEqual(CgmesFileNameParser.parseDateTime(TEST_CGMES_CASE_FILE_NAME.substring(0, 14))));
         assertEquals("2D", caseInfos.getBusinessProcess());
-        assertSame(SourcingActorTsoCode.RTEFRANCE, caseInfos.getTso());
+        assertEquals("RTEFRANCE", caseInfos.getTso());
         assertEquals(Integer.valueOf(1), caseInfos.getVersion());
     }
 

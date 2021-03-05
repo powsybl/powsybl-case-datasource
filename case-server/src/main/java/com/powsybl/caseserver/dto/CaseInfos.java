@@ -79,7 +79,7 @@ public class CaseInfos {
             case CGMES:
                 CgmesFileName cgmesFileName = (CgmesFileName) fileNameInfos;
                 return CgmesCaseInfos.builder().name(fileBaseName).uuid(caseUuid).format(format)
-                        .date(cgmesFileName.getDate()).businessProcess(cgmesFileName.getBuisinessProcess())
+                        .date(cgmesFileName.getDate()).businessProcess(cgmesFileName.getBusinessProcess())
                         .tso(cgmesFileName.getTso()).version(cgmesFileName.getVersion()).build();
             default:
                 return CaseInfos.builder().name(fileBaseName).uuid(caseUuid).format(format).build();

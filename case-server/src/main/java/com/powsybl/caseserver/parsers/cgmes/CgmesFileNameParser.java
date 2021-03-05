@@ -45,11 +45,9 @@ public class CgmesFileNameParser implements FileNameParser {
         }
         DateTime date = parseDateTime(m.group(1));
         String businessProcess = m.group(2).substring(0, 2);
-        String sourcingActor = m.group(3);
+        String tso = m.group(3);
         int version = Integer.parseInt(m.group(4).substring(0, 3));
 
-        SourcingActorTsoCode tso = SourcingActorTsoCode.tsoFromSourcingActor(sourcingActor);
-
-        return Optional.of(CgmesFileName.builder().date(date).buisinessProcess(businessProcess).tso(tso).version(version).build());
+        return Optional.of(CgmesFileName.builder().date(date).businessProcess(businessProcess).tso(tso).version(version).build());
     }
 }
