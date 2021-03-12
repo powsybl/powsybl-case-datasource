@@ -12,12 +12,9 @@ import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
 import com.powsybl.caseserver.dto.CaseInfos;
 import com.powsybl.caseserver.parsers.entsoe.EntsoeFileNameParser;
-import com.powsybl.commons.PowsyblException;
 import com.powsybl.computation.ComputationManager;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
@@ -532,10 +529,6 @@ public class CaseControllerTest {
 
     private String getDateSearchTerm(String entsoeFormatDate) {
         String utcFormattedDate = EntsoeFileNameParser.parseDateTime(entsoeFormatDate).toDateTimeISO().toString();
-        try {
-            return "date:\"" + URLEncoder.encode(utcFormattedDate, "UTF-8") + "\"";
-        } catch (UnsupportedEncodingException e) {
-            throw new PowsyblException("Error when decoding the query string");
-        }
+        return "date:\"" + utcFormattedDate + "\"";
     }
 }
