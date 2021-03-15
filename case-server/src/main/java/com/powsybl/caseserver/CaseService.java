@@ -220,12 +220,13 @@ public class CaseService {
     }
 
     private void ensureMaxCount(Path directory, int capacity) {
+        LOGGER.error("max count {}", capacity);
         if (capacity < 0) {
             return;
         }
         List<Path> listFiles = new ArrayList<>();
-        try {
-            Files.newDirectoryStream(directory).forEach(listFiles::add);
+        try (DirectoryStream<Path> paths = Files.newDirectoryStream(directory)) {
+            paths.forEach(listFiles::add);
         } catch (IOException e) {
             LOGGER.error(e.getMessage());
         }
