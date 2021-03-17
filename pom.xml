@@ -13,7 +13,7 @@
     <parent>
         <groupId>com.powsybl</groupId>
         <artifactId>powsybl-parent-ws</artifactId>
-        <version>3</version>
+        <version>5</version>
         <relativePath/>
     </parent>
 
@@ -62,9 +62,9 @@
         <junit.version>4.13</junit.version>
         <lombok.version>1.18.10</lombok.version>
         <slf4j.version>1.7.30</slf4j.version>
-        <springboot.version>2.2.9.RELEASE</springboot.version>
+        <springboot.version>2.4.3</springboot.version>
         <springfox.version>2.9.2</springfox.version>
-        <spring-cloud.version>Hoxton.SR3</spring-cloud.version>
+        <spring-cloud.version>Hoxton.SR10</spring-cloud.version>
         <elasticsearch.version>6.8.6</elasticsearch.version>
         <spring-data-elasticsearch.version>3.2.9.RELEASE</spring-data-elasticsearch.version>
         <rdf4j.version>2.4.4</rdf4j.version>
@@ -72,7 +72,9 @@
         <log4j2-mock-version>0.0.2</log4j2-mock-version>
         <guava-testlib-version>29.0-jre</guava-testlib-version>
 
-        <powsybl-core.version>3.8.0</powsybl-core.version>
+        <powsybl-core.version>4.0.1</powsybl-core.version>
+
+        <jib.to.image>powsybl/case-server</jib.to.image>
 
         <sonar.coverage.jacoco.xmlReportPaths>
             ../case-distribution/target/site/jacoco-aggregate/jacoco.xml
@@ -252,6 +254,12 @@
                 <artifactId>spring-boot-starter-test</artifactId>
                 <version>${springboot.version}</version>
                 <scope>test</scope>
+                <exclusions>
+                    <exclusion>
+                        <groupId>com.vaadin.external.google</groupId>
+                        <artifactId>android-json</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>de.dentrassi.elasticsearch</groupId>
