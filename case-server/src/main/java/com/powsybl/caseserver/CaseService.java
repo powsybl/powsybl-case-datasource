@@ -68,7 +68,7 @@ public class CaseService {
     @Lazy
     private CaseInfosService caseInfosService;
 
-    @Value("#{${max-public-cases:systemProperties['maxPublicCases']?: '-1'}}")
+    @Value("#{${max-public-cases:'-1'}}")
     Integer maxPublicCases;
 
     @Bean
@@ -220,7 +220,6 @@ public class CaseService {
     }
 
     private void ensureMaxCount(Path directory, int capacity) {
-        LOGGER.error("max count {}", capacity);
         if (capacity < 0) {
             return;
         }
