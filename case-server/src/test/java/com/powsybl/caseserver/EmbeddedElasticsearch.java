@@ -63,7 +63,7 @@ public class EmbeddedElasticsearch extends ExternalResource {
         NodesInfoResponse nodesInfoResponse = nodesInfoRequestBuilder.get();
         List<NodeInfo> nodeInfos = nodesInfoResponse.getNodes();
         NodeInfo nodeInfo = nodeInfos.get(0);
-        HttpInfo httpInfo = nodeInfo.getHttp();
+        HttpInfo httpInfo = nodeInfo.getInfo(HttpInfo.class);
         BoundTransportAddress boundTransportAddress = httpInfo.address();
         TransportAddress transportAddress = boundTransportAddress.publishAddress();
         System.setProperty("spring.data.elasticsearch.embedded", Boolean.toString(true));

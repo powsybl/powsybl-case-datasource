@@ -64,9 +64,9 @@
         <slf4j.version>1.7.30</slf4j.version>
         <springboot.version>2.4.3</springboot.version>
         <springfox.version>2.9.2</springfox.version>
-        <spring-cloud.version>Hoxton.SR10</spring-cloud.version>
-        <elasticsearch.version>6.8.6</elasticsearch.version>
-        <spring-data-elasticsearch.version>3.2.9.RELEASE</spring-data-elasticsearch.version>
+        <spring-cloud.version>2020.0.2</spring-cloud.version>
+        <elasticsearch.version>7.9.3</elasticsearch.version>
+        <spring-data-elasticsearch.version>4.1.6</spring-data-elasticsearch.version>
         <rdf4j.version>2.4.4</rdf4j.version>
         <jackson-datatype-joda.version>2.11.0</jackson-datatype-joda.version>
         <log4j2-mock-version>0.0.2</log4j2-mock-version>
@@ -254,12 +254,6 @@
                 <artifactId>spring-boot-starter-test</artifactId>
                 <version>${springboot.version}</version>
                 <scope>test</scope>
-                <exclusions>
-                    <exclusion>
-                        <groupId>com.vaadin.external.google</groupId>
-                        <artifactId>android-json</artifactId>
-                    </exclusion>
-                </exclusions>
             </dependency>
             <dependency>
                 <groupId>de.dentrassi.elasticsearch</groupId>
