@@ -229,7 +229,7 @@ public class CaseService {
         } catch (IOException e) {
             LOGGER.error(e.getMessage());
         }
-        if (listFiles.size() > capacity) {
+        if (listFiles.size() >= capacity) {
 
             listFiles.sort(Comparator.comparingLong(o -> {
                 try {
