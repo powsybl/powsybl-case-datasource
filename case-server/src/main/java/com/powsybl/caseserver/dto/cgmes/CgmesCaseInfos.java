@@ -7,7 +7,6 @@
 package com.powsybl.caseserver.dto.cgmes;
 
 import com.powsybl.caseserver.dto.CaseInfos;
-import com.powsybl.caseserver.parsers.cgmes.SourcingActorTsoCode;
 import io.swagger.annotations.ApiModel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -40,7 +39,7 @@ public class CgmesCaseInfos extends CaseInfos {
 
     @NonNull private DateTime date;
     @NonNull private String businessProcess;
-    @NonNull private SourcingActorTsoCode tso;
+    @NonNull private String tso;
     @NonNull private Integer version;
 
     @Override

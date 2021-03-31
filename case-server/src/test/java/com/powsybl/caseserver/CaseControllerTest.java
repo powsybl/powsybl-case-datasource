@@ -443,7 +443,7 @@ public class CaseControllerTest {
         assertTrue(response.contains("\"name\":\"20200103_0915_135_CH2.UCT\""));
 
         mvcResult = mvc.perform(get("/v1/cases/search")
-                .param("q", "geographicalCode:(FR) OR tso:(FR)"))
+                .param("q", "geographicalCode:(FR) OR tso:(RTEFRANCE)"))
                 .andExpect(status().isOk())
                 .andReturn();
         response = mvcResult.getResponse().getContentAsString();
@@ -502,7 +502,7 @@ public class CaseControllerTest {
         assertFalse(response.contains("\"name\":\"20200424T1330Z_2D_RTEFRANCE_001.zip\""));
 
         mvcResult = mvc.perform(get("/v1/cases/search")
-                .param("q", "tso:(FR) AND businessProcess:(2D) AND format:(CGMES)"))
+                .param("q", "tso:(RTEFRANCE) AND businessProcess:(2D) AND format:(CGMES)"))
                 .andExpect(status().isOk())
                 .andReturn();
         response = mvcResult.getResponse().getContentAsString();
