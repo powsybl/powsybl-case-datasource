@@ -68,7 +68,7 @@ public class CaseService {
     @Lazy
     private CaseInfosService caseInfosService;
 
-    @Value("#{${max-public-cases:'-1'}}")
+    @Value("${max-public-cases:-1}")
     Integer maxPublicCases;
 
     @Bean
