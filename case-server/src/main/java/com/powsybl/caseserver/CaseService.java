@@ -25,7 +25,9 @@ import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -65,6 +67,9 @@ public class CaseService {
     @Autowired
     @Lazy
     private CaseInfosService caseInfosService;
+
+    @Value("${max-public-cases:-1}")
+    Integer maxPublicCases;
 
     @Bean
     public Supplier<Flux<Message<String>>> publishCaseImport() {
@@ -173,6 +178,7 @@ public class CaseService {
         UUID caseUuid = UUID.randomUUID();
         Path uuidDirectory;
         if (toPublic) {
+            ensureMaxCount(getPublicStorageDir().normalize(), maxPublicCases);
             uuidDirectory = getPublicStorageDir().resolve(caseUuid.toString());
         } else {
             uuidDirectory = getPrivateStorageDir().resolve(caseUuid.toString());
@@ -211,6 +217,33 @@ public class CaseService {
         caseInfosPublisher.onNext(caseInfos.createMessage());
 
         return caseUuid;
+    }
+
+    private void ensureMaxCount(Path directory, int capacity) {
+        if (capacity < 0) {
+            return;
+        }
+        List<Path> listFiles = new ArrayList<>();
+        try (DirectoryStream<Path> paths = Files.newDirectoryStream(directory)) {
+            paths.forEach(listFiles::add);
+        } catch (IOException e) {
+            LOGGER.error(e.getMessage());
+        }
+        if (listFiles.size() >= capacity) {
+
+            listFiles.sort(Comparator.comparingLong(o -> {
+                try {
+                    return Files.getLastModifiedTime(o).toMillis();
+                } catch (IOException e) {
+                    LOGGER.error(e.getMessage());
+                    return 0;
+                }
+            }));
+            for (Path path : listFiles.subList(0, listFiles.size() - capacity + 1)) {
+                deleteDirectoryRecursively(path);
+                caseInfosService.deleteCaseInfosByUuid(path.getFileName().toString());
+            }
+        }
     }
 
     CaseInfos createInfos(String fileBaseName, UUID caseUuid, String format) {

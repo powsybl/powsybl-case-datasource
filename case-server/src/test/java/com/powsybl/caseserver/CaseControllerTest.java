@@ -19,6 +19,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 import org.junit.After;
 import org.junit.Before;
@@ -41,10 +43,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import static org.hamcrest.Matchers.startsWith;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
@@ -93,6 +92,7 @@ public class CaseControllerTest {
         fileSystem = Jimfs.newFileSystem(Configuration.unix());
         caseService.setFileSystem(fileSystem);
         caseService.setComputationManager(Mockito.mock(ComputationManager.class));
+        caseService.maxPublicCases = 5;
     }
 
     @After
@@ -236,13 +236,7 @@ public class CaseControllerTest {
         mvc.perform(delete("/v1/cases"))
                 .andExpect(status().isOk());
 
-        // import a case to public
-        String publicCase = mvc.perform(multipart("/v1/cases/public")
-                .file(createMockMultipartFile(TEST_CASE)))
-                .andExpect(status().isOk())
-                .andReturn().getResponse().getContentAsString();
-
-        UUID publicCaseUuid = UUID.fromString(publicCase.substring(1, publicCase.length() - 1));
+        UUID publicCaseUuid = importPublicCase(TEST_CASE);
 
         // assert that the broker message has been sent
         Message<byte[]> messageImportPublic = outputDestination.receive(1000);
@@ -258,6 +252,43 @@ public class CaseControllerTest {
                 .andReturn();
 
         assertTrue(mvcResult.getResponse().getContentAsString().contains("\"name\":\"testCase.xiidm\""));
+
+        List<UUID> uuids = new ArrayList<>();
+        for (int i = 0; i < 10; ++i) {
+            uuids.add(importPublicCase(TEST_CASE));
+        }
+        // list the cases and expect one case since the case imported just before is public
+        MvcResult mvcResultTestMax = mvc.perform(get("/v1/cases/"))
+            .andExpect(status().isOk())
+            .andReturn();
+        String cases = mvcResultTestMax.getResponse().getContentAsString();
+        for (int i = 0; i < 10; ++i) {
+            assertEquals(i >= 5, cases.contains("\"uuid\":\"" + uuids.get(i) + "\""));
+        }
+
+        caseService.maxPublicCases = -1;
+        for (int i = 0; i < 5; ++i) {
+            uuids.add(importPublicCase(TEST_CASE));
+        }
+        // list the cases and expect one case since the case imported just before is public
+        mvcResultTestMax = mvc.perform(get("/v1/cases/"))
+            .andExpect(status().isOk())
+            .andReturn();
+        cases = mvcResultTestMax.getResponse().getContentAsString();
+        for (int i = 5; i < uuids.size(); ++i) {
+            assertTrue(cases.contains("\"uuid\":\"" + uuids.get(i) + "\""));
+        }
+
+    }
+
+    private UUID importPublicCase(String testCase) throws Exception {
+        // import a case to public
+        String publicCase = mvc.perform(multipart("/v1/cases/public")
+            .file(createMockMultipartFile(testCase)))
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString();
+
+        return UUID.fromString(publicCase.substring(1, publicCase.length() - 1));
     }
 
     @Test
