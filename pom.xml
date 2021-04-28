@@ -13,7 +13,7 @@
     <parent>
         <groupId>com.powsybl</groupId>
         <artifactId>powsybl-parent-ws</artifactId>
-        <version>3</version>
+        <version>4</version>
         <relativePath/>
     </parent>
 
@@ -72,7 +72,7 @@
         <log4j2-mock-version>0.0.2</log4j2-mock-version>
         <guava-testlib-version>29.0-jre</guava-testlib-version>
 
-        <powsybl-core.version>4.0.1</powsybl-core.version>
+        <powsybl-core.version>4.1.2</powsybl-core.version>
 
         <sonar.coverage.jacoco.xmlReportPaths>
             ../case-distribution/target/site/jacoco-aggregate/jacoco.xml
