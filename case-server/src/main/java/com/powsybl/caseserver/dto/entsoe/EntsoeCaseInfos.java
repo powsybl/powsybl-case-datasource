@@ -29,7 +29,7 @@ import org.springframework.messaging.Message;
 @NoArgsConstructor
 @Getter
 @ApiModel("Case infos")
-@Document(indexName = "case-server", type = "metadatas")
+@Document(indexName = "case-server")
 @TypeAlias(value = "EntsoeCaseInfos")
 public class EntsoeCaseInfos extends CaseInfos {
 

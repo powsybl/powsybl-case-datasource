@@ -66,6 +66,8 @@ public class CaseInfosServiceImpl implements CaseInfosService {
 
     @Override
     public void deleteAllCaseInfos() {
-        caseInfosRepository.deleteAll(getAllCaseInfos());
+        // FIXME why does this throw an exception
+        //caseInfosRepository.deleteAll();
+        getAllCaseInfos().forEach(caseInfos -> caseInfosRepository.delete(caseInfos));
     }
 }

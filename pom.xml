@@ -13,7 +13,7 @@
     <parent>
         <groupId>com.powsybl</groupId>
         <artifactId>powsybl-parent-ws</artifactId>
-        <version>4</version>
+        <version>5-SNAPSHOT</version>
         <relativePath/>
     </parent>
 
@@ -59,9 +59,9 @@
         <!-- 4.13.1 is incompatible with spring-boot-starter-test -->
         <junit.version>4.13</junit.version>
         <lombok.version>1.18.10</lombok.version>
-        <springboot.version>2.2.9.RELEASE</springboot.version>
+        <springboot.version>2.4.5</springboot.version>
         <springfox.version>2.9.2</springfox.version>
-        <spring-cloud.version>Hoxton.SR3</spring-cloud.version>
+        <spring-cloud.version>2020.0.2</spring-cloud.version>
         <jackson-datatype-joda.version>2.11.0</jackson-datatype-joda.version>
         <log4j2-mock-version>0.0.2</log4j2-mock-version>
 
