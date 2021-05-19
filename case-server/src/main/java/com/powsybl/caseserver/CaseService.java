@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.locks.LockSupport;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -45,8 +46,8 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import reactor.core.publisher.EmitterProcessor;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Sinks;
 
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
@@ -62,7 +63,7 @@ public class CaseService {
 
     private ComputationManager computationManager = LocalComputationManager.getDefault();
 
-    private final EmitterProcessor<Message<String>> caseInfosPublisher = EmitterProcessor.create();
+    private final Sinks.Many<Message<String>> caseInfosPublisher = Sinks.many().multicast().onBackpressureBuffer();
 
     @Autowired
     @Lazy
@@ -73,7 +74,7 @@ public class CaseService {
 
     @Bean
     public Supplier<Flux<Message<String>>> publishCaseImport() {
-        return () -> caseInfosPublisher;
+        return caseInfosPublisher::asFlux;
     }
 
     @Value("${case-store-directory:#{systemProperties['user.home'].concat(\"/cases\")}}")
@@ -214,8 +215,9 @@ public class CaseService {
 
         CaseInfos caseInfos = createInfos(caseFile.getFileName().toString(), caseUuid, importer.getFormat());
         caseInfosService.addCaseInfos(caseInfos);
-        caseInfosPublisher.onNext(caseInfos.createMessage());
-
+        while (caseInfosPublisher.tryEmitNext(caseInfos.createMessage()).isFailure()) {
+            LockSupport.parkNanos(10);
+        }
         return caseUuid;
     }
 
