@@ -65,7 +65,7 @@
         <jackson-datatype-joda.version>2.11.0</jackson-datatype-joda.version>
         <log4j2-mock-version>0.0.2</log4j2-mock-version>
 
-        <powsybl-core.version>4.1.2</powsybl-core.version>
+        <powsybl-core.version>4.2.0</powsybl-core.version>
 
         <sonar.coverage.jacoco.xmlReportPaths>
             ../case-distribution/target/site/jacoco-aggregate/jacoco.xml
