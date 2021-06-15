@@ -58,6 +58,7 @@
 
         <!-- 4.13.1 is incompatible with spring-boot-starter-test -->
         <junit.version>4.13</junit.version>
+        <mockito-inline.version>3.11.1</mockito-inline.version>
         <lombok.version>1.18.10</lombok.version>
         <springboot.version>2.4.5</springboot.version>
         <springfox.version>2.9.2</springfox.version>

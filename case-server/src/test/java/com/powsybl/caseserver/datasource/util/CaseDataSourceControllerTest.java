@@ -8,6 +8,7 @@ package com.powsybl.caseserver.datasource.util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.jimfs.Jimfs;
+import com.powsybl.caseserver.CaseApplication;
 import com.powsybl.caseserver.CaseService;
 import com.powsybl.commons.datasource.DataSource;
 import com.powsybl.iidm.import_.Importers;
@@ -30,6 +31,11 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.cloud.stream.binder.test.TestChannelBinderConfiguration;
+import org.springframework.cloud.stream.function.StreamBridge;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.ContextHierarchy;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
@@ -47,9 +53,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @EnableWebMvc
 @WebMvcTest(CaseDataSourceController.class)
 @TestPropertySource(properties = {"case-store-directory=test"})
+@ContextHierarchy({@ContextConfiguration(classes = {CaseApplication.class, TestChannelBinderConfiguration.class})})
 public class CaseDataSourceControllerTest {
 
     private FileSystem fileSystem = Jimfs.newFileSystem();
+
+    @MockBean
+    StreamBridge streamBridge;
 
     @Autowired
     private MockMvc mvc;

@@ -212,5 +212,12 @@
             <artifactId>spring-integration-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <!-- Needed to mock final StreamBridge to avoid redoing all the test classes -->
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-inline</artifactId>
+            <version>${mockito-inline.version}</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 </project>

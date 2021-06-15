@@ -32,22 +32,17 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.locks.LockSupport;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
+import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Sinks;
 
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
@@ -63,7 +58,8 @@ public class CaseService {
 
     private ComputationManager computationManager = LocalComputationManager.getDefault();
 
-    private final Sinks.Many<Message<String>> caseInfosPublisher = Sinks.many().multicast().onBackpressureBuffer();
+    @Autowired
+    private StreamBridge caseInfosPublisher;
 
     @Autowired
     @Lazy
@@ -71,11 +67,6 @@ public class CaseService {
 
     @Value("${max-public-cases:-1}")
     Integer maxPublicCases;
-
-    @Bean
-    public Supplier<Flux<Message<String>>> publishCaseImport() {
-        return caseInfosPublisher::asFlux;
-    }
 
     @Value("${case-store-directory:#{systemProperties['user.home'].concat(\"/cases\")}}")
     private String rootDirectory;
@@ -215,9 +206,7 @@ public class CaseService {
 
         CaseInfos caseInfos = createInfos(caseFile.getFileName().toString(), caseUuid, importer.getFormat());
         caseInfosService.addCaseInfos(caseInfos);
-        while (caseInfosPublisher.tryEmitNext(caseInfos.createMessage()).isFailure()) {
-            LockSupport.parkNanos(10);
-        }
+        caseInfosPublisher.send("publishCaseImport-out-0", caseInfos.createMessage());
         return caseUuid;
     }
 
