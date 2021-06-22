@@ -60,7 +60,7 @@
         <junit.version>4.13</junit.version>
         <mockito-inline.version>3.11.1</mockito-inline.version>
         <lombok.version>1.18.10</lombok.version>
-        <springboot.version>2.4.5</springboot.version>
+        <springboot.version>2.4.7</springboot.version>
         <springfox.version>2.9.2</springfox.version>
         <spring-cloud.version>2020.0.3</spring-cloud.version>
         <jackson-datatype-joda.version>2.11.0</jackson-datatype-joda.version>
