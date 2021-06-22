@@ -212,7 +212,13 @@
             <artifactId>spring-integration-test</artifactId>
             <scope>test</scope>
         </dependency>
-        <!-- Needed to mock final StreamBridge to avoid redoing all the test classes -->
+        <!-- Needed to mock StreamBridge (which happens to be a final class) in CaseDataSourceControllerTest which doesn't load the full spring context -->
+        <!-- see "mockito-inline" in https://docs.spring.io/spring-boot/docs/current/reference/html/features.html#features.testing.spring-boot-applications.mocking-beans -->
+        <!-- otherwise we get the following exception:
+            Cannot mock/spy class org.springframework.cloud.stream.function.StreamBridge
+             Mockito cannot mock/spy because :
+              - final class
+        -->
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-inline</artifactId>
