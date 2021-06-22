@@ -41,6 +41,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -53,6 +54,10 @@ import org.springframework.web.multipart.MultipartFile;
 public class CaseService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CaseService.class);
+
+    private static final String CATEGORY_BROKER_OUTPUT = CaseService.class.getName() + ".output-broker-messages";
+
+    private static final Logger OUTPUT_MESSAGE_LOGGER = LoggerFactory.getLogger(CATEGORY_BROKER_OUTPUT);
 
     private FileSystem fileSystem = FileSystems.getDefault();
 
@@ -206,7 +211,7 @@ public class CaseService {
 
         CaseInfos caseInfos = createInfos(caseFile.getFileName().toString(), caseUuid, importer.getFormat());
         caseInfosService.addCaseInfos(caseInfos);
-        caseInfosPublisher.send("publishCaseImport-out-0", caseInfos.createMessage());
+        sendImportMessage(caseInfos.createMessage());
         return caseUuid;
     }
 
@@ -358,5 +363,10 @@ public class CaseService {
         checkStorageInitialization();
 
         return caseInfosService.searchCaseInfos(query);
+    }
+
+    private void sendImportMessage(Message<String> message) {
+        OUTPUT_MESSAGE_LOGGER.debug("Sending message : {}", message);
+        caseInfosPublisher.send("publishCaseImport-out-0", message);
     }
 }

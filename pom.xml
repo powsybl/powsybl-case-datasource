@@ -62,7 +62,7 @@
         <lombok.version>1.18.10</lombok.version>
         <springboot.version>2.4.5</springboot.version>
         <springfox.version>2.9.2</springfox.version>
-        <spring-cloud.version>2020.0.1</spring-cloud.version>
+        <spring-cloud.version>2020.0.3</spring-cloud.version>
         <jackson-datatype-joda.version>2.11.0</jackson-datatype-joda.version>
         <log4j2-mock-version>0.0.2</log4j2-mock-version>
 
