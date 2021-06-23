@@ -32,21 +32,18 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
+import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import reactor.core.publisher.EmitterProcessor;
-import reactor.core.publisher.Flux;
 
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
@@ -58,11 +55,16 @@ public class CaseService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CaseService.class);
 
+    private static final String CATEGORY_BROKER_OUTPUT = CaseService.class.getName() + ".output-broker-messages";
+
+    private static final Logger OUTPUT_MESSAGE_LOGGER = LoggerFactory.getLogger(CATEGORY_BROKER_OUTPUT);
+
     private FileSystem fileSystem = FileSystems.getDefault();
 
     private ComputationManager computationManager = LocalComputationManager.getDefault();
 
-    private final EmitterProcessor<Message<String>> caseInfosPublisher = EmitterProcessor.create();
+    @Autowired
+    private StreamBridge caseInfosPublisher;
 
     @Autowired
     @Lazy
@@ -70,11 +72,6 @@ public class CaseService {
 
     @Value("${max-public-cases:-1}")
     Integer maxPublicCases;
-
-    @Bean
-    public Supplier<Flux<Message<String>>> publishCaseImport() {
-        return () -> caseInfosPublisher;
-    }
 
     @Value("${case-store-directory:#{systemProperties['user.home'].concat(\"/cases\")}}")
     private String rootDirectory;
@@ -214,8 +211,7 @@ public class CaseService {
 
         CaseInfos caseInfos = createInfos(caseFile.getFileName().toString(), caseUuid, importer.getFormat());
         caseInfosService.addCaseInfos(caseInfos);
-        caseInfosPublisher.onNext(caseInfos.createMessage());
-
+        sendImportMessage(caseInfos.createMessage());
         return caseUuid;
     }
 
@@ -367,5 +363,10 @@ public class CaseService {
         checkStorageInitialization();
 
         return caseInfosService.searchCaseInfos(query);
+    }
+
+    private void sendImportMessage(Message<String> message) {
+        OUTPUT_MESSAGE_LOGGER.debug("Sending message : {}", message);
+        caseInfosPublisher.send("publishCaseImport-out-0", message);
     }
 }

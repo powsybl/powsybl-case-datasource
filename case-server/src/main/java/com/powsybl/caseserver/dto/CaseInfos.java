@@ -31,7 +31,7 @@ import org.springframework.messaging.Message;
 @NoArgsConstructor
 @Getter
 @ApiModel("Case infos")
-@Document(indexName = "case-server", type = "metadatas")
+@Document(indexName = "case-server")
 @TypeAlias(value = "CaseInfos")
 public class CaseInfos {
 

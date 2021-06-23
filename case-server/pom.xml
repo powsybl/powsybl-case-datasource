@@ -186,6 +186,11 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>org.junit.vintage</groupId>
+            <artifactId>junit-vintage-engine</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
@@ -205,6 +210,19 @@
         <dependency>
             <groupId>org.springframework.integration</groupId>
             <artifactId>spring-integration-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- Needed to mock StreamBridge (which happens to be a final class) in CaseDataSourceControllerTest which doesn't load the full spring context -->
+        <!-- see "mockito-inline" in https://docs.spring.io/spring-boot/docs/current/reference/html/features.html#features.testing.spring-boot-applications.mocking-beans -->
+        <!-- otherwise we get the following exception:
+            Cannot mock/spy class org.springframework.cloud.stream.function.StreamBridge
+             Mockito cannot mock/spy because :
+              - final class
+        -->
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-inline</artifactId>
+            <version>${mockito-inline.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
