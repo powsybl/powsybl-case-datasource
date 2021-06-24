@@ -66,9 +66,6 @@ public class CaseInfosServiceImpl implements CaseInfosService {
 
     @Override
     public void deleteAllCaseInfos() {
-        //FIXME why does this throw an exception
-        //org.springframework.data.elasticsearch.UncategorizedElasticsearchException: Elasticsearch exception [type=illegal_argument_exception, reason=request [/case-server/_delete_by_query] contains unrecognized parameters: [allow_no_indices], [conflicts], [expand_wildcards], [ignore_throttled], [ignore_unavailable], [requests_per_second], [slices], [wait_for_completion]]; nested exception is ElasticsearchStatusException[Elasticsearch exception [type=illegal_argument_exception, reason=request [/case-server/_delete_by_query] contains unrecognized parameters: [allow_no_indices], [conflicts], [expand_wildcards], [ignore_throttled], [ignore_unavailable], [requests_per_second], [slices], [wait_for_completion]]]
-        //caseInfosRepository.deleteAll();
-        getAllCaseInfos().forEach(caseInfos -> caseInfosRepository.delete(caseInfos));
+        caseInfosRepository.deleteAll(getAllCaseInfos());
     }
 }

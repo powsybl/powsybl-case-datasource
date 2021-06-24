@@ -6,7 +6,6 @@
  */
 package com.powsybl.caseserver;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import org.elasticsearch.action.admin.cluster.node.info.NodeInfo;
@@ -16,6 +15,7 @@ import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.BoundTransportAddress;
 import org.elasticsearch.common.transport.TransportAddress;
 import org.elasticsearch.http.HttpInfo;
+import org.elasticsearch.index.reindex.ReindexPlugin;
 import org.elasticsearch.node.Node;
 import org.elasticsearch.node.NodeValidationException;
 import org.elasticsearch.transport.Netty4Plugin;
@@ -51,7 +51,7 @@ public class EmbeddedElasticsearch extends ExternalResource {
                         .put("cluster.routing.allocation.disk.watermark.high", "1gb")
                         .put("cluster.routing.allocation.disk.watermark.flood_stage", "1gb")
                         .build(),
-                Collections.singletonList(Netty4Plugin.class));
+                List.of(Netty4Plugin.class, ReindexPlugin.class));
 
         node.start();
 
