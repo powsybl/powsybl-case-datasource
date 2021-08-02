@@ -7,7 +7,7 @@
 package com.powsybl.caseserver.dto.cgmes;
 
 import com.powsybl.caseserver.dto.CaseInfos;
-import io.swagger.annotations.ApiModel;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
@@ -27,7 +27,7 @@ import java.util.Objects;
 @SuperBuilder
 @NoArgsConstructor
 @Getter
-@ApiModel("Case infos")
+@Schema(description = "Case infos")
 @Document(indexName = "case-server")
 @TypeAlias(value = "CgmesCaseInfos")
 public class CgmesCaseInfos extends CaseInfos {

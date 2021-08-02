@@ -11,9 +11,10 @@ import com.powsybl.caseserver.dto.entsoe.EntsoeCaseInfos;
 import com.powsybl.caseserver.parsers.FileNameInfos;
 import com.powsybl.caseserver.parsers.cgmes.CgmesFileName;
 import com.powsybl.caseserver.parsers.entsoe.EntsoeFileName;
-import io.swagger.annotations.ApiModel;
 import java.util.Objects;
 import java.util.UUID;
+
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
@@ -30,7 +31,7 @@ import org.springframework.messaging.Message;
 @SuperBuilder
 @NoArgsConstructor
 @Getter
-@ApiModel("Case infos")
+@Schema(description = "Case infos")
 @Document(indexName = "case-server")
 @TypeAlias(value = "CaseInfos")
 public class CaseInfos {

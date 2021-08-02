@@ -1,5 +1,6 @@
 server:
   port: 5000
+  forward-headers-strategy: framework
 
 spring:
   servlet:
@@ -25,3 +26,7 @@ spring:
       port: 9200
       index: case-server
       type: metadatas
+
+springdoc:
+  swagger-ui:
+    path: swagger-ui.html
