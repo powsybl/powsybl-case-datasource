@@ -61,11 +61,11 @@
         <mockito-inline.version>3.11.1</mockito-inline.version>
         <lombok.version>1.18.10</lombok.version>
         <springboot.version>2.4.7</springboot.version>
-        <springfox.version>2.9.2</springfox.version>
+        <springdoc-openapi.version>1.4.8</springdoc-openapi.version>
         <spring-cloud.version>2020.0.3</spring-cloud.version>
         <jackson-datatype-joda.version>2.11.0</jackson-datatype-joda.version>
         <log4j2-mock-version>0.0.2</log4j2-mock-version>
-
+        <commons-lang3.version>3.9</commons-lang3.version>
         <powsybl-core.version>4.3.1</powsybl-core.version>
 
         <sonar.coverage.jacoco.xmlReportPaths>
@@ -123,16 +123,6 @@
 
             <!-- project specific dependencies (also overrides imports, but separate for clarity) -->
             <dependency>
-                <groupId>io.springfox</groupId>
-                <artifactId>springfox-swagger-ui</artifactId>
-                <version>${springfox.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.springfox</groupId>
-                <artifactId>springfox-swagger2</artifactId>
-                <version>${springfox.version}</version>
-            </dependency>
-            <dependency>
                 <groupId>org.projectlombok</groupId>
                 <artifactId>lombok</artifactId>
                 <version>${lombok.version}</version>
@@ -146,6 +136,16 @@
                 <groupId>de.dentrassi.elasticsearch</groupId>
                 <artifactId>log4j2-mock</artifactId>
                 <version>${log4j2-mock-version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springdoc</groupId>
+                <artifactId>springdoc-openapi-ui</artifactId>
+                <version>${springdoc-openapi.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-lang3</artifactId>
+                <version>${commons-lang3.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

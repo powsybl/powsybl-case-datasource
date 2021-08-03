@@ -9,14 +9,15 @@ package com.powsybl.caseserver;
 import com.powsybl.caseserver.dto.CaseInfos;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.iidm.xml.NetworkXml;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.UUID;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,7 +41,7 @@ import static com.powsybl.caseserver.CaseException.createDirectoryNotFound;
  */
 @RestController
 @RequestMapping(value = "/" + CaseConstants.API_VERSION)
-@Api(value = "Case server")
+@Tag(name = "Case server")
 @ComponentScan(basePackageClasses = {CaseService.class})
 public class CaseController {
 
@@ -50,7 +51,7 @@ public class CaseController {
     private CaseService caseService;
 
     @GetMapping(value = "/cases")
-    @ApiOperation(value = "Get all cases")
+    @Operation(summary = "Get all cases")
     public ResponseEntity<List<CaseInfos>> getCases() {
         LOGGER.debug("getCases request received");
         List<CaseInfos> cases = caseService.getCases();
@@ -61,7 +62,7 @@ public class CaseController {
     }
 
     @GetMapping(value = "/cases/{caseUuid}/format")
-    @ApiOperation(value = "Get case Format")
+    @Operation(summary = "Get case Format")
     public ResponseEntity<String> getCaseFormat(@PathVariable("caseUuid") UUID caseUuid) {
         LOGGER.debug("getCaseFormat request received");
         Path file = caseService.getCaseFile(caseUuid);
@@ -73,7 +74,7 @@ public class CaseController {
     }
 
     @GetMapping(value = "/cases/{caseUuid}")
-    @ApiOperation(value = "Get a case")
+    @Operation(summary = "Get a case")
     public ResponseEntity<byte[]> getCase(@PathVariable("caseUuid") UUID caseUuid,
                                                          @RequestParam(value = "xiidm", required = false, defaultValue = "true") boolean xiidmFormat) {
         LOGGER.debug("getCase request received with parameter caseUuid = {}", caseUuid);
@@ -103,7 +104,7 @@ public class CaseController {
     }
 
     @GetMapping(value = "/cases/{caseUuid}/exists")
-    @ApiOperation(value = "check if the case exists")
+    @Operation(summary = "check if the case exists")
     public ResponseEntity<Boolean> exists(@PathVariable("caseUuid") UUID caseUuid) {
         boolean exists = caseService.caseExists(caseUuid);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(exists);
@@ -111,7 +112,7 @@ public class CaseController {
     }
 
     @PostMapping(value = "/cases/private")
-    @ApiOperation(value = "import a case in the private directory")
+    @Operation(summary = "import a case in the private directory")
     public ResponseEntity<UUID> importPrivateCase(@RequestParam("file") MultipartFile file) {
         LOGGER.debug("importPrivateCase request received with file = {}", file.getName());
         UUID caseUuid = caseService.importCase(file, false);
@@ -119,7 +120,7 @@ public class CaseController {
     }
 
     @PostMapping(value = "/cases/public")
-    @ApiOperation(value = "import a case in the public directory")
+    @Operation(summary = "import a case in the public directory")
     public ResponseEntity<UUID> importPublicCase(@RequestParam("file") MultipartFile file) {
         LOGGER.debug("importPublicCase request received with file = {}", file.getName());
         UUID caseUuid = caseService.importCase(file, true);
@@ -127,7 +128,7 @@ public class CaseController {
     }
 
     @DeleteMapping(value = "/cases/{caseUuid}")
-    @ApiOperation(value = "delete a case")
+    @Operation(summary = "delete a case")
     public ResponseEntity<Void> deleteCase(@PathVariable("caseUuid") UUID caseUuid) {
         LOGGER.debug("deleteCase request received with parameter caseUuid = {}", caseUuid);
         caseService.deleteCase(caseUuid);
@@ -135,7 +136,7 @@ public class CaseController {
     }
 
     @DeleteMapping(value = "/cases")
-    @ApiOperation(value = "delete all cases")
+    @Operation(summary = "delete all cases")
     public ResponseEntity<Void> deleteCases() {
         LOGGER.debug("deleteCases request received");
         caseService.deleteAllCases();
@@ -143,7 +144,7 @@ public class CaseController {
     }
 
     @GetMapping(value = "/cases/search")
-    @ApiOperation(value = "Search cases by metadata")
+    @Operation(summary = "Search cases by metadata")
     public ResponseEntity<List<CaseInfos>> searchCases(@RequestParam(value = "q") String query) {
         LOGGER.debug("search cases request received");
         List<CaseInfos> cases = caseService.searchCases(query);

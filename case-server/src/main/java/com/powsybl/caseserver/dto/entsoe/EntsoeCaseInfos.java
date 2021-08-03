@@ -9,8 +9,9 @@ package com.powsybl.caseserver.dto.entsoe;
 import com.powsybl.caseserver.dto.CaseInfos;
 import com.powsybl.entsoe.util.EntsoeGeographicalCode;
 import com.powsybl.iidm.network.Country;
-import io.swagger.annotations.ApiModel;
 import java.util.Objects;
+
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
@@ -28,7 +29,7 @@ import org.springframework.messaging.Message;
 @SuperBuilder
 @NoArgsConstructor
 @Getter
-@ApiModel("Case infos")
+@Schema(description = "Case infos")
 @Document(indexName = "case-server")
 @TypeAlias(value = "EntsoeCaseInfos")
 public class EntsoeCaseInfos extends CaseInfos {

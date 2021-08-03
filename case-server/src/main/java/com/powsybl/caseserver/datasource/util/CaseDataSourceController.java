@@ -7,8 +7,8 @@
 package com.powsybl.caseserver.datasource.util;
 
 import com.powsybl.caseserver.CaseConstants;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.MediaType;
@@ -24,7 +24,7 @@ import java.util.UUID;
  */
 @RestController
 @RequestMapping(value = "/" + CaseConstants.API_VERSION)
-@Api(value = "Case datasource util")
+@Tag(name = "Case datasource util")
 @ComponentScan(basePackageClasses = {CaseDataSourceService.class})
 public class CaseDataSourceController {
 
@@ -32,14 +32,14 @@ public class CaseDataSourceController {
     private CaseDataSourceService caseDataSourceService;
 
     @GetMapping(value = "/cases/{caseUuid}/datasource/baseName")
-    @ApiOperation(value = "Get datasource baseName")
+    @Operation(summary = "Get datasource baseName")
     public ResponseEntity<String> getBaseName(@PathVariable("caseUuid") UUID caseUuid) {
         String baseName = caseDataSourceService.getBaseName(caseUuid);
         return ResponseEntity.ok().body(baseName);
     }
 
     @GetMapping(value = "/cases/{caseUuid}/datasource/exists", params = {"suffix", "ext"})
-    @ApiOperation(value = "check if the file exists in the datasource")
+    @Operation(summary = "check if the file exists in the datasource")
     public ResponseEntity<Boolean> datasourceExists(@PathVariable("caseUuid") UUID caseUuid,
                                                     @RequestParam String suffix,
                                                     @RequestParam String ext) {
@@ -48,7 +48,7 @@ public class CaseDataSourceController {
     }
 
     @GetMapping(value = "/cases/{caseUuid}/datasource/exists", params = "fileName")
-    @ApiOperation(value = "check if the file exists in the datasource")
+    @Operation(summary = "check if the file exists in the datasource")
     public ResponseEntity<Boolean> datasourceExists(@PathVariable("caseUuid") UUID caseUuid,
                                                     @RequestParam String fileName) {
         Boolean exists = caseDataSourceService.datasourceExists(caseUuid, fileName);
@@ -56,7 +56,7 @@ public class CaseDataSourceController {
     }
 
     @GetMapping(value = "/cases/{caseUuid}/datasource", params = {"suffix", "ext"})
-    @ApiOperation(value = "Get an input stream")
+    @Operation(summary = "Get an input stream")
     public ResponseEntity<byte[]> getFileData(@PathVariable("caseUuid") UUID caseUuid,
                                                       @RequestParam(value = "suffix") String suffix,
                                                       @RequestParam(value = "ext") String ext) {
@@ -65,7 +65,7 @@ public class CaseDataSourceController {
     }
 
     @GetMapping(value = "/cases/{caseUuid}/datasource", params = "fileName")
-    @ApiOperation(value = "Get an input stream")
+    @Operation(summary = "Get an input stream")
     public ResponseEntity<byte[]> getFileData(@PathVariable("caseUuid") UUID caseUuid,
                                                              @RequestParam(value = "fileName") String fileName) {
         byte[] byteArray = caseDataSourceService.getInputStream(caseUuid, fileName);
@@ -73,7 +73,7 @@ public class CaseDataSourceController {
     }
 
     @GetMapping(value = "/cases/{caseUuid}/datasource/list")
-    @ApiOperation(value = "list the files names matching the regex")
+    @Operation(summary = "list the files names matching the regex")
     public ResponseEntity<Set<String>> listName(@PathVariable("caseUuid") UUID caseUuid,
                                                 @RequestParam(value = "regex") String regex) {
         Set<String> nameList = caseDataSourceService.listName(caseUuid, regex);
