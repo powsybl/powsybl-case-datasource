@@ -111,7 +111,7 @@ public class CaseController {
 
     }
 
-    @PostMapping(value = "/cases/private")
+    @PostMapping(value = "/cases/private", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "import a case in the private directory")
     public ResponseEntity<UUID> importPrivateCase(@RequestParam("file") MultipartFile file) {
         LOGGER.debug("importPrivateCase request received with file = {}", file.getName());
@@ -119,7 +119,7 @@ public class CaseController {
         return ResponseEntity.ok().body(caseUuid);
     }
 
-    @PostMapping(value = "/cases/public")
+    @PostMapping(value = "/cases/public", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "import a case in the public directory")
     public ResponseEntity<UUID> importPublicCase(@RequestParam("file") MultipartFile file) {
         LOGGER.debug("importPublicCase request received with file = {}", file.getName());
