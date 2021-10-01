@@ -6,8 +6,6 @@
  */
 package com.powsybl.caseserver.elasticsearch;
 
-import java.net.InetSocketAddress;
-import java.util.Arrays;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormatter;
@@ -26,6 +24,9 @@ import org.springframework.data.elasticsearch.config.AbstractElasticsearchConfig
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchCustomConversions;
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
 
+import java.net.InetSocketAddress;
+import java.util.Arrays;
+
 /**
  * A class to configure DB elasticsearch client for metadatas transfer
  *
@@ -43,6 +44,9 @@ public class ESConfig extends AbstractElasticsearchConfiguration {
     @Value("#{'${spring.data.elasticsearch.embedded:false}' ? '${spring.data.elasticsearch.embedded.port:}' : '${spring.data.elasticsearch.port}'}")
     private int esPort;
 
+    @Value("${spring.data.elasticsearch.client.timeout:60}")
+    int timeout;
+
     @Bean
     @ConditionalOnExpression("'${spring.data.elasticsearch.enabled:false}' == 'true'")
     public CaseInfosService caseInfosServiceImpl() {
@@ -59,8 +63,9 @@ public class ESConfig extends AbstractElasticsearchConfiguration {
     @Override
     public RestHighLevelClient elasticsearchClient() {
         ClientConfiguration clientConfiguration = ClientConfiguration.builder()
-                .connectedTo(InetSocketAddress.createUnresolved(esHost, esPort))
-                .build();
+            .connectedTo(InetSocketAddress.createUnresolved(esHost, esPort))
+            .withConnectTimeout(timeout * 1000L).withSocketTimeout(timeout * 1000L)
+            .build();
 
         return RestClients.create(clientConfiguration).rest();
     }
@@ -73,6 +78,7 @@ public class ESConfig extends AbstractElasticsearchConfiguration {
     @WritingConverter
     enum DateToStringConverter implements Converter<DateTime, String> {
         INSTANCE;
+
         @Override
         public String convert(DateTime date) {
             return date.toDateTimeISO().toString();
@@ -82,6 +88,7 @@ public class ESConfig extends AbstractElasticsearchConfiguration {
     @ReadingConverter
     enum StringToDateConverter implements Converter<String, DateTime> {
         INSTANCE;
+
         @Override
         public DateTime convert(String s) {
             DateTimeFormatter parser = ISODateTimeFormat.dateTimeParser();
