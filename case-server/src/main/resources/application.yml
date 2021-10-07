@@ -1,15 +1,17 @@
 server:
-  port: 5000
   forward-headers-strategy: framework
 
 spring:
+  profiles:
+    active: default,local
+
   servlet:
     multipart:
       max-file-size: 100MB
       max-request-size: 100MB
 
   rabbitmq:
-    addresses: localhost
+    addresses: rabbitmq
     port: 5672
 
   cloud:
@@ -22,7 +24,7 @@ spring:
   data:
     elasticsearch:
       enabled : false
-      host: localhost
+      host: elasticsearch
       port: 9200
       client:
         timeout : 60  # Seconds

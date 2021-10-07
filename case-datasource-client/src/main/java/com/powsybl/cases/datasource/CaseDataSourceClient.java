@@ -47,7 +47,7 @@ public class CaseDataSourceClient implements ReadOnlyDataSource {
         return restTemplate;
     }
 
-    public CaseDataSourceClient(@Value("${case-server.base.url}") String caseServerBaseUri, UUID caseUuid) {
+    public CaseDataSourceClient(@Value("${case-server.base.url:http://case-server/}") String caseServerBaseUri, UUID caseUuid) {
         this(createRestTemplate(caseServerBaseUri), caseUuid);
     }
 

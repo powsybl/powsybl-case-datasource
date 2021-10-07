@@ -1,0 +1,10 @@
+server:
+  port: 5000
+
+spring:
+  rabbitmq:
+    addresses: localhost
+
+  data:
+    elasticsearch:
+      host: localhost
