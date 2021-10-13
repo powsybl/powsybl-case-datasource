@@ -349,7 +349,7 @@ public class CaseService {
 
     static void validateCaseName(String caseName) {
         Objects.requireNonNull(caseName);
-        if (!caseName.matches("^[\\w0-9\\-]+(\\.[\\w0-9]+)*$")) {
+        if (!caseName.matches("[\\w\\-]+(\\.[\\w]+)*+")) {
             throw CaseException.createIllegalCaseName(caseName);
         }
     }
