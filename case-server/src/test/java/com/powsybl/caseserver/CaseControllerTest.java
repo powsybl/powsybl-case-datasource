@@ -298,6 +298,7 @@ public class CaseControllerTest {
         CaseService.validateCaseName("te-st");
         CaseService.validateCaseName("test-case.7zip");
         CaseService.validateCaseName("testcase1.7zip");
+        CaseService.validateCaseName("testcase1.xiidm.gz");
 
         try {
             CaseService.validateCaseName("../test.xiidm");
