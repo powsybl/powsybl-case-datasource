@@ -32,7 +32,7 @@ import org.springframework.messaging.Message;
 @NoArgsConstructor
 @Getter
 @Schema(description = "Case infos")
-@Document(indexName = "case-server")
+@Document(indexName = "#{@environment.getProperty('index.prefix')}cases")
 @TypeAlias(value = "CaseInfos")
 public class CaseInfos {
 
