@@ -30,7 +30,7 @@ import org.springframework.messaging.Message;
 @NoArgsConstructor
 @Getter
 @Schema(description = "Case infos")
-@Document(indexName = "#{@environment.getProperty('index.prefix')}cases")
+@Document(indexName = "#{@environment.getProperty('powsybl-ws.elasticsearch.index.prefix')}cases")
 @TypeAlias(value = "EntsoeCaseInfos")
 public class EntsoeCaseInfos extends CaseInfos {
 
