@@ -6,5 +6,5 @@ spring:
     stream:
       bindings:
         publishCaseImport-out-0:
-          destination: case.import
+          destination: ${powsybl-ws.rabbitmq.destination.prefix:}case.import
       source: publishCaseImport
