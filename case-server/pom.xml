@@ -18,10 +18,6 @@
     <artifactId>powsybl-case-server</artifactId>
     <name>Case server</name>
 
-    <properties>
-        <springdoc-openapi.version>1.4.8</springdoc-openapi.version>
-    </properties>
-
     <build>
         <pluginManagement>
             <plugins>
