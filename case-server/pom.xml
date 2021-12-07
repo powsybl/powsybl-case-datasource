@@ -19,7 +19,6 @@
     <name>Case server</name>
 
     <properties>
-        <jib.container.environment>SPRING_PROFILES_ACTIVE=default</jib.container.environment>
         <springdoc-openapi.version>1.4.8</springdoc-openapi.version>
     </properties>
 
