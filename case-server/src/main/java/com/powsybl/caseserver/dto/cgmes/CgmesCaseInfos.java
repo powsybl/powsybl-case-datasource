@@ -28,7 +28,7 @@ import java.util.Objects;
 @NoArgsConstructor
 @Getter
 @Schema(description = "Case infos")
-@Document(indexName = "case-server")
+@Document(indexName = "#{@environment.getProperty('powsybl-ws.elasticsearch.index.prefix')}cases")
 @TypeAlias(value = "CgmesCaseInfos")
 public class CgmesCaseInfos extends CaseInfos {
 
