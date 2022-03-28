@@ -225,5 +225,10 @@
             <version>${mockito-inline.version}</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>elasticsearch</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 </project>

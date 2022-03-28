@@ -9,7 +9,7 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    
+
     <parent>
         <groupId>com.powsybl</groupId>
         <artifactId>powsybl-parent-ws</artifactId>
@@ -60,14 +60,15 @@
         <junit.version>4.13</junit.version>
         <mockito-inline.version>3.11.1</mockito-inline.version>
         <lombok.version>1.18.10</lombok.version>
-        <springboot.version>2.4.7</springboot.version>
-        <springdoc-openapi.version>1.4.8</springdoc-openapi.version>
-        <spring-cloud.version>2020.0.3</spring-cloud.version>
-        <jackson-datatype-joda.version>2.11.0</jackson-datatype-joda.version>
+        <springboot.version>2.6.4</springboot.version>
+        <springdoc-openapi.version>1.5.13</springdoc-openapi.version>
+        <spring-cloud.version>2021.0.1</spring-cloud.version>
+        <jackson-datatype-joda.version>2.13.1</jackson-datatype-joda.version>
         <log4j2-mock-version>0.0.2</log4j2-mock-version>
         <commons-lang3.version>3.9</commons-lang3.version>
         <powsybl-core.version>4.6.1</powsybl-core.version>
         <powsybl-ws-commons.version>1.1.0</powsybl-ws-commons.version>
+        <testcontainers.version>1.16.2</testcontainers.version>
 
         <sonar.coverage.jacoco.xmlReportPaths>
             ../case-distribution/target/site/jacoco-aggregate/jacoco.xml
@@ -152,6 +153,12 @@
                 <groupId>com.powsybl</groupId>
                 <artifactId>powsybl-ws-commons</artifactId>
                 <version>${powsybl-ws-commons.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.testcontainers</groupId>
+                <artifactId>elasticsearch</artifactId>
+                <version>${testcontainers.version}</version>
+                <scope>test</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>
