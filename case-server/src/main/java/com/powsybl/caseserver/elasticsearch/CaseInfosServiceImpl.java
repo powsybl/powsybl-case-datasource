@@ -17,6 +17,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.lang.NonNull;
 
 /**
@@ -31,6 +34,9 @@ public class CaseInfosServiceImpl implements CaseInfosService {
 
     @Autowired
     private CaseInfosRepository caseInfosRepository;
+
+    @Autowired
+    private ElasticsearchOperations operations;
 
     @Override
     public CaseInfos addCaseInfos(@NonNull final CaseInfos ci) {
@@ -51,7 +57,9 @@ public class CaseInfosServiceImpl implements CaseInfosService {
 
     @Override
     public List<CaseInfos> searchCaseInfos(@NonNull final String query) {
-        return Lists.newArrayList(caseInfosRepository.search(QueryBuilders.queryStringQuery(query)));
+        NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(QueryBuilders.queryStringQuery(query)).build();
+        return Lists.newArrayList(operations.search(searchQuery, CaseInfos.class)
+                                            .map(searchHit -> searchHit.getContent()));
     }
 
     @Override
