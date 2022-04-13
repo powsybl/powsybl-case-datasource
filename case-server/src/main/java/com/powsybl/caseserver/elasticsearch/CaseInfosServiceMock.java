@@ -47,4 +47,7 @@ public class CaseInfosServiceMock implements CaseInfosService {
 
     @Override
     public void deleteAllCaseInfos() { }
+
+    @Override
+    public void recreateAllCaseInfos(List<CaseInfos> caseInfos) { }
 }

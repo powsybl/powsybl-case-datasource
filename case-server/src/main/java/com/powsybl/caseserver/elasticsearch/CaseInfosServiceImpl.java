@@ -68,4 +68,10 @@ public class CaseInfosServiceImpl implements CaseInfosService {
     public void deleteAllCaseInfos() {
         caseInfosRepository.deleteAll(getAllCaseInfos());
     }
+
+    @Override
+    public void recreateAllCaseInfos(List<CaseInfos> caseInfos) {
+        caseInfosRepository.deleteAll();
+        caseInfosRepository.saveAll(caseInfos);
+    }
 }

@@ -35,8 +35,9 @@ public interface CaseInfosService {
 
     void deleteAllCaseInfos();
 
+    void recreateAllCaseInfos(List<CaseInfos> caseInfos);
+
     static String getDateSearchTerm(@NonNull final DateTime... dates) {
         return Arrays.stream(dates).map(date -> "\"" + date.toDateTimeISO().toString() + "\"").collect(Collectors.joining(" OR ", "date:", "")).toString();
     }
-
 }
