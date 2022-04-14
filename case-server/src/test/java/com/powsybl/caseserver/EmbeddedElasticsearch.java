@@ -13,6 +13,11 @@ import org.testcontainers.elasticsearch.ElasticsearchContainer;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 
+/**
+ * A class to launch an embedded DB elasticsearch
+ *
+ * @author Slimane Amar <slimane.amar at rte-france.com>
+ */
 @Component
 public class EmbeddedElasticsearch {
 
