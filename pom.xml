@@ -9,11 +9,11 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    
+
     <parent>
         <groupId>com.powsybl</groupId>
         <artifactId>powsybl-parent-ws</artifactId>
-        <version>7</version>
+        <version>8</version>
         <relativePath/>
     </parent>
 
@@ -56,18 +56,17 @@
 
         <java.version>11</java.version>
 
-        <!-- 4.13.1 is incompatible with spring-boot-starter-test -->
-        <junit.version>4.13</junit.version>
         <mockito-inline.version>3.11.1</mockito-inline.version>
         <lombok.version>1.18.10</lombok.version>
-        <springboot.version>2.4.7</springboot.version>
-        <springdoc-openapi.version>1.4.8</springdoc-openapi.version>
-        <spring-cloud.version>2020.0.3</spring-cloud.version>
-        <jackson-datatype-joda.version>2.11.0</jackson-datatype-joda.version>
+        <springboot.version>2.6.6</springboot.version>
+        <springdoc-openapi.version>1.5.13</springdoc-openapi.version>
+        <spring-cloud.version>2021.0.1</spring-cloud.version>
         <log4j2-mock-version>0.0.2</log4j2-mock-version>
         <commons-lang3.version>3.9</commons-lang3.version>
         <powsybl-core.version>4.7.0</powsybl-core.version>
         <powsybl-ws-commons.version>1.1.0</powsybl-ws-commons.version>
+        <testcontainers.version>1.16.2</testcontainers.version>
+        <jackson.version>2.13.2.20220328</jackson.version>
 
         <sonar.coverage.jacoco.xmlReportPaths>
             ../case-distribution/target/site/jacoco-aggregate/jacoco.xml
@@ -93,10 +92,16 @@
     <dependencyManagement>
         <dependencies>
             <!-- overrides of imports -->
+
+            <!-- The version 2.10 put by Powsybl cause a problem. spring boot 2.6 needs at least 2.13: https://github.com/FasterXML/jackson-databind/issues/2683 -->
+            <!-- java.lang.NoSuchMethodError: 'boolean com.fasterxml.jackson.databind.SerializationConfig.hasExplicitTimeZone()' -->
+            <!-- Use the version from spring boot 2.6.6 which contains the fix for the  spring 4 shell CVE -->
             <dependency>
-                <groupId>junit</groupId>
-                <artifactId>junit</artifactId>
-                <version>${junit.version}</version>
+                <groupId>com.fasterxml.jackson</groupId>
+                <artifactId>jackson-bom</artifactId>
+                <version>${jackson.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
             </dependency>
 
             <!-- imports -->
@@ -129,11 +134,6 @@
                 <version>${lombok.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.fasterxml.jackson.datatype</groupId>
-                <artifactId>jackson-datatype-joda</artifactId>
-                <version>${jackson-datatype-joda.version}</version>
-            </dependency>
-            <dependency>
                 <groupId>de.dentrassi.elasticsearch</groupId>
                 <artifactId>log4j2-mock</artifactId>
                 <version>${log4j2-mock-version}</version>
@@ -152,6 +152,12 @@
                 <groupId>com.powsybl</groupId>
                 <artifactId>powsybl-ws-commons</artifactId>
                 <version>${powsybl-ws-commons.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.testcontainers</groupId>
+                <artifactId>elasticsearch</artifactId>
+                <version>${testcontainers.version}</version>
+                <scope>test</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>
