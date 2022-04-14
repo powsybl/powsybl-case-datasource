@@ -40,14 +40,22 @@ public class CaseInfosServiceMock implements CaseInfosService {
     }
 
     @Override
-    public void deleteCaseInfos(@NonNull final CaseInfos ci) { }
+    public void deleteCaseInfos(@NonNull final CaseInfos ci) {
+        // Nothing to do
+    }
 
     @Override
-    public void deleteCaseInfosByUuid(@NonNull final String uuid) { }
+    public void deleteCaseInfosByUuid(@NonNull final String uuid) {
+        // Nothing to do
+    }
 
     @Override
-    public void deleteAllCaseInfos() { }
+    public void deleteAllCaseInfos() {
+        // Nothing to do
+    }
 
     @Override
-    public void recreateAllCaseInfos(List<CaseInfos> caseInfos) { }
+    public void recreateAllCaseInfos(List<CaseInfos> caseInfos) {
+        // Nothing to do
+    }
 }
