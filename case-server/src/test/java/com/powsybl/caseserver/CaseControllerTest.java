@@ -47,6 +47,7 @@ import static org.junit.Assert.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -512,6 +513,21 @@ public class CaseControllerTest {
         assertFalse(response.contains("\"name\":\"20200103_0915_FO5_FR0.UCT\""));
         assertFalse(response.contains("\"name\":\"20200103_0915_SN5_D80.UCT\""));
         assertFalse(response.contains("\"name\":\"20200103_0915_135_CH2.UCT\""));
+
+        // reindex all cases
+        mvc.perform(post("/v1/cases/reindex-all"))
+            .andExpect(status().isOk());
+
+        mvcResult = mvc.perform(get("/v1/cases/search")
+                .param("q", "*"))
+                .andExpect(status().isOk())
+                .andReturn();
+        response = mvcResult.getResponse().getContentAsString();
+        assertTrue(response.contains("\"name\":\"testCase.xiidm\""));
+        assertTrue(response.contains("\"name\":\"20200424T1330Z_2D_RTEFRANCE_001.zip\""));
+        assertTrue(response.contains("\"name\":\"20200103_0915_FO5_FR0.UCT\""));
+        assertTrue(response.contains("\"name\":\"20200103_0915_SN5_D80.UCT\""));
+        assertTrue(response.contains("\"name\":\"20200103_0915_135_CH2.UCT\""));
 
         // delete all cases
         mvc.perform(delete("/v1/cases"))

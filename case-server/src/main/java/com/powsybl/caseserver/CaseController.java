@@ -54,7 +54,7 @@ public class CaseController {
     @Operation(summary = "Get all cases")
     public ResponseEntity<List<CaseInfos>> getCases() {
         LOGGER.debug("getCases request received");
-        List<CaseInfos> cases = caseService.getCases();
+        List<CaseInfos> cases = caseService.getCases(true);
         if (cases == null) {
             return ResponseEntity.noContent().build();
         }
@@ -151,5 +151,13 @@ public class CaseController {
         LOGGER.debug("search cases request received");
         List<CaseInfos> cases = caseService.searchCases(query);
         return ResponseEntity.ok().body(cases);
+    }
+
+    @PostMapping(value = "/cases/reindex-all")
+    @Operation(summary = "reindex all cases")
+    public ResponseEntity<Void> reindexAllCases() {
+        LOGGER.debug("reindex all cases request received");
+        caseService.reindexAllCases();
+        return ResponseEntity.ok().build();
     }
 }

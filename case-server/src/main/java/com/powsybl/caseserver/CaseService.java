@@ -90,15 +90,23 @@ public class CaseService {
         return importer.getFormat();
     }
 
-    List<CaseInfos> getCases() {
-        checkStorageInitialization();
-        try (Stream<Path> walk = Files.walk(getPublicStorageDir())) {
+    private List<CaseInfos> getCasesFromDirectoryPath(Path directoryPath) {
+        try (Stream<Path> walk = Files.walk(directoryPath)) {
             return walk.filter(Files::isRegularFile)
-                    .map(file -> createInfos(file.getFileName().toString(), UUID.fromString(file.getParent().getFileName().toString()), getFormat(file)))
-                    .collect(Collectors.toList());
+                .map(file -> createInfos(file.getFileName().toString(), UUID.fromString(file.getParent().getFileName().toString()), getFormat(file)))
+                .collect(Collectors.toList());
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
+    }
+
+    public List<CaseInfos> getCases(boolean onlyPublicCases) {
+        checkStorageInitialization();
+        List<CaseInfos> casesInfos = getCasesFromDirectoryPath(getPublicStorageDir());
+        if (!onlyPublicCases) {
+            casesInfos.addAll(getCasesFromDirectoryPath(getPrivateStorageDir()));
+        }
+        return casesInfos;
     }
 
     public Path getCaseFile(UUID caseUuid) {
@@ -368,5 +376,9 @@ public class CaseService {
     private void sendImportMessage(Message<String> message) {
         OUTPUT_MESSAGE_LOGGER.debug("Sending message : {}", message);
         caseInfosPublisher.send("publishCaseImport-out-0", message);
+    }
+
+    public void reindexAllCases() {
+        caseInfosService.recreateAllCaseInfos(getCases(false));
     }
 }

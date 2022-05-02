@@ -76,6 +76,14 @@ public class CaseInfosELRepositoryTests {
         caseInfosService.deleteAllCaseInfos();
         all = caseInfosService.getAllCaseInfos();
         assertTrue(all.isEmpty());
+
+        caseInfosService.recreateAllCaseInfos(List.of(createInfos(SN_UCTE_CASE_FILE_NAME), createInfos(TEST_CGMES_CASE_FILE_NAME)));
+        all = caseInfosService.getAllCaseInfos();
+        assertEquals(2, all.size());
+        assertEquals(SN_UCTE_CASE_FILE_NAME, all.get(0).getName());
+        assertEquals("UCTE", all.get(0).getFormat());
+        assertEquals(TEST_CGMES_CASE_FILE_NAME, all.get(1).getName());
+        assertEquals("CGMES", all.get(1).getFormat());
     }
 
     @Test

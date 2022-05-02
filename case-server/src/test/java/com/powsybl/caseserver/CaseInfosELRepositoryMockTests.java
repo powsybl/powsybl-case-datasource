@@ -78,6 +78,10 @@ public class CaseInfosELRepositoryMockTests {
         caseInfosService.deleteAllCaseInfos();
         all = caseInfosService.getAllCaseInfos();
         assertTrue(all.isEmpty());
+
+        caseInfosService.recreateAllCaseInfos(List.of(createInfos(SN_UCTE_CASE_FILE_NAME), createInfos(ID2_UCTE_CASE_FILE_NAME)));
+        all = caseInfosService.getAllCaseInfos();
+        assertTrue(all.isEmpty());
     }
 
     private CaseInfos createInfos(String fileName) {
