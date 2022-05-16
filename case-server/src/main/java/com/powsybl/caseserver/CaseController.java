@@ -129,6 +129,15 @@ public class CaseController {
         return ResponseEntity.ok().body(caseUuid);
     }
 
+    @PostMapping(value = "/cases")
+    @Operation(summary = "create a case in based on another existing case")
+    @SuppressWarnings("javasecurity:S5145")
+    public ResponseEntity<UUID> createCase(@RequestParam("duplicateFrom") UUID parentCaseUuid) {
+        LOGGER.info("createCase request received with parameter parentCaseUuid = {}", parentCaseUuid);
+        UUID newCaseUuid = caseService.createCase(parentCaseUuid);
+        return ResponseEntity.ok().body(newCaseUuid);
+    }
+
     @DeleteMapping(value = "/cases/{caseUuid}")
     @Operation(summary = "delete a case")
     public ResponseEntity<Void> deleteCase(@PathVariable("caseUuid") UUID caseUuid) {

@@ -20,11 +20,7 @@ import com.powsybl.iidm.import_.Importers;
 import com.powsybl.iidm.network.Network;
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.nio.file.DirectoryStream;
-import java.nio.file.FileSystem;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.nio.file.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -221,6 +217,31 @@ public class CaseService {
         caseInfosService.addCaseInfos(caseInfos);
         sendImportMessage(caseInfos.createMessage());
         return caseUuid;
+    }
+
+    UUID createCase(UUID parentCaseUuid) {
+        Path existingCaseFile = getCaseFile(parentCaseUuid);
+        UUID newCaseUuid = UUID.randomUUID();
+        Path newCaseUuidDirectory = existingCaseFile.getParent().getParent().resolve(newCaseUuid.toString());
+
+        if (Files.exists(newCaseUuidDirectory)) {
+            throw CaseException.createDirectoryAreadyExists(newCaseUuidDirectory);
+        }
+
+        Path newCaseFile;
+        try {
+            Files.createDirectory(newCaseUuidDirectory);
+            newCaseFile = newCaseUuidDirectory.resolve(existingCaseFile.getFileName());
+            Files.copy(existingCaseFile, newCaseFile, StandardCopyOption.COPY_ATTRIBUTES);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+
+        Optional<CaseInfos> existingCaseInfos = caseInfosService.getCaseInfosByUuid(parentCaseUuid.toString());
+        CaseInfos caseInfos = createInfos(existingCaseInfos.get().getName(), newCaseUuid, existingCaseInfos.get().getFormat());
+        caseInfosService.addCaseInfos(caseInfos);
+        sendImportMessage(caseInfos.createMessage());
+        return newCaseUuid;
     }
 
     private void ensureMaxCount(Path directory, int capacity) {
