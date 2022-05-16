@@ -248,7 +248,7 @@ public class CaseControllerTest {
         assertEquals("XIIDM", headersPublicCase.get(CaseInfos.FORMAT_HEADER_KEY));
 
         //duplicate an existing case
-        MvcResult duplicateResult = mvc.perform(post("/v1/cases/{parentCaseUuid}/duplicate", publicCaseUuid))
+        MvcResult duplicateResult = mvc.perform(post("/v1/cases").param("duplicateFrom", publicCaseUuid.toString()))
                 .andExpect(status().isOk())
                 .andReturn();
 
