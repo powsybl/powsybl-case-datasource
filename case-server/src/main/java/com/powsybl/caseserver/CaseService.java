@@ -230,33 +230,24 @@ public class CaseService {
     UUID createCase(UUID parentCaseUuid) {
         try {
             Path existingCaseFile = getCaseFile(parentCaseUuid);
+
             UUID newCaseUuid = UUID.randomUUID();
             Path newCaseUuidDirectory = existingCaseFile.getParent().getParent().resolve(newCaseUuid.toString());
-
-            if (Files.exists(newCaseUuidDirectory)) {
-                throw CaseException.createDirectoryAreadyExists(newCaseUuidDirectory);
-            }
-
             Path newCaseFile;
-            try {
-                Files.createDirectory(newCaseUuidDirectory);
-                newCaseFile = newCaseUuidDirectory.resolve(existingCaseFile.getFileName());
-                Files.copy(existingCaseFile, newCaseFile, StandardCopyOption.COPY_ATTRIBUTES);
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
-            }
+            Files.createDirectory(newCaseUuidDirectory);
+            newCaseFile = newCaseUuidDirectory.resolve(existingCaseFile.getFileName());
+            Files.copy(existingCaseFile, newCaseFile, StandardCopyOption.COPY_ATTRIBUTES);
 
-            Optional<CaseInfos> existingCaseInfos = caseInfosService.getCaseInfosByUuid(parentCaseUuid.toString());
-            if (existingCaseInfos.isPresent()) {
-                CaseInfos caseInfos = createInfos(existingCaseInfos.get().getName(), newCaseUuid, existingCaseInfos.get().getFormat());
-                caseInfosService.addCaseInfos(caseInfos);
-                sendImportMessage(caseInfos.createMessage());
-                return newCaseUuid;
-            } else {
-                throw new NoSuchElementException("Parent case " + parentCaseUuid + " not found");
-            }
+            CaseInfos existingCaseInfos = caseInfosService.getCaseInfosByUuid(parentCaseUuid.toString()).orElseThrow();
+            CaseInfos caseInfos = createInfos(existingCaseInfos.getName(), newCaseUuid, existingCaseInfos.getFormat());
+            caseInfosService.addCaseInfos(caseInfos);
+            sendImportMessage(caseInfos.createMessage());
+            return newCaseUuid;
+
         } catch (NoSuchElementException | NullPointerException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Parent case " + parentCaseUuid + " not found");
+        } catch (IOException e) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "An error occured during the case file duplication");
         }
     }
 

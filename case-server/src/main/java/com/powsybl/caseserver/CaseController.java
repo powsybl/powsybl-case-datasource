@@ -17,6 +17,8 @@ import java.util.List;
 import java.util.UUID;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -130,7 +132,10 @@ public class CaseController {
     }
 
     @PostMapping(value = "/cases")
-    @Operation(summary = "create a case in based on another existing case")
+    @Operation(summary = "duplicarte a case")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The case has been duplicated"),
+            @ApiResponse(responseCode = "403", description = "An error occured during the case file duplication"),
+            @ApiResponse(responseCode = "404", description = "Parent case not found")})
     @SuppressWarnings("javasecurity:S5145")
     public ResponseEntity<UUID> createCase(@RequestParam("duplicateFrom") UUID parentCaseUuid) {
         LOGGER.info("createCase request received with parameter parentCaseUuid = {}", parentCaseUuid);
