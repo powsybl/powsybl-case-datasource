@@ -132,7 +132,7 @@ public class CaseController {
     }
 
     @PostMapping(value = "/cases")
-    @Operation(summary = "duplicarte a case")
+    @Operation(summary = "duplicate a case")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The case has been duplicated"),
             @ApiResponse(responseCode = "403", description = "An error occured during the case file duplication"),
             @ApiResponse(responseCode = "404", description = "Parent case not found")})
