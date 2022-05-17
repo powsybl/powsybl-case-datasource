@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.slf4j.Logger;
@@ -245,13 +246,12 @@ public class CaseService {
                 throw new UncheckedIOException(e);
             }
 
-
             Optional<CaseInfos> existingCaseInfos = caseInfosService.getCaseInfosByUuid(parentCaseUuid.toString());
             CaseInfos caseInfos = createInfos(existingCaseInfos.get().getName(), newCaseUuid, existingCaseInfos.get().getFormat());
             caseInfosService.addCaseInfos(caseInfos);
             sendImportMessage(caseInfos.createMessage());
             return newCaseUuid;
-        } catch (NoSuchElementException|NullPointerException e) {
+        } catch (NoSuchElementException | NullPointerException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Parent case " + parentCaseUuid + " not found");
         }
     }
