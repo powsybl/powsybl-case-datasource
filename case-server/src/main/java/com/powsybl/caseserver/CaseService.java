@@ -247,7 +247,7 @@ public class CaseService {
             }
 
             Optional<CaseInfos> existingCaseInfos = caseInfosService.getCaseInfosByUuid(parentCaseUuid.toString());
-            if(existingCaseInfos.isPresent()) {
+            if (existingCaseInfos.isPresent()) {
                 CaseInfos caseInfos = createInfos(existingCaseInfos.get().getName(), newCaseUuid, existingCaseInfos.get().getFormat());
                 caseInfosService.addCaseInfos(caseInfos);
                 sendImportMessage(caseInfos.createMessage());
