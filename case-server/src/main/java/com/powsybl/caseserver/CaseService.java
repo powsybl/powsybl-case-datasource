@@ -247,10 +247,14 @@ public class CaseService {
             }
 
             Optional<CaseInfos> existingCaseInfos = caseInfosService.getCaseInfosByUuid(parentCaseUuid.toString());
-            CaseInfos caseInfos = createInfos(existingCaseInfos.get().getName(), newCaseUuid, existingCaseInfos.get().getFormat());
-            caseInfosService.addCaseInfos(caseInfos);
-            sendImportMessage(caseInfos.createMessage());
-            return newCaseUuid;
+            if(existingCaseInfos.isPresent()) {
+                CaseInfos caseInfos = createInfos(existingCaseInfos.get().getName(), newCaseUuid, existingCaseInfos.get().getFormat());
+                caseInfosService.addCaseInfos(caseInfos);
+                sendImportMessage(caseInfos.createMessage());
+                return newCaseUuid;
+            } else {
+                throw new NoSuchElementException("Parent case " + parentCaseUuid + " not found");
+            }
         } catch (NoSuchElementException | NullPointerException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Parent case " + parentCaseUuid + " not found");
         }
