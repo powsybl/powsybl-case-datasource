@@ -255,6 +255,10 @@ public class CaseControllerTest {
         String duplicateCaseUuid = duplicateResult.getResponse().getContentAsString();
         assertNotEquals(publicCaseUuid.toString(), duplicateCaseUuid);
 
+        mvc.perform(post("/v1/cases").param("duplicateFrom", UUID.randomUUID().toString()))
+                .andExpect(status().isNotFound())
+                .andReturn();
+
         // list the cases and expect one case since the case imported just before is public
         MvcResult mvcResult = mvc.perform(get("/v1/cases"))
                 .andExpect(status().isOk())

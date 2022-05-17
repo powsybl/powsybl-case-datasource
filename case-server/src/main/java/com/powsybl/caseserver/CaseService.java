@@ -26,13 +26,7 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.slf4j.Logger;
@@ -42,9 +36,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.http.HttpStatus;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
@@ -225,28 +221,33 @@ public class CaseService {
     }
 
     UUID createCase(UUID parentCaseUuid) {
-        Path existingCaseFile = getCaseFile(parentCaseUuid);
-        UUID newCaseUuid = UUID.randomUUID();
-        Path newCaseUuidDirectory = existingCaseFile.getParent().getParent().resolve(newCaseUuid.toString());
-
-        if (Files.exists(newCaseUuidDirectory)) {
-            throw CaseException.createDirectoryAreadyExists(newCaseUuidDirectory);
-        }
-
-        Path newCaseFile;
         try {
-            Files.createDirectory(newCaseUuidDirectory);
-            newCaseFile = newCaseUuidDirectory.resolve(existingCaseFile.getFileName());
-            Files.copy(existingCaseFile, newCaseFile, StandardCopyOption.COPY_ATTRIBUTES);
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
+            Path existingCaseFile = getCaseFile(parentCaseUuid);
+            UUID newCaseUuid = UUID.randomUUID();
+            Path newCaseUuidDirectory = existingCaseFile.getParent().getParent().resolve(newCaseUuid.toString());
 
-        Optional<CaseInfos> existingCaseInfos = caseInfosService.getCaseInfosByUuid(parentCaseUuid.toString());
-        CaseInfos caseInfos = createInfos(existingCaseInfos.get().getName(), newCaseUuid, existingCaseInfos.get().getFormat());
-        caseInfosService.addCaseInfos(caseInfos);
-        sendImportMessage(caseInfos.createMessage());
-        return newCaseUuid;
+            if (Files.exists(newCaseUuidDirectory)) {
+                throw CaseException.createDirectoryAreadyExists(newCaseUuidDirectory);
+            }
+
+            Path newCaseFile;
+            try {
+                Files.createDirectory(newCaseUuidDirectory);
+                newCaseFile = newCaseUuidDirectory.resolve(existingCaseFile.getFileName());
+                Files.copy(existingCaseFile, newCaseFile, StandardCopyOption.COPY_ATTRIBUTES);
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+
+
+            Optional<CaseInfos> existingCaseInfos = caseInfosService.getCaseInfosByUuid(parentCaseUuid.toString());
+            CaseInfos caseInfos = createInfos(existingCaseInfos.get().getName(), newCaseUuid, existingCaseInfos.get().getFormat());
+            caseInfosService.addCaseInfos(caseInfos);
+            sendImportMessage(caseInfos.createMessage());
+            return newCaseUuid;
+        } catch (NoSuchElementException|NullPointerException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Parent case " + parentCaseUuid + " not found");
+        }
     }
 
     private void ensureMaxCount(Path directory, int capacity) {
