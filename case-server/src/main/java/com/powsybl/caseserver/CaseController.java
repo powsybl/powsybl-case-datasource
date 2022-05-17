@@ -137,9 +137,9 @@ public class CaseController {
             @ApiResponse(responseCode = "403", description = "An error occured during the case file duplication"),
             @ApiResponse(responseCode = "404", description = "Parent case not found")})
     @SuppressWarnings("javasecurity:S5145")
-    public ResponseEntity<UUID> createCase(@RequestParam("duplicateFrom") UUID parentCaseUuid) {
-        LOGGER.info("createCase request received with parameter parentCaseUuid = {}", parentCaseUuid);
-        UUID newCaseUuid = caseService.createCase(parentCaseUuid);
+    public ResponseEntity<UUID> createCase(@RequestParam("duplicateFrom") UUID sourceCaseUuid) {
+        LOGGER.info("createCase request received with parameter sourceCaseUuid = {}", sourceCaseUuid);
+        UUID newCaseUuid = caseService.createCase(sourceCaseUuid);
         return ResponseEntity.ok().body(newCaseUuid);
     }
 
