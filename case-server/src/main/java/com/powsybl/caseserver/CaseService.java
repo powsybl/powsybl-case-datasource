@@ -100,6 +100,12 @@ public class CaseService {
         }
     }
 
+    public List<CaseInfos> getCase(Path casePath) {
+        checkStorageInitialization();
+        List<CaseInfos> caseInfos = getCasesFromDirectoryPath(casePath);
+        return caseInfos;
+    }
+
     public List<CaseInfos> getCases(boolean onlyPublicCases) {
         checkStorageInitialization();
         List<CaseInfos> casesInfos = getCasesFromDirectoryPath(getPublicStorageDir());

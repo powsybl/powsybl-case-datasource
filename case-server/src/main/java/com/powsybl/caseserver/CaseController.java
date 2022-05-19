@@ -73,6 +73,21 @@ public class CaseController {
         return ResponseEntity.ok().body(caseFormat);
     }
 
+    @GetMapping(value = "/cases/{caseUuid}/name", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Get case name")
+    public ResponseEntity<String> getCaseName(@PathVariable("caseUuid") UUID caseUuid) {
+        LOGGER.debug("getCaseName request received");
+        Path file = caseService.getCaseFile(caseUuid);
+        if (file == null) {
+            throw createDirectoryNotFound(caseUuid);
+        }
+        List<CaseInfos> caseInfos = caseService.getCase(file);
+        if (caseInfos == null || caseInfos.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body("\"" + caseInfos.get(0).getName() + "\"");
+    }
+
     @GetMapping(value = "/cases/{caseUuid}")
     @Operation(summary = "Get a case")
     public ResponseEntity<byte[]> getCase(@PathVariable("caseUuid") UUID caseUuid,
