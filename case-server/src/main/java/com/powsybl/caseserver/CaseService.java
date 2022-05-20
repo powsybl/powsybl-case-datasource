@@ -230,6 +230,8 @@ public class CaseService {
     UUID createCase(UUID sourceCaseUuid) {
         try {
             Path existingCaseFile = getCaseFile(sourceCaseUuid);
+            if(existingCaseFile == null || existingCaseFile.getParent() == null)
+                throw CaseException.createDirectoryNotFound(sourceCaseUuid);
 
             UUID newCaseUuid = UUID.randomUUID();
             Path newCaseUuidDirectory = existingCaseFile.getParent().getParent().resolve(newCaseUuid.toString());
