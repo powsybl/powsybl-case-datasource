@@ -259,7 +259,9 @@ public class CaseControllerTest {
         messageImportPublic = outputDestination.receive(1000, "case.import.destination");
         assertEquals("", new String(messageImportPublic.getPayload()));
         headersPublicCase = messageImportPublic.getHeaders();
-        assertEquals(duplicateCaseUuid, headersPublicCase.get(CaseInfos.UUID_HEADER_KEY));
+        assertEquals(UUID.fromString(duplicateCaseUuid.replace("\"","")), headersPublicCase.get(CaseInfos.UUID_HEADER_KEY));
+        assertEquals("testCase.xiidm", headersPublicCase.get(CaseInfos.NAME_HEADER_KEY));
+        assertEquals("XIIDM", headersPublicCase.get(CaseInfos.FORMAT_HEADER_KEY));
 
         // assert that duplicating a non existing case should return a 404
         mvc.perform(post("/v1/cases").param("duplicateFrom", UUID.randomUUID().toString()))

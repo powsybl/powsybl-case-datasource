@@ -231,7 +231,7 @@ public class CaseService {
         try {
             Path existingCaseFile = getCaseFile(sourceCaseUuid);
             if (existingCaseFile == null || existingCaseFile.getParent() == null) {
-                throw CaseException.createDirectoryNotFound(sourceCaseUuid);
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Source case " + sourceCaseUuid + " not found");
             }
 
             UUID newCaseUuid = UUID.randomUUID();
@@ -247,8 +247,6 @@ public class CaseService {
             sendImportMessage(caseInfos.createMessage());
             return newCaseUuid;
 
-        } catch (NoSuchElementException | NullPointerException e) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Parent case " + sourceCaseUuid + " not found");
         } catch (IOException e) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "An error occured during the case file duplication");
         }
