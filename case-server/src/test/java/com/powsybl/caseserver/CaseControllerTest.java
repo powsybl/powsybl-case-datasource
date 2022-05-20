@@ -259,7 +259,7 @@ public class CaseControllerTest {
         messageImportPublic = outputDestination.receive(1000, "case.import.destination");
         assertEquals("", new String(messageImportPublic.getPayload()));
         headersPublicCase = messageImportPublic.getHeaders();
-        assertEquals(UUID.fromString(duplicateCaseUuid.replace("\"","")), headersPublicCase.get(CaseInfos.UUID_HEADER_KEY));
+        assertEquals(UUID.fromString(duplicateCaseUuid.replace("\"", "")), headersPublicCase.get(CaseInfos.UUID_HEADER_KEY));
         assertEquals("testCase.xiidm", headersPublicCase.get(CaseInfos.NAME_HEADER_KEY));
         assertEquals("XIIDM", headersPublicCase.get(CaseInfos.FORMAT_HEADER_KEY));
 
