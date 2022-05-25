@@ -26,6 +26,7 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.security.AccessControlException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -246,8 +247,10 @@ public class CaseService {
             sendImportMessage(caseInfos.createMessage());
             return newCaseUuid;
 
+        } catch (AccessControlException e) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access to the source case or writing rights were denied for the case file duplication");
         } catch (IOException e) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "An error occured during the case file duplication");
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "An error occurred during case duplication");
         }
     }
 

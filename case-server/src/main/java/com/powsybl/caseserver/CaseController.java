@@ -134,8 +134,9 @@ public class CaseController {
     @PostMapping(value = "/cases")
     @Operation(summary = "create a case from an existing one")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The case has been duplicated"),
-            @ApiResponse(responseCode = "403", description = "An error occured during the case file duplication"),
-            @ApiResponse(responseCode = "404", description = "Parent case not found")})
+            @ApiResponse(responseCode = "403", description = "Access to the source case or writing rights were denied for the case file duplication"),
+            @ApiResponse(responseCode = "404", description = "Parent case not found"),
+            @ApiResponse(responseCode = "500", description = "An error occurred during the case file duplication")})
     public ResponseEntity<UUID> createCase(@RequestParam("duplicateFrom") UUID sourceCaseUuid) {
         LOGGER.info("createCase request received with parameter sourceCaseUuid = {}", sourceCaseUuid);
         UUID newCaseUuid = caseService.createCase(sourceCaseUuid);
