@@ -247,8 +247,6 @@ public class CaseService {
             sendImportMessage(caseInfos.createMessage());
             return newCaseUuid;
 
-        } catch (AccessControlException e) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access to the source case or writing rights were denied for the case file duplication");
         } catch (IOException e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "An error occurred during case duplication");
         }
