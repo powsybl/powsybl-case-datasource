@@ -255,6 +255,10 @@ public class CaseControllerTest {
         String duplicateCaseUuid = duplicateResult.getResponse().getContentAsString();
         assertNotEquals(publicCaseUuid.toString(), duplicateCaseUuid);
 
+        mvc.perform(post("/v1/cases").param("duplicateFrom", UUID.randomUUID().toString()))
+                .andExpect(status().isNotFound())
+                .andReturn();
+
         // assert that broker message has been sent after duplication
         messageImportPublic = outputDestination.receive(1000, "case.import.destination");
         assertEquals("", new String(messageImportPublic.getPayload()));
