@@ -77,15 +77,10 @@ public class CaseController {
     @Operation(summary = "Get case name")
     public ResponseEntity<String> getCaseName(@PathVariable("caseUuid") UUID caseUuid) {
         LOGGER.debug("getCaseName request received");
-        Path file = caseService.getCaseFile(caseUuid);
-        if (file == null) {
-            throw createDirectoryNotFound(caseUuid);
-        }
-        List<CaseInfos> caseInfos = caseService.getCase(file);
-        if (caseInfos == null || caseInfos.isEmpty()) {
-            return ResponseEntity.noContent().build();
-        }
-        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body("\"" + caseInfos.get(0).getName() + "\"");
+        String caseName = caseService.getCaseName(caseUuid);
+        //Add quotes to the name otherwise it can't encode it to json
+        caseName = "\"" + caseName + "\"";
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(caseName);
     }
 
     @GetMapping(value = "/cases/{caseUuid}")

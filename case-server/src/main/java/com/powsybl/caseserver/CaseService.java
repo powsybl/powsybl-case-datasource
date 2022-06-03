@@ -45,6 +45,8 @@ import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import static com.powsybl.caseserver.CaseException.createDirectoryNotFound;
+
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -100,10 +102,19 @@ public class CaseService {
         }
     }
 
-    public List<CaseInfos> getCase(Path casePath) {
+    public String getCaseName(UUID caseUuid) {
+        Path file = getCaseFile(caseUuid);
+        if (file == null) {
+            throw createDirectoryNotFound(caseUuid);
+        }
+        CaseInfos caseInfos = getCase(file);
+        return caseInfos.getName();
+    }
+
+    public CaseInfos getCase(Path casePath) {
         checkStorageInitialization();
-        List<CaseInfos> caseInfos = getCasesFromDirectoryPath(casePath);
-        return caseInfos;
+        CaseInfos caseInfo = getCasesFromDirectoryPath(casePath).stream().findFirst().get();
+        return caseInfo;
     }
 
     public List<CaseInfos> getCases(boolean onlyPublicCases) {
