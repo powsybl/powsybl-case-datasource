@@ -113,8 +113,8 @@ public class CaseService {
 
     public CaseInfos getCase(Path casePath) {
         checkStorageInitialization();
-        CaseInfos caseInfo = getCasesFromDirectoryPath(casePath).stream().findFirst().get();
-        return caseInfo;
+        Optional<CaseInfos> caseInfo = getCasesFromDirectoryPath(casePath).stream().findFirst();
+        return caseInfo.isPresent() ? caseInfo.get() : caseInfo.orElseThrow();
     }
 
     public List<CaseInfos> getCases(boolean onlyPublicCases) {
