@@ -73,6 +73,16 @@ public class CaseController {
         return ResponseEntity.ok().body(caseFormat);
     }
 
+    @GetMapping(value = "/cases/{caseUuid}/name", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Get case name")
+    public ResponseEntity<String> getCaseName(@PathVariable("caseUuid") UUID caseUuid) {
+        LOGGER.debug("getCaseName request received");
+        String caseName = caseService.getCaseName(caseUuid);
+        //Add quotes to the name otherwise it can't encode it to json
+        caseName = "\"" + caseName + "\"";
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(caseName);
+    }
+
     @GetMapping(value = "/cases/{caseUuid}")
     @Operation(summary = "Get a case")
     public ResponseEntity<byte[]> getCase(@PathVariable("caseUuid") UUID caseUuid,
