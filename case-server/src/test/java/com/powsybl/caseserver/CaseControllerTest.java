@@ -164,6 +164,16 @@ public class CaseControllerTest {
                 .andExpect(content().string("XIIDM"))
                 .andReturn();
 
+        //retrieve case name
+        mvc.perform(get("/v1/cases/{caseUuid}/name", firstCaseUuid))
+                .andExpect(status().isOk())
+                .andExpect(content().string("\"testCase.xiidm\""))
+                .andReturn();
+
+        //retrieve unknown case name
+        mvc.perform(get("/v1/cases/{caseUuid}/name", UUID.randomUUID()))
+                .andExpect(status().is5xxServerError());
+
         // check if the case exists (except a true)
         mvc.perform(get("/v1/cases/{caseUuid}/exists", firstCaseUuid))
                 .andExpect(status().isOk())

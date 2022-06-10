@@ -48,6 +48,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import static com.powsybl.caseserver.CaseException.createDirectoryNotFound;
+
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
@@ -101,6 +103,21 @@ public class CaseService {
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
+    }
+
+    public String getCaseName(UUID caseUuid) {
+        Path file = getCaseFile(caseUuid);
+        if (file == null) {
+            throw createDirectoryNotFound(caseUuid);
+        }
+        CaseInfos caseInfos = getCase(file);
+        return caseInfos.getName();
+    }
+
+    public CaseInfos getCase(Path casePath) {
+        checkStorageInitialization();
+        Optional<CaseInfos> caseInfo = getCasesFromDirectoryPath(casePath).stream().findFirst();
+        return caseInfo.isPresent() ? caseInfo.get() : caseInfo.orElseThrow();
     }
 
     public List<CaseInfos> getCases(boolean onlyPublicCases) {
