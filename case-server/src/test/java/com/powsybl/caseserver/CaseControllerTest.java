@@ -257,6 +257,27 @@ public class CaseControllerTest {
         assertEquals(publicCaseUuid, headersPublicCase.get(CaseInfos.UUID_HEADER_KEY));
         assertEquals("XIIDM", headersPublicCase.get(CaseInfos.FORMAT_HEADER_KEY));
 
+        //duplicate an existing case
+        MvcResult duplicateResult = mvc.perform(post("/v1/cases").param("duplicateFrom", publicCaseUuid.toString()))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String duplicateCaseUuid = duplicateResult.getResponse().getContentAsString();
+        assertNotEquals(publicCaseUuid.toString(), duplicateCaseUuid);
+
+        // assert that broker message has been sent after duplication
+        messageImportPublic = outputDestination.receive(1000, "case.import.destination");
+        assertEquals("", new String(messageImportPublic.getPayload()));
+        headersPublicCase = messageImportPublic.getHeaders();
+        assertEquals(UUID.fromString(duplicateCaseUuid.replace("\"", "")), headersPublicCase.get(CaseInfos.UUID_HEADER_KEY));
+        assertEquals("testCase.xiidm", headersPublicCase.get(CaseInfos.NAME_HEADER_KEY));
+        assertEquals("XIIDM", headersPublicCase.get(CaseInfos.FORMAT_HEADER_KEY));
+
+        // assert that duplicating a non existing case should return a 404
+        mvc.perform(post("/v1/cases").param("duplicateFrom", UUID.randomUUID().toString()))
+                .andExpect(status().isNotFound())
+                .andReturn();
+
         // list the cases and expect one case since the case imported just before is public
         MvcResult mvcResult = mvc.perform(get("/v1/cases"))
                 .andExpect(status().isOk())

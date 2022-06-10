@@ -17,6 +17,8 @@ import java.util.List;
 import java.util.UUID;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -137,6 +139,17 @@ public class CaseController {
         LOGGER.debug("importPublicCase request received with file = {}", file.getName());
         UUID caseUuid = caseService.importCase(file, true);
         return ResponseEntity.ok().body(caseUuid);
+    }
+
+    @PostMapping(value = "/cases")
+    @Operation(summary = "create a case from an existing one")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The case has been duplicated"),
+            @ApiResponse(responseCode = "404", description = "Source case not found"),
+            @ApiResponse(responseCode = "500", description = "An error occurred during the case file duplication")})
+    public ResponseEntity<UUID> createCase(@RequestParam("duplicateFrom") UUID sourceCaseUuid) {
+        LOGGER.info("createCase request received with parameter sourceCaseUuid = {}", sourceCaseUuid);
+        UUID newCaseUuid = caseService.createCase(sourceCaseUuid);
+        return ResponseEntity.ok().body(newCaseUuid);
     }
 
     @DeleteMapping(value = "/cases/{caseUuid}")

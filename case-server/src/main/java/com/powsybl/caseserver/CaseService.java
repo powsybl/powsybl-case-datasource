@@ -25,6 +25,7 @@ import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -41,9 +42,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.http.HttpStatus;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import static com.powsybl.caseserver.CaseException.createDirectoryNotFound;
 
@@ -238,6 +241,31 @@ public class CaseService {
         caseInfosService.addCaseInfos(caseInfos);
         sendImportMessage(caseInfos.createMessage());
         return caseUuid;
+    }
+
+    UUID createCase(UUID sourceCaseUuid) {
+        try {
+            Path existingCaseFile = getCaseFile(sourceCaseUuid);
+            if (existingCaseFile == null || existingCaseFile.getParent() == null) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Source case " + sourceCaseUuid + " not found");
+            }
+
+            UUID newCaseUuid = UUID.randomUUID();
+            Path newCaseUuidDirectory = existingCaseFile.getParent().getParent().resolve(newCaseUuid.toString());
+            Path newCaseFile;
+            Files.createDirectory(newCaseUuidDirectory);
+            newCaseFile = newCaseUuidDirectory.resolve(existingCaseFile.getFileName());
+            Files.copy(existingCaseFile, newCaseFile, StandardCopyOption.COPY_ATTRIBUTES);
+
+            CaseInfos existingCaseInfos = caseInfosService.getCaseInfosByUuid(sourceCaseUuid.toString()).orElseThrow();
+            CaseInfos caseInfos = createInfos(existingCaseInfos.getName(), newCaseUuid, existingCaseInfos.getFormat());
+            caseInfosService.addCaseInfos(caseInfos);
+            sendImportMessage(caseInfos.createMessage());
+            return newCaseUuid;
+
+        } catch (IOException e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "An error occurred during case duplication");
+        }
     }
 
     private void ensureMaxCount(Path directory, int capacity) {
