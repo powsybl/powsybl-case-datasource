@@ -69,7 +69,7 @@ public class CaseController {
         LOGGER.debug("getCase request received");
         Path file = caseService.getCaseFile(caseUuid);
         if (file == null) {
-            throw createDirectoryNotFound(caseUuid);
+            return ResponseEntity.noContent().build();
         }
         CaseInfos caseInfos = caseService.getCase(file);
         return ResponseEntity.ok().body(caseInfos);
