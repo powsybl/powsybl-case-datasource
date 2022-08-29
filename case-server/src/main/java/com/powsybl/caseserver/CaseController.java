@@ -63,6 +63,18 @@ public class CaseController {
         return ResponseEntity.ok().body(cases);
     }
 
+    @GetMapping(value = "/cases/{caseUuid}/infos")
+    @Operation(summary = "Get a case infos")
+    public ResponseEntity<CaseInfos> getCase(@PathVariable("caseUuid") UUID caseUuid) {
+        LOGGER.debug("getCase request received");
+        Path file = caseService.getCaseFile(caseUuid);
+        if (file == null) {
+            throw createDirectoryNotFound(caseUuid);
+        }
+        CaseInfos caseInfos = caseService.getCase(file);
+        return ResponseEntity.ok().body(caseInfos);
+    }
+
     @GetMapping(value = "/cases/{caseUuid}/format")
     @Operation(summary = "Get case Format")
     public ResponseEntity<String> getCaseFormat(@PathVariable("caseUuid") UUID caseUuid) {
@@ -75,14 +87,12 @@ public class CaseController {
         return ResponseEntity.ok().body(caseFormat);
     }
 
-    @GetMapping(value = "/cases/{caseUuid}/name", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/cases/{caseUuid}/name")
     @Operation(summary = "Get case name")
     public ResponseEntity<String> getCaseName(@PathVariable("caseUuid") UUID caseUuid) {
         LOGGER.debug("getCaseName request received");
         String caseName = caseService.getCaseName(caseUuid);
-        //Add quotes to the name otherwise it can't encode it to json
-        caseName = "\"" + caseName + "\"";
-        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(caseName);
+        return ResponseEntity.ok().body(caseName);
     }
 
     @GetMapping(value = "/cases/{caseUuid}")
