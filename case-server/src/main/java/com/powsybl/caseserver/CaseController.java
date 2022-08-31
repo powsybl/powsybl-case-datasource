@@ -65,8 +65,8 @@ public class CaseController {
 
     @GetMapping(value = "/cases/{caseUuid}/infos")
     @Operation(summary = "Get a case infos")
-    public ResponseEntity<CaseInfos> getCase(@PathVariable("caseUuid") UUID caseUuid) {
-        LOGGER.debug("getCase request received");
+    public ResponseEntity<CaseInfos> getCaseInfos(@PathVariable("caseUuid") UUID caseUuid) {
+        LOGGER.debug("getCaseInfos request received");
         Path file = caseService.getCaseFile(caseUuid);
         if (file == null) {
             return ResponseEntity.noContent().build();
