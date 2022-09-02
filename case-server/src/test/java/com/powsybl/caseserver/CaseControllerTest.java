@@ -41,6 +41,7 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.*;
@@ -63,6 +64,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class CaseControllerTest {
 
     private static final String TEST_CASE = "testCase.xiidm";
+    private static final String TEST_CASE_FORMAT = "XIIDM";
     private static final String NOT_A_NETWORK = "notANetwork.txt";
     private static final String STILL_NOT_A_NETWORK = "stillNotANetwork.xiidm";
     private static final String TEST_CASE_URL = "/v1/cases/ae17bc33-77e2-4aca-b890-0b8cecd15175";
@@ -161,18 +163,30 @@ public class CaseControllerTest {
         // retrieve case format
         mvc.perform(get(GET_CASE_FORMAT_URL, firstCaseUuid))
                 .andExpect(status().isOk())
-                .andExpect(content().string("XIIDM"))
+                .andExpect(content().string(TEST_CASE_FORMAT))
                 .andReturn();
 
         //retrieve case name
         mvc.perform(get("/v1/cases/{caseUuid}/name", firstCaseUuid))
                 .andExpect(status().isOk())
-                .andExpect(content().string("\"testCase.xiidm\""))
+                .andExpect(content().string(TEST_CASE))
                 .andReturn();
 
         //retrieve unknown case name
         mvc.perform(get("/v1/cases/{caseUuid}/name", UUID.randomUUID()))
                 .andExpect(status().is5xxServerError());
+
+        //retrieve case infos
+        mvc.perform(get("/v1/cases/{caseUuid}/infos", firstCaseUuid))
+                .andExpect(status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.name").value(TEST_CASE))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.format").value(TEST_CASE_FORMAT))
+                .andReturn();
+
+        //retrieve case infos
+        mvc.perform(get("/v1/cases/{caseUuid}/infos", UUID.randomUUID()))
+                .andExpect(status().isNoContent())
+                .andReturn();
 
         // check if the case exists (except a true)
         mvc.perform(get("/v1/cases/{caseUuid}/exists", firstCaseUuid))
