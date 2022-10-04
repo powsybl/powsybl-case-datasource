@@ -10,7 +10,6 @@ import org.elasticsearch.client.RestHighLevelClient;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.context.annotation.Bean;
@@ -41,6 +40,15 @@ import java.util.Arrays;
 @Lazy
 public class ESConfig extends AbstractElasticsearchConfiguration {
 
+    @Value("#{'${spring.data.elasticsearch.embedded:false}' ? 'localhost' : '${spring.data.elasticsearch.host}'}")
+    private String esHost;
+
+    @Value("#{'${spring.data.elasticsearch.embedded:false}' ? '${spring.data.elasticsearch.embedded.port:}' : '${spring.data.elasticsearch.port}'}")
+    private int esPort;
+
+    @Value("${spring.data.elasticsearch.client.timeout:60}")
+    private int timeout;
+
     @Bean
     @ConditionalOnExpression("'${spring.data.elasticsearch.enabled:false}' == 'true'")
     public CaseInfosService caseInfosServiceImpl() {
@@ -53,36 +61,16 @@ public class ESConfig extends AbstractElasticsearchConfiguration {
         return new CaseInfosServiceMock();
     }
 
-    @Configuration
-    static class RestClientConfig {
-
-        @Value("#{'${spring.data.elasticsearch.embedded:false}' ? 'localhost' : '${spring.data.elasticsearch.host}'}")
-        private String esHost;
-
-        @Value("#{'${spring.data.elasticsearch.embedded:false}' ? '${spring.data.elasticsearch.embedded.port:}' : '${spring.data.elasticsearch.port}'}")
-        private int esPort;
-
-        @Value("${spring.data.elasticsearch.client.timeout:60}")
-        private int timeout;
-
-        @Bean
-        public RestClients.ElasticsearchRestClient elasticsearchRestClient() {
-            ClientConfiguration clientConfiguration = ClientConfiguration.builder()
-                    .connectedTo(InetSocketAddress.createUnresolved(esHost, esPort))
-                    .withConnectTimeout(timeout * 1000L).withSocketTimeout(timeout * 1000L)
-                    .build();
-
-            return RestClients.create(clientConfiguration);
-        }
-    }
-
-    @Autowired
-    private RestClients.ElasticsearchRestClient elasticsearchClient;
-
     @Bean
     @Override
+    @SuppressWarnings("squid:S2095")
     public RestHighLevelClient elasticsearchClient() {
-        return elasticsearchClient.rest();
+        ClientConfiguration clientConfiguration = ClientConfiguration.builder()
+                .connectedTo(InetSocketAddress.createUnresolved(esHost, esPort))
+                .withConnectTimeout(timeout * 1000L).withSocketTimeout(timeout * 1000L)
+                .build();
+
+        return RestClients.create(clientConfiguration).rest();
     }
 
     @Bean
