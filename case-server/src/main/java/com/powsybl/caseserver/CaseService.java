@@ -83,7 +83,7 @@ public class CaseService {
 
     Importer getImporterOrThrowsException(Path caseFile) {
         DataSource dataSource = Importers.createDataSource(caseFile);
-        Importer importer = Importers.findImporter(dataSource, computationManager);
+        Importer importer = Importer.find(dataSource, computationManager);
         if (importer == null) {
             throw CaseException.createFileNotImportable(caseFile);
         }
