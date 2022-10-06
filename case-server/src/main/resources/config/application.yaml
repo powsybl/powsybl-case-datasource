@@ -7,4 +7,4 @@ spring:
       bindings:
         publishCaseImport-out-0:
           destination: ${powsybl-ws.rabbitmq.destination.prefix:}case.import
-      source: publishCaseImport
+      output-bindings: publishCaseImport
