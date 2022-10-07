@@ -19,6 +19,7 @@ import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.ReadingConverter;
 import org.springframework.data.convert.WritingConverter;
 import org.springframework.data.elasticsearch.client.ClientConfiguration;
+import org.springframework.data.elasticsearch.client.ClientConfiguration.TerminalClientConfigurationBuilder;
 import org.springframework.data.elasticsearch.client.RestClients;
 import org.springframework.data.elasticsearch.config.AbstractElasticsearchConfiguration;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
@@ -28,6 +29,7 @@ import org.springframework.data.elasticsearch.repository.config.EnableElasticsea
 
 import java.net.InetSocketAddress;
 import java.util.Arrays;
+import java.util.Optional;
 
 /**
  * A class to configure DB elasticsearch client for metadatas transfer
@@ -49,6 +51,12 @@ public class ESConfig extends AbstractElasticsearchConfiguration {
     @Value("${spring.data.elasticsearch.client.timeout:60}")
     private int timeout;
 
+    @Value("${spring.data.elasticsearch.username:#{null}}")
+    private Optional<String> username;
+
+    @Value("${spring.data.elasticsearch.password:#{null}}")
+    private Optional<String> password;
+
     @Bean
     @ConditionalOnExpression("'${spring.data.elasticsearch.enabled:false}' == 'true'")
     public CaseInfosService caseInfosServiceImpl() {
@@ -65,12 +73,15 @@ public class ESConfig extends AbstractElasticsearchConfiguration {
     @Override
     @SuppressWarnings("squid:S2095")
     public RestHighLevelClient elasticsearchClient() {
-        ClientConfiguration clientConfiguration = ClientConfiguration.builder()
+        TerminalClientConfigurationBuilder clientConfiguration = ClientConfiguration.builder()
                 .connectedTo(InetSocketAddress.createUnresolved(esHost, esPort))
-                .withConnectTimeout(timeout * 1000L).withSocketTimeout(timeout * 1000L)
-                .build();
+                .withConnectTimeout(timeout * 1000L).withSocketTimeout(timeout * 1000L);
 
-        return RestClients.create(clientConfiguration).rest();
+        if (username.isPresent() && password.isPresent()) {
+            clientConfiguration = clientConfiguration.withBasicAuth(username.get(), password.get());
+        }
+
+        return RestClients.create(clientConfiguration.build()).rest();
     }
 
     @Bean

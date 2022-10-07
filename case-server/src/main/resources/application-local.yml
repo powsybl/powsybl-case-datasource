@@ -8,3 +8,6 @@ spring:
   data:
     elasticsearch:
       host: localhost
+      ## to fill if authentication is needed
+      # user:
+      # password:
