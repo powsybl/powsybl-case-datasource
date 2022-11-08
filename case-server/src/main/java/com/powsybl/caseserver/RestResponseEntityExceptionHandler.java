@@ -33,6 +33,7 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
         if (ex instanceof CaseException) {
             switch (((CaseException) ex).getType()) {
                 case FILE_NOT_IMPORTABLE:
+                case ILLEGAL_FILE_NAME:
                 case STORAGE_DIR_NOT_CREATED:
                     status = HttpStatus.UNPROCESSABLE_ENTITY;
                     break;
