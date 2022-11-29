@@ -11,7 +11,6 @@ import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
@@ -26,7 +25,6 @@ import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchCustomConversions;
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
-
 import java.net.InetSocketAddress;
 import java.util.Arrays;
 import java.util.Optional;
@@ -58,15 +56,8 @@ public class ESConfig extends AbstractElasticsearchConfiguration {
     private Optional<String> password;
 
     @Bean
-    @ConditionalOnExpression("'${spring.data.elasticsearch.enabled:false}' == 'true'")
     public CaseInfosService caseInfosServiceImpl() {
         return new CaseInfosServiceImpl();
-    }
-
-    @Bean
-    @ConditionalOnExpression("'${spring.data.elasticsearch.enabled:false}' == 'false'")
-    public CaseInfosService caseInfosServiceMock() {
-        return new CaseInfosServiceMock();
     }
 
     @Bean
