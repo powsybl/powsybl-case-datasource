@@ -12,6 +12,8 @@ import com.powsybl.caseserver.elasticsearch.CaseInfosServiceImpl;
 import com.powsybl.caseserver.parsers.FileNameInfos;
 import com.powsybl.caseserver.parsers.FileNameParser;
 import com.powsybl.caseserver.parsers.FileNameParsers;
+import com.powsybl.caseserver.repository.CaseMetadataEntity;
+import com.powsybl.caseserver.repository.CaseMetadataRepository;
 import com.powsybl.commons.datasource.DataSource;
 import com.powsybl.computation.ComputationManager;
 import com.powsybl.computation.local.LocalComputationManager;
@@ -26,15 +28,15 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,6 +47,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -55,7 +58,7 @@ import static com.powsybl.caseserver.CaseException.createDirectoryNotFound;
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
 @Service
-@ComponentScan(basePackageClasses = {CaseInfosServiceImpl.class})
+@ComponentScan(basePackageClasses = {CaseInfosServiceImpl.class, CaseMetadataRepository.class})
 public class CaseService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CaseService.class);
@@ -68,6 +71,8 @@ public class CaseService {
 
     private ComputationManager computationManager = LocalComputationManager.getDefault();
 
+    private final CaseMetadataRepository caseMetadataRepository;
+
     @Autowired
     private StreamBridge caseInfosPublisher;
 
@@ -75,11 +80,12 @@ public class CaseService {
     @Lazy
     private CaseInfosService caseInfosService;
 
-    @Value("${max-public-cases:-1}")
-    Integer maxPublicCases;
-
     @Value("${case-store-directory:#{systemProperties['user.home'].concat(\"/cases\")}}")
     private String rootDirectory;
+
+    public CaseService(CaseMetadataRepository caseMetadataRepository) {
+        this.caseMetadataRepository = caseMetadataRepository;
+    }
 
     Importer getImporterOrThrowsException(Path caseFile) {
         DataSource dataSource = Importers.createDataSource(caseFile);
@@ -95,8 +101,8 @@ public class CaseService {
         return importer.getFormat();
     }
 
-    private List<CaseInfos> getCasesFromDirectoryPath(Path directoryPath) {
-        try (Stream<Path> walk = Files.walk(directoryPath)) {
+    public List<CaseInfos> getCases(Path directory) {
+        try (Stream<Path> walk = Files.walk(directory)) {
             return walk.filter(Files::isRegularFile)
                 .map(file -> createInfos(file.getFileName().toString(), UUID.fromString(file.getParent().getFileName().toString()), getFormat(file)))
                 .collect(Collectors.toList());
@@ -116,38 +122,16 @@ public class CaseService {
 
     public CaseInfos getCase(Path casePath) {
         checkStorageInitialization();
-        Optional<CaseInfos> caseInfo = getCasesFromDirectoryPath(casePath).stream().findFirst();
-        return caseInfo.isPresent() ? caseInfo.get() : caseInfo.orElseThrow();
-    }
-
-    public List<CaseInfos> getCases(boolean onlyPublicCases) {
-        checkStorageInitialization();
-        List<CaseInfos> casesInfos = getCasesFromDirectoryPath(getPublicStorageDir());
-        if (!onlyPublicCases) {
-            casesInfos.addAll(getCasesFromDirectoryPath(getPrivateStorageDir()));
-        }
-        return casesInfos;
+        Optional<CaseInfos> caseInfo = getCases(casePath).stream().findFirst();
+        return caseInfo.orElseThrow();
     }
 
     public Path getCaseFile(UUID caseUuid) {
-        Path publicCaseDirectory = getPublicStorageDir();
-        Path privateCaseDirectory = getPrivateStorageDir();
-        Path caseFile = walkCaseDirectory(publicCaseDirectory.resolve(caseUuid.toString()));
-        if (caseFile != null) {
-            return caseFile;
-        }
-        caseFile = walkCaseDirectory(privateCaseDirectory.resolve(caseUuid.toString()));
-        return caseFile;
+        return walkCaseDirectory(getStorageRootDir().resolve(caseUuid.toString()));
     }
 
     Path getCaseDirectory(UUID caseUuid) {
-        Path publicCaseDirectory = getPublicStorageDir();
-        Path privateCaseDirectory = getPrivateStorageDir();
-        Path caseDirectory = publicCaseDirectory.resolve(caseUuid.toString());
-        if (Files.exists(caseDirectory) && Files.isDirectory(caseDirectory)) {
-            return caseDirectory;
-        }
-        caseDirectory = privateCaseDirectory.resolve(caseUuid.toString());
+        Path caseDirectory = getStorageRootDir().resolve(caseUuid.toString());
         if (Files.exists(caseDirectory) && Files.isDirectory(caseDirectory)) {
             return caseDirectory;
         }
@@ -197,17 +181,12 @@ public class CaseService {
         return Files.exists(caseFile) && Files.isRegularFile(caseFile);
     }
 
-    UUID importCase(MultipartFile mpf, boolean toPublic) {
+    UUID importCase(MultipartFile mpf, boolean withExpiration) {
         checkStorageInitialization();
 
         UUID caseUuid = UUID.randomUUID();
-        Path uuidDirectory;
-        if (toPublic) {
-            ensureMaxCount(getPublicStorageDir().normalize(), maxPublicCases);
-            uuidDirectory = getPublicStorageDir().resolve(caseUuid.toString());
-        } else {
-            uuidDirectory = getPrivateStorageDir().resolve(caseUuid.toString());
-        }
+        Path uuidDirectory = getStorageRootDir().resolve(caseUuid.toString());
+
         String caseName = mpf.getOriginalFilename();
         validateCaseName(caseName);
 
@@ -237,13 +216,20 @@ public class CaseService {
             throw e;
         }
 
+        LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
+        LocalDateTime expirationTime = null;
+        if (withExpiration) {
+            expirationTime = now.plusHours(1);
+        }
+        CaseMetadataEntity caseEntity = new CaseMetadataEntity(caseUuid, now, expirationTime);
+        caseMetadataRepository.save(caseEntity);
         CaseInfos caseInfos = createInfos(caseFile.getFileName().toString(), caseUuid, importer.getFormat());
         caseInfosService.addCaseInfos(caseInfos);
         sendImportMessage(caseInfos.createMessage());
         return caseUuid;
     }
 
-    UUID createCase(UUID sourceCaseUuid) {
+    UUID createCase(UUID sourceCaseUuid, boolean withExpiration) {
         try {
             Path existingCaseFile = getCaseFile(sourceCaseUuid);
             if (existingCaseFile == null || existingCaseFile.getParent() == null) {
@@ -260,38 +246,20 @@ public class CaseService {
             CaseInfos existingCaseInfos = caseInfosService.getCaseInfosByUuid(sourceCaseUuid.toString()).orElseThrow();
             CaseInfos caseInfos = createInfos(existingCaseInfos.getName(), newCaseUuid, existingCaseInfos.getFormat());
             caseInfosService.addCaseInfos(caseInfos);
+
+            LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
+            LocalDateTime expirationTime = null;
+            if (withExpiration) {
+                expirationTime = now.plusHours(1);
+            }
+            CaseMetadataEntity caseEntity = new CaseMetadataEntity(newCaseUuid, now, expirationTime);
+            caseMetadataRepository.save(caseEntity);
+
             sendImportMessage(caseInfos.createMessage());
             return newCaseUuid;
 
         } catch (IOException e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "An error occurred during case duplication");
-        }
-    }
-
-    private void ensureMaxCount(Path directory, int capacity) {
-        if (capacity < 0) {
-            return;
-        }
-        List<Path> listFiles = new ArrayList<>();
-        try (DirectoryStream<Path> paths = Files.newDirectoryStream(directory)) {
-            paths.forEach(listFiles::add);
-        } catch (IOException e) {
-            LOGGER.error(e.getMessage());
-        }
-        if (listFiles.size() >= capacity) {
-
-            listFiles.sort(Comparator.comparingLong(o -> {
-                try {
-                    return Files.getLastModifiedTime(o).toMillis();
-                } catch (IOException e) {
-                    LOGGER.error(e.getMessage());
-                    return 0;
-                }
-            }));
-            for (Path path : listFiles.subList(0, listFiles.size() - capacity + 1)) {
-                deleteDirectoryRecursively(path);
-                caseInfosService.deleteCaseInfosByUuid(path.getFileName().toString());
-            }
         }
     }
 
@@ -304,6 +272,12 @@ public class CaseService {
             }
         }
         return CaseInfos.builder().name(fileBaseName).uuid(caseUuid).format(format).build();
+    }
+
+    @Transactional
+    public void disableCaseExpiration(UUID caseUuid) {
+        CaseMetadataEntity caseMetadataEntity = caseMetadataRepository.findById(caseUuid).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "case " + caseUuid + " not found"));
+        caseMetadataEntity.setExpirationDate(null);
     }
 
     Optional<Network> loadNetwork(UUID caseUuid) {
@@ -343,36 +317,25 @@ public class CaseService {
         checkStorageInitialization();
         Path caseDirectory = getCaseDirectory(caseUuid);
         deleteDirectoryRecursively(caseDirectory);
-
         caseInfosService.deleteCaseInfosByUuid(caseUuid.toString());
+        caseMetadataRepository.deleteById(caseUuid);
     }
 
     void deleteAllCases() {
         checkStorageInitialization();
 
-        List<Path> directories = Arrays.asList(getPrivateStorageDir(), getPublicStorageDir());
-
-        for (Path directory : directories) {
-            try (DirectoryStream<Path> paths = Files.newDirectoryStream(directory)) {
-                paths.forEach(this::deleteDirectoryRecursively);
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
-            }
+        Path rootDirectoryPath = getStorageRootDir();
+        try (DirectoryStream<Path> paths = Files.newDirectoryStream(rootDirectoryPath)) {
+            paths.forEach(this::deleteDirectoryRecursively);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
         }
-
         caseInfosService.deleteAllCaseInfos();
+        caseMetadataRepository.deleteAll();
     }
 
     public Path getStorageRootDir() {
         return fileSystem.getPath(rootDirectory);
-    }
-
-    public Path getPublicStorageDir() {
-        return getStorageRootDir().resolve("public");
-    }
-
-    public Path getPrivateStorageDir() {
-        return getStorageRootDir().resolve("private");
     }
 
     private boolean isStorageCreated() {
@@ -383,12 +346,6 @@ public class CaseService {
     public void checkStorageInitialization() {
         if (!isStorageCreated()) {
             throw CaseException.createStorageNotInitialized(getStorageRootDir());
-        }
-        try {
-            Files.createDirectories(getPublicStorageDir());
-            Files.createDirectories(getPrivateStorageDir());
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
         }
     }
 
@@ -424,6 +381,6 @@ public class CaseService {
     }
 
     public void reindexAllCases() {
-        caseInfosService.recreateAllCaseInfos(getCases(false));
+        caseInfosService.recreateAllCaseInfos(getCases(getStorageRootDir()));
     }
 }

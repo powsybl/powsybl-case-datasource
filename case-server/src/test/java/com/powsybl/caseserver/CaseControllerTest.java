@@ -12,6 +12,8 @@ import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
 import com.powsybl.caseserver.dto.CaseInfos;
 import com.powsybl.caseserver.parsers.entsoe.EntsoeFileNameParser;
+import com.powsybl.caseserver.repository.CaseMetadataEntity;
+import com.powsybl.caseserver.repository.CaseMetadataRepository;
 import com.powsybl.computation.ComputationManager;
 import java.io.IOException;
 import java.io.InputStream;
@@ -19,8 +21,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.UUID;
 import org.junit.After;
 import org.junit.Before;
@@ -43,6 +45,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -81,6 +84,9 @@ public class CaseControllerTest {
     private CaseService caseService;
 
     @Autowired
+    private CaseMetadataRepository caseMetadataRepository;
+
+    @Autowired
     private OutputDestination outputDestination;
 
     @Value("${case-store-directory}")
@@ -95,7 +101,6 @@ public class CaseControllerTest {
         fileSystem = Jimfs.newFileSystem(Configuration.unix());
         caseService.setFileSystem(fileSystem);
         caseService.setComputationManager(Mockito.mock(ComputationManager.class));
-        caseService.maxPublicCases = 5;
     }
 
     @After
@@ -108,15 +113,6 @@ public class CaseControllerTest {
         if (!Files.exists(path)) {
             Files.createDirectories(path);
         }
-        path = fileSystem.getPath(rootDirectory).resolve("public");
-        if (!Files.exists(path)) {
-            Files.createDirectories(path);
-        }
-        path = fileSystem.getPath(rootDirectory).resolve("private");
-        if (!Files.exists(path)) {
-            Files.createDirectories(path);
-        }
-
     }
 
     private static MockMultipartFile createMockMultipartFile(String fileName) throws IOException {
@@ -145,20 +141,21 @@ public class CaseControllerTest {
                 .andReturn();
 
         // import a case
-        String firstCase = mvc.perform(multipart("/v1/cases/private")
-                .file(createMockMultipartFile(TEST_CASE)))
-                .andExpect(status().isOk())
-                .andReturn().getResponse().getContentAsString();
-
-        UUID firstCaseUuid = UUID.fromString(firstCase.substring(1, firstCase.length() - 1));
+        UUID firstCaseUuid = importCase(TEST_CASE, false);
 
         // assert that the broker message has been sent
-        Message<byte[]> messageImportPrivate = outputDestination.receive(1000, "case.import.destination");
-        assertEquals("", new String(messageImportPrivate.getPayload()));
-        MessageHeaders headersPrivateCase = messageImportPrivate.getHeaders();
-        assertEquals("testCase.xiidm", headersPrivateCase.get(CaseInfos.NAME_HEADER_KEY));
-        assertEquals(firstCaseUuid, headersPrivateCase.get(CaseInfos.UUID_HEADER_KEY));
-        assertEquals("XIIDM", headersPrivateCase.get(CaseInfos.FORMAT_HEADER_KEY));
+        Message<byte[]> messageImport = outputDestination.receive(1000, "case.import.destination");
+        assertEquals("", new String(messageImport.getPayload()));
+        MessageHeaders headersCase = messageImport.getHeaders();
+        assertEquals("testCase.xiidm", headersCase.get(CaseInfos.NAME_HEADER_KEY));
+        assertEquals(firstCaseUuid, headersCase.get(CaseInfos.UUID_HEADER_KEY));
+        assertEquals("XIIDM", headersCase.get(CaseInfos.FORMAT_HEADER_KEY));
+
+        //check that the case doesn't have an expiration date
+        CaseMetadataEntity caseMetadataEntity = caseMetadataRepository.findById(firstCaseUuid).orElseThrow();
+        assertEquals(firstCaseUuid, caseMetadataEntity.getId());
+        assertNotNull(caseMetadataEntity.getDate());
+        assertNull(caseMetadataEntity.getExpirationDate());
 
         // retrieve case format
         mvc.perform(get(GET_CASE_FORMAT_URL, firstCaseUuid))
@@ -195,23 +192,26 @@ public class CaseControllerTest {
                 .andReturn();
 
         // import a non valid case and expect a fail
-        mvc.perform(multipart("/v1/cases/private")
+        mvc.perform(multipart("/v1/cases")
                 .file(createMockMultipartFile(NOT_A_NETWORK)))
                 .andExpect(status().isUnprocessableEntity())
                 .andExpect(content().string(startsWith("This file cannot be imported")))
                 .andReturn();
 
         // import a non valid case with a valid extension and expect a fail
-        mvc.perform(multipart("/v1/cases/private")
+        mvc.perform(multipart("/v1/cases")
                 .file(createMockMultipartFile(STILL_NOT_A_NETWORK)))
                 .andExpect(status().isUnprocessableEntity())
                 .andExpect(content().string(startsWith("This file cannot be imported")))
                 .andReturn();
 
-        // list the cases and expect no case since the case imported just before is not public
+        // list the cases and expect the one imported before
         mvc.perform(get("/v1/cases"))
                 .andExpect(status().isOk())
-                .andExpect(content().json("[]"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$").isArray())
+                .andExpect(MockMvcResultMatchers.jsonPath("$", hasSize(1)))
+                .andExpect(MockMvcResultMatchers.jsonPath("$[0].name").value(TEST_CASE))
+                .andExpect(MockMvcResultMatchers.jsonPath("$[0].format").value(TEST_CASE_FORMAT))
                 .andReturn();
 
         // retrieve a case as a network
@@ -243,11 +243,7 @@ public class CaseControllerTest {
                 .andReturn();
 
         // import a case to delete it
-        String secondCase = mvc.perform(multipart("/v1/cases/private")
-                .file(createMockMultipartFile(TEST_CASE)))
-                .andExpect(status().isOk())
-                .andReturn().getResponse().getContentAsString();
-        UUID secondCaseUuid = UUID.fromString(secondCase.substring(1, secondCase.length() - 1));
+        UUID secondCaseUuid = importCase(TEST_CASE, false);
 
         // assert that the broker message has been sent
         Message<byte[]> messageImportPrivate2 = outputDestination.receive(1000, "case.import.destination");
@@ -257,84 +253,153 @@ public class CaseControllerTest {
         assertEquals(secondCaseUuid, headersPrivateCase2.get(CaseInfos.UUID_HEADER_KEY));
         assertEquals("XIIDM", headersPrivateCase2.get(CaseInfos.FORMAT_HEADER_KEY));
 
+        //check that the case doesn't have an expiration date
+        caseMetadataEntity = caseMetadataRepository.findById(secondCaseUuid).orElseThrow();
+        assertEquals(secondCaseUuid, caseMetadataEntity.getId());
+        assertNotNull(caseMetadataEntity.getDate());
+        assertNull(caseMetadataEntity.getExpirationDate());
+
         // delete all cases
         mvc.perform(delete("/v1/cases"))
                 .andExpect(status().isOk());
 
-        UUID publicCaseUuid = importPublicCase(TEST_CASE);
+        //check that the caseMetadataRepository is empty since all cases were removed
+        assertTrue(caseMetadataRepository.findAll().isEmpty());
+
+        UUID caseUuid = importCase(TEST_CASE, false);
 
         // assert that the broker message has been sent
-        Message<byte[]> messageImportPublic = outputDestination.receive(1000, "case.import.destination");
-        assertEquals("", new String(messageImportPublic.getPayload()));
-        MessageHeaders headersPublicCase = messageImportPublic.getHeaders();
-        assertEquals("testCase.xiidm", headersPublicCase.get(CaseInfos.NAME_HEADER_KEY));
-        assertEquals(publicCaseUuid, headersPublicCase.get(CaseInfos.UUID_HEADER_KEY));
-        assertEquals("XIIDM", headersPublicCase.get(CaseInfos.FORMAT_HEADER_KEY));
+        messageImport = outputDestination.receive(1000, "case.import.destination");
+        assertEquals("", new String(messageImport.getPayload()));
+        headersCase = messageImport.getHeaders();
+        assertEquals("testCase.xiidm", headersCase.get(CaseInfos.NAME_HEADER_KEY));
+        assertEquals(caseUuid, headersCase.get(CaseInfos.UUID_HEADER_KEY));
+        assertEquals("XIIDM", headersCase.get(CaseInfos.FORMAT_HEADER_KEY));
+
+        //check that the case doesn't have an expiration date
+        caseMetadataEntity = caseMetadataRepository.findById(caseUuid).orElseThrow();
+        assertEquals(caseUuid, caseMetadataEntity.getId());
+        assertNotNull(caseMetadataEntity.getDate());
+        assertNull(caseMetadataEntity.getExpirationDate());
 
         //duplicate an existing case
-        MvcResult duplicateResult = mvc.perform(post("/v1/cases").param("duplicateFrom", publicCaseUuid.toString()))
+        MvcResult duplicateResult = mvc.perform(post("/v1/cases").param("duplicateFrom", caseUuid.toString()))
                 .andExpect(status().isOk())
                 .andReturn();
 
-        String duplicateCaseUuid = duplicateResult.getResponse().getContentAsString();
-        assertNotEquals(publicCaseUuid.toString(), duplicateCaseUuid);
+        String duplicateCaseUuid = duplicateResult.getResponse().getContentAsString().replace("\"", "");
 
         // assert that broker message has been sent after duplication
-        messageImportPublic = outputDestination.receive(1000, "case.import.destination");
-        assertEquals("", new String(messageImportPublic.getPayload()));
-        headersPublicCase = messageImportPublic.getHeaders();
-        assertEquals(UUID.fromString(duplicateCaseUuid.replace("\"", "")), headersPublicCase.get(CaseInfos.UUID_HEADER_KEY));
-        assertEquals("testCase.xiidm", headersPublicCase.get(CaseInfos.NAME_HEADER_KEY));
-        assertEquals("XIIDM", headersPublicCase.get(CaseInfos.FORMAT_HEADER_KEY));
+        messageImport = outputDestination.receive(1000, "case.import.destination");
+        assertEquals("", new String(messageImport.getPayload()));
+        headersCase = messageImport.getHeaders();
+        assertEquals(UUID.fromString(duplicateCaseUuid), headersCase.get(CaseInfos.UUID_HEADER_KEY));
+        assertEquals("testCase.xiidm", headersCase.get(CaseInfos.NAME_HEADER_KEY));
+        assertEquals("XIIDM", headersCase.get(CaseInfos.FORMAT_HEADER_KEY));
+
+        //check that the duplicated case doesn't have an expiration date
+        caseMetadataEntity = caseMetadataRepository.findById(UUID.fromString(duplicateCaseUuid)).orElseThrow();
+        assertEquals(duplicateCaseUuid, caseMetadataEntity.getId().toString());
+        assertNotNull(caseMetadataEntity.getDate());
+        assertNull(caseMetadataEntity.getExpirationDate());
+
+        // import a case with expiration
+        LocalDateTime beforeImportDate = LocalDateTime.now(ZoneOffset.UTC);
+        UUID thirdCaseUuid = importCase(TEST_CASE, true);
+        LocalDateTime afterImportDate = LocalDateTime.now(ZoneOffset.UTC);
+
+        // assert that the broker message has been sent
+        messageImport = outputDestination.receive(1000, "case.import.destination");
+        assertEquals("", new String(messageImport.getPayload()));
+        headersCase = messageImport.getHeaders();
+        assertEquals("testCase.xiidm", headersCase.get(CaseInfos.NAME_HEADER_KEY));
+        assertEquals(thirdCaseUuid, headersCase.get(CaseInfos.UUID_HEADER_KEY));
+        assertEquals("XIIDM", headersCase.get(CaseInfos.FORMAT_HEADER_KEY));
+
+        //check that the case does have an expiration date
+        caseMetadataEntity = caseMetadataRepository.findById(thirdCaseUuid).orElseThrow();
+        assertEquals(thirdCaseUuid, caseMetadataEntity.getId());
+        assertNotNull(caseMetadataEntity.getDate());
+        //verify that beforeImportDate < caseMetadataEntity.getDate() < afterImportDate
+        assertTrue(caseMetadataEntity.getDate().isAfter(beforeImportDate));
+        assertTrue(caseMetadataEntity.getDate().isBefore(afterImportDate));
+        assertNotNull(caseMetadataEntity.getExpirationDate());
+
+        //duplicate an existing case withExpiration
+        MvcResult duplicateResult2 = mvc.perform(post("/v1/cases")
+                .param("duplicateFrom", caseUuid.toString())
+                .param("withExpiration", "true"))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String duplicateCaseUuid2 = duplicateResult2.getResponse().getContentAsString().replace("\"", "");
+        assertNotEquals(caseUuid.toString(), duplicateCaseUuid2);
+
+        // assert that broker message has been sent after duplication
+        messageImport = outputDestination.receive(1000, "case.import.destination");
+        assertEquals("", new String(messageImport.getPayload()));
+        headersCase = messageImport.getHeaders();
+        assertEquals(UUID.fromString(duplicateCaseUuid2), headersCase.get(CaseInfos.UUID_HEADER_KEY));
+        assertEquals("testCase.xiidm", headersCase.get(CaseInfos.NAME_HEADER_KEY));
+        assertEquals("XIIDM", headersCase.get(CaseInfos.FORMAT_HEADER_KEY));
+
+        //check that the duplicated case does have an expiration date
+        caseMetadataEntity = caseMetadataRepository.findById(UUID.fromString(duplicateCaseUuid2)).orElseThrow();
+        assertEquals(duplicateCaseUuid2, caseMetadataEntity.getId().toString());
+        assertNotNull(caseMetadataEntity.getDate());
+        assertNotNull(caseMetadataEntity.getExpirationDate());
+
+        //remove the expiration date of the previously duplicated case
+        mvc.perform(delete("/v1/cases/{caseUuid}/expiration", duplicateCaseUuid2))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        //verify that the expiration date is removed
+        caseMetadataEntity = caseMetadataRepository.findById(UUID.fromString(duplicateCaseUuid2)).orElseThrow();
+        assertNull(caseMetadataEntity.getExpirationDate());
+
+        //remove the duplicated case and check that the entry is deleted from the CaseMetadataRepository
+        mvc.perform(delete("/v1/cases/{caseUuid}", duplicateCaseUuid2))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        assertTrue(caseMetadataRepository.findById(UUID.fromString(duplicateCaseUuid2)).isEmpty());
+
+        //remove the expiration date of a non existing case and expect a 404
+        UUID randomUuid = UUID.randomUUID();
+        MvcResult deleteExpirationResult = mvc.perform(delete("/v1/cases/{caseUuid}/expiration", randomUuid))
+                .andExpect(status().isNotFound())
+                .andReturn();
+        assertTrue(deleteExpirationResult.getResponse().getErrorMessage().contains("case " + randomUuid + " not found"));
 
         // assert that duplicating a non existing case should return a 404
         mvc.perform(post("/v1/cases").param("duplicateFrom", UUID.randomUUID().toString()))
                 .andExpect(status().isNotFound())
                 .andReturn();
 
-        // list the cases and expect one case since the case imported just before is public
+        // list the cases and expect one case
         MvcResult mvcResult = mvc.perform(get("/v1/cases"))
                 .andExpect(status().isOk())
                 .andReturn();
 
         assertTrue(mvcResult.getResponse().getContentAsString().contains("\"name\":\"testCase.xiidm\""));
-
-        List<UUID> uuids = new ArrayList<>();
-        for (int i = 0; i < 10; ++i) {
-            uuids.add(importPublicCase(TEST_CASE));
-        }
-        // list the cases and expect one case since the case imported just before is public
-        MvcResult mvcResultTestMax = mvc.perform(get("/v1/cases/"))
-            .andExpect(status().isOk())
-            .andReturn();
-        String cases = mvcResultTestMax.getResponse().getContentAsString();
-        for (int i = 0; i < 10; ++i) {
-            assertEquals(i >= 5, cases.contains("\"uuid\":\"" + uuids.get(i) + "\""));
-        }
-
-        caseService.maxPublicCases = -1;
-        for (int i = 0; i < 5; ++i) {
-            uuids.add(importPublicCase(TEST_CASE));
-        }
-        // list the cases and expect one case since the case imported just before is public
-        mvcResultTestMax = mvc.perform(get("/v1/cases/"))
-            .andExpect(status().isOk())
-            .andReturn();
-        cases = mvcResultTestMax.getResponse().getContentAsString();
-        for (int i = 5; i < uuids.size(); ++i) {
-            assertTrue(cases.contains("\"uuid\":\"" + uuids.get(i) + "\""));
-        }
-
     }
 
-    private UUID importPublicCase(String testCase) throws Exception {
-        // import a case to public
-        String publicCase = mvc.perform(multipart("/v1/cases/public")
-            .file(createMockMultipartFile(testCase)))
-            .andExpect(status().isOk())
-            .andReturn().getResponse().getContentAsString();
-
-        return UUID.fromString(publicCase.substring(1, publicCase.length() - 1));
+    private UUID importCase(String testCase, Boolean withExpiration) throws Exception {
+        String importedCase;
+        if (withExpiration) {
+            importedCase = mvc.perform(multipart("/v1/cases")
+                    .file(createMockMultipartFile(testCase))
+                    .param("withExpiration", withExpiration.toString()))
+                    .andExpect(status().isOk())
+                    .andReturn().getResponse().getContentAsString();
+        } else {
+            importedCase = mvc.perform(multipart("/v1/cases")
+                    .file(createMockMultipartFile(testCase)))
+                    .andExpect(status().isOk())
+                    .andReturn().getResponse().getContentAsString();
+        }
+        return UUID.fromString(importedCase.substring(1, importedCase.length() - 1));
     }
 
     @Test
@@ -373,84 +438,84 @@ public class CaseControllerTest {
                 .andExpect(status().isOk());
 
         // import IIDM test case
-        String publicCase = mvc.perform(multipart("/v1/cases/public")
+        String aCase = mvc.perform(multipart("/v1/cases")
                 .file(createMockMultipartFile("testCase.xiidm")))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
-        UUID publicCaseUuid = UUID.fromString(publicCase.substring(1, publicCase.length() - 1));
+        UUID aCaseUuid = UUID.fromString(aCase.substring(1, aCase.length() - 1));
 
         // assert that broker message has been sent and properties are the right ones
-        Message<byte[]> messageImportPublic = outputDestination.receive(1000, "case.import.destination");
-        assertEquals("", new String(messageImportPublic.getPayload()));
-        MessageHeaders headersPublicCase = messageImportPublic.getHeaders();
-        assertEquals("testCase.xiidm", headersPublicCase.get(CaseInfos.NAME_HEADER_KEY));
-        assertEquals(publicCaseUuid, headersPublicCase.get(CaseInfos.UUID_HEADER_KEY));
-        assertEquals("XIIDM", headersPublicCase.get(CaseInfos.FORMAT_HEADER_KEY));
+        Message<byte[]> messageImport = outputDestination.receive(1000, "case.import.destination");
+        assertEquals("", new String(messageImport.getPayload()));
+        MessageHeaders headersCase = messageImport.getHeaders();
+        assertEquals("testCase.xiidm", headersCase.get(CaseInfos.NAME_HEADER_KEY));
+        assertEquals(aCaseUuid, headersCase.get(CaseInfos.UUID_HEADER_KEY));
+        assertEquals("XIIDM", headersCase.get(CaseInfos.FORMAT_HEADER_KEY));
 
         // import CGMES french file
-        publicCase = mvc.perform(multipart("/v1/cases/public")
+        aCase = mvc.perform(multipart("/v1/cases")
                 .file(createMockMultipartFile("20200424T1330Z_2D_RTEFRANCE_001.zip")))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
-        publicCaseUuid = UUID.fromString(publicCase.substring(1, publicCase.length() - 1));
+        aCaseUuid = UUID.fromString(aCase.substring(1, aCase.length() - 1));
 
         // assert that broker message has been sent and properties are the right ones
-        messageImportPublic = outputDestination.receive(1000, "case.import.destination");
-        assertEquals("", new String(messageImportPublic.getPayload()));
-        headersPublicCase = messageImportPublic.getHeaders();
-        assertEquals("20200424T1330Z_2D_RTEFRANCE_001.zip", headersPublicCase.get(CaseInfos.NAME_HEADER_KEY));
-        assertEquals(publicCaseUuid, headersPublicCase.get(CaseInfos.UUID_HEADER_KEY));
-        assertEquals("CGMES", headersPublicCase.get(CaseInfos.FORMAT_HEADER_KEY));
+        messageImport = outputDestination.receive(1000, "case.import.destination");
+        assertEquals("", new String(messageImport.getPayload()));
+        headersCase = messageImport.getHeaders();
+        assertEquals("20200424T1330Z_2D_RTEFRANCE_001.zip", headersCase.get(CaseInfos.NAME_HEADER_KEY));
+        assertEquals(aCaseUuid, headersCase.get(CaseInfos.UUID_HEADER_KEY));
+        assertEquals("CGMES", headersCase.get(CaseInfos.FORMAT_HEADER_KEY));
 
         // import UCTE french file
-        publicCase = mvc.perform(multipart("/v1/cases/public")
+        aCase = mvc.perform(multipart("/v1/cases")
                 .file(createMockMultipartFile("20200103_0915_FO5_FR0.UCT")))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
-        publicCaseUuid = UUID.fromString(publicCase.substring(1, publicCase.length() - 1));
+        aCaseUuid = UUID.fromString(aCase.substring(1, aCase.length() - 1));
 
         // assert that broker message has been sent and properties are the right ones
-        messageImportPublic = outputDestination.receive(1000, "case.import.destination");
-        assertEquals("", new String(messageImportPublic.getPayload()));
-        headersPublicCase = messageImportPublic.getHeaders();
-        assertEquals("20200103_0915_FO5_FR0.UCT", headersPublicCase.get(CaseInfos.NAME_HEADER_KEY));
-        assertEquals(publicCaseUuid, headersPublicCase.get(CaseInfos.UUID_HEADER_KEY));
-        assertEquals("UCTE", headersPublicCase.get(CaseInfos.FORMAT_HEADER_KEY));
+        messageImport = outputDestination.receive(1000, "case.import.destination");
+        assertEquals("", new String(messageImport.getPayload()));
+        headersCase = messageImport.getHeaders();
+        assertEquals("20200103_0915_FO5_FR0.UCT", headersCase.get(CaseInfos.NAME_HEADER_KEY));
+        assertEquals(aCaseUuid, headersCase.get(CaseInfos.UUID_HEADER_KEY));
+        assertEquals("UCTE", headersCase.get(CaseInfos.FORMAT_HEADER_KEY));
 
         // import UCTE german file
-        publicCase = mvc.perform(multipart("/v1/cases/public")
+        aCase = mvc.perform(multipart("/v1/cases")
                 .file(createMockMultipartFile("20200103_0915_SN5_D80.UCT")))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
-        publicCaseUuid = UUID.fromString(publicCase.substring(1, publicCase.length() - 1));
+        aCaseUuid = UUID.fromString(aCase.substring(1, aCase.length() - 1));
 
         // assert that broker message has been sent and properties are the right ones
-        messageImportPublic = outputDestination.receive(1000, "case.import.destination");
-        assertEquals("", new String(messageImportPublic.getPayload()));
-        headersPublicCase = messageImportPublic.getHeaders();
-        assertEquals("20200103_0915_SN5_D80.UCT", headersPublicCase.get(CaseInfos.NAME_HEADER_KEY));
-        assertEquals(publicCaseUuid, headersPublicCase.get(CaseInfos.UUID_HEADER_KEY));
-        assertEquals("UCTE", headersPublicCase.get(CaseInfos.FORMAT_HEADER_KEY));
+        messageImport = outputDestination.receive(1000, "case.import.destination");
+        assertEquals("", new String(messageImport.getPayload()));
+        headersCase = messageImport.getHeaders();
+        assertEquals("20200103_0915_SN5_D80.UCT", headersCase.get(CaseInfos.NAME_HEADER_KEY));
+        assertEquals(aCaseUuid, headersCase.get(CaseInfos.UUID_HEADER_KEY));
+        assertEquals("UCTE", headersCase.get(CaseInfos.FORMAT_HEADER_KEY));
 
         // import UCTE swiss file
-        publicCase = mvc.perform(multipart("/v1/cases/public")
+        aCase = mvc.perform(multipart("/v1/cases")
                 .file(createMockMultipartFile("20200103_0915_135_CH2.UCT")))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
-        publicCaseUuid = UUID.fromString(publicCase.substring(1, publicCase.length() - 1));
+        aCaseUuid = UUID.fromString(aCase.substring(1, aCase.length() - 1));
 
         // assert that broker message has been sent and properties are the right ones
-        messageImportPublic = outputDestination.receive(1000, "case.import.destination");
-        assertEquals("", new String(messageImportPublic.getPayload()));
-        headersPublicCase = messageImportPublic.getHeaders();
-        assertEquals("20200103_0915_135_CH2.UCT", headersPublicCase.get(CaseInfos.NAME_HEADER_KEY));
-        assertEquals(publicCaseUuid, headersPublicCase.get(CaseInfos.UUID_HEADER_KEY));
-        assertEquals("UCTE", headersPublicCase.get(CaseInfos.FORMAT_HEADER_KEY));
+        messageImport = outputDestination.receive(1000, "case.import.destination");
+        assertEquals("", new String(messageImport.getPayload()));
+        headersCase = messageImport.getHeaders();
+        assertEquals("20200103_0915_135_CH2.UCT", headersCase.get(CaseInfos.NAME_HEADER_KEY));
+        assertEquals(aCaseUuid, headersCase.get(CaseInfos.UUID_HEADER_KEY));
+        assertEquals("UCTE", headersCase.get(CaseInfos.FORMAT_HEADER_KEY));
 
         // list the cases
         MvcResult mvcResult = mvc.perform(get("/v1/cases"))

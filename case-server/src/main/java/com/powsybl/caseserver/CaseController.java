@@ -54,9 +54,10 @@ public class CaseController {
 
     @GetMapping(value = "/cases")
     @Operation(summary = "Get all cases")
+    //For maintenance purpose
     public ResponseEntity<List<CaseInfos>> getCases() {
         LOGGER.debug("getCases request received");
-        List<CaseInfos> cases = caseService.getCases(true);
+        List<CaseInfos> cases = caseService.getCases(caseService.getStorageRootDir());
         if (cases == null) {
             return ResponseEntity.noContent().build();
         }
@@ -133,21 +134,13 @@ public class CaseController {
 
     }
 
-    @PostMapping(value = "/cases/private", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @Operation(summary = "import a case in the private directory")
+    @PostMapping(value = "/cases", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "import a case")
     @SuppressWarnings("javasecurity:S5145")
-    public ResponseEntity<UUID> importPrivateCase(@RequestParam("file") MultipartFile file) {
-        LOGGER.debug("importPrivateCase request received with file = {}", file.getName());
-        UUID caseUuid = caseService.importCase(file, false);
-        return ResponseEntity.ok().body(caseUuid);
-    }
-
-    @PostMapping(value = "/cases/public", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @Operation(summary = "import a case in the public directory")
-    @SuppressWarnings("javasecurity:S5145")
-    public ResponseEntity<UUID> importPublicCase(@RequestParam("file") MultipartFile file) {
-        LOGGER.debug("importPublicCase request received with file = {}", file.getName());
-        UUID caseUuid = caseService.importCase(file, true);
+    public ResponseEntity<UUID> importCase(@RequestParam("file") MultipartFile file,
+                                           @RequestParam(value = "withExpiration", required = false, defaultValue = "false") boolean withExpiration) {
+        LOGGER.debug("importCase request received with file = {}", file.getName());
+        UUID caseUuid = caseService.importCase(file, withExpiration);
         return ResponseEntity.ok().body(caseUuid);
     }
 
@@ -156,10 +149,21 @@ public class CaseController {
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The case has been duplicated"),
             @ApiResponse(responseCode = "404", description = "Source case not found"),
             @ApiResponse(responseCode = "500", description = "An error occurred during the case file duplication")})
-    public ResponseEntity<UUID> createCase(@RequestParam("duplicateFrom") UUID sourceCaseUuid) {
+    public ResponseEntity<UUID> createCase(@RequestParam("duplicateFrom") UUID sourceCaseUuid,
+                                           @RequestParam(value = "withExpiration", required = false, defaultValue = "false") boolean withExpiration) {
         LOGGER.info("createCase request received with parameter sourceCaseUuid = {}", sourceCaseUuid);
-        UUID newCaseUuid = caseService.createCase(sourceCaseUuid);
+        UUID newCaseUuid = caseService.createCase(sourceCaseUuid, withExpiration);
         return ResponseEntity.ok().body(newCaseUuid);
+    }
+
+    @DeleteMapping(value = "/cases/{caseUuid}/expiration")
+    @Operation(summary = "disable the case expiration")
+    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The case expiration has been removed"),
+            @ApiResponse(responseCode = "404", description = "Source case not found")})
+    public ResponseEntity<Void> disableCaseExpiration(@PathVariable("caseUuid") UUID caseUuid) {
+        LOGGER.info("disableCaseExpiration request received for caseUuid = {}", caseUuid);
+        caseService.disableCaseExpiration(caseUuid);
+        return ResponseEntity.ok().build();
     }
 
     @DeleteMapping(value = "/cases/{caseUuid}")
