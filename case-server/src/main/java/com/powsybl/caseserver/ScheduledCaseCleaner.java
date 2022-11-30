@@ -7,6 +7,8 @@
 package com.powsybl.caseserver;
 
 import com.powsybl.caseserver.repository.CaseMetadataRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -22,18 +24,20 @@ import java.time.ZoneOffset;
 @ComponentScan(basePackageClasses = {CaseService.class, CaseMetadataRepository.class})
 public class ScheduledCaseCleaner {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(ScheduledCaseCleaner.class);
+
     @Autowired
     private CaseMetadataRepository caseMetadataRepository;
 
     @Autowired
     private CaseService caseService;
 
-    //every day at 2 AM UTC
-    @Scheduled(cron = "0 * 2 * * ?", zone = "UTC")
+    @Scheduled(cron = "${cleaning-cases-cron}", zone = "UTC")
     public void deleteExpiredCases() {
         LocalDateTime localDateTime = LocalDateTime.now(ZoneOffset.UTC);
+        LOGGER.info("Cleaning cases cron starting execution at {}", localDateTime);
         caseMetadataRepository.findAll().forEach(caseMetadataEntity -> {
-            if (localDateTime.isAfter(caseMetadataEntity.getExpirationDate())) {
+            if (caseMetadataEntity.getExpirationDate() != null && localDateTime.isAfter(caseMetadataEntity.getExpirationDate())) {
                 caseService.deleteCase(caseMetadataEntity.getId());
                 caseMetadataRepository.deleteById(caseMetadataEntity.getId());
             }

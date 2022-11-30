@@ -15,3 +15,5 @@ spring:
 powsybl-ws:
   database:
     host: localhost
+
+cleaning-cases-cron: 0 * 2 * * ?

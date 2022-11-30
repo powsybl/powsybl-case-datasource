@@ -12,3 +12,6 @@ spring:
 powsybl-ws:
   database:
     name: case_metadata
+
+cleaning-cases-cron: 0 * 2 * * ?
+
