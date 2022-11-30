@@ -52,12 +52,15 @@ public class ScheduledCaseCleanerTest {
         LocalDateTime yesterday = now.minusDays(1);
         CaseMetadataEntity shouldNotExpireEntity = new CaseMetadataEntity(UUID.randomUUID(), now, now.plusHours(1));
         CaseMetadataEntity shouldExpireEntity = new CaseMetadataEntity(UUID.randomUUID(), yesterday, yesterday.plusHours(1));
+        CaseMetadataEntity noExpireDateEntity = new CaseMetadataEntity(UUID.randomUUID(), yesterday, null);
         caseMetadataRepository.save(shouldExpireEntity);
         caseMetadataRepository.save(shouldNotExpireEntity);
-        assertEquals(2, caseMetadataRepository.findAll().size());
+        caseMetadataRepository.save(noExpireDateEntity);
+        assertEquals(3, caseMetadataRepository.findAll().size());
         scheduledCaseCleaner.deleteExpiredCases();
-        assertEquals(1, caseMetadataRepository.findAll().size());
+        assertEquals(2, caseMetadataRepository.findAll().size());
         assertTrue(caseMetadataRepository.findById(shouldNotExpireEntity.getId()).isPresent());
+        assertTrue(caseMetadataRepository.findById(noExpireDateEntity.getId()).isPresent());
         assertTrue(caseMetadataRepository.findById(shouldExpireEntity.getId()).isEmpty());
         verify(caseService, times(1)).deleteCase(shouldExpireEntity.getId());
     }
