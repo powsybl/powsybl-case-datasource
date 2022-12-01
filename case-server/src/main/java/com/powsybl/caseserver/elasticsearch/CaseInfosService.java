@@ -6,38 +6,83 @@
  */
 package com.powsybl.caseserver.elasticsearch;
 
+import com.google.common.collect.Lists;
 import com.powsybl.caseserver.dto.CaseInfos;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+import org.elasticsearch.index.query.QueryBuilders;
 import org.joda.time.DateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.lang.NonNull;
+import org.springframework.stereotype.Service;
 
 /**
- * An interface to define an api for metadatas transfer in the DB elasticsearch
+ * A class to implement metadatas transfer in the DB elasticsearch
  *
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
-public interface CaseInfosService {
+@ComponentScan(basePackageClasses = {CaseInfosRepository.class})
+@Service
+public class CaseInfosService {
 
-    CaseInfos addCaseInfos(@NonNull final CaseInfos ci);
+    private static final Logger LOGGER = LoggerFactory.getLogger(CaseInfosService.class);
 
-    List<CaseInfos> getAllCaseInfos();
+    @Autowired
+    private CaseInfosRepository caseInfosRepository;
 
-    Optional<CaseInfos> getCaseInfosByUuid(@NonNull final String uuid);
+    @Autowired
+    private ElasticsearchOperations operations;
 
-    List<CaseInfos> searchCaseInfos(@NonNull final String query);
+    public CaseInfos addCaseInfos(@NonNull final CaseInfos ci) {
+        caseInfosRepository.save(ci);
+        return ci;
+    }
 
-    void deleteCaseInfos(@NonNull final CaseInfos ci);
+    public Optional<CaseInfos> getCaseInfosByUuid(@NonNull final String uuid) {
+        Page<CaseInfos> res = caseInfosRepository.findByUuid(uuid,  PageRequest.of(0, 1));
+        return res.get().findFirst();
+    }
 
-    void deleteCaseInfosByUuid(@NonNull final String uuid);
+    public List<CaseInfos> getAllCaseInfos() {
+        return Lists.newArrayList(caseInfosRepository.findAll());
+    }
 
-    void deleteAllCaseInfos();
+    public List<CaseInfos> searchCaseInfos(@NonNull final String query) {
+        NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(QueryBuilders.queryStringQuery(query)).build();
+        return Lists.newArrayList(operations.search(searchQuery, CaseInfos.class)
+                                            .map(searchHit -> searchHit.getContent()));
+    }
 
-    void recreateAllCaseInfos(List<CaseInfos> caseInfos);
+    public void deleteCaseInfos(@NonNull final CaseInfos ci) {
+        caseInfosRepository.delete(ci);
+    }
 
-    static String getDateSearchTerm(@NonNull final DateTime... dates) {
+    public void deleteCaseInfosByUuid(@NonNull  String uuid) {
+        caseInfosRepository.deleteById(uuid);
+    }
+
+    public void deleteAllCaseInfos() {
+        caseInfosRepository.deleteAll(getAllCaseInfos());
+    }
+
+    public void recreateAllCaseInfos(List<CaseInfos> caseInfos) {
+        caseInfosRepository.deleteAll();
+        caseInfosRepository.saveAll(caseInfos);
+    }
+
+    public static String getDateSearchTerm(@NonNull final DateTime... dates) {
         return Arrays.stream(dates).map(date -> "\"" + date.toDateTimeISO().toString() + "\"").collect(Collectors.joining(" OR ", "date:", "")).toString();
     }
 }

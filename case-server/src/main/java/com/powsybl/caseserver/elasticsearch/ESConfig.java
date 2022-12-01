@@ -56,11 +56,6 @@ public class ESConfig extends AbstractElasticsearchConfiguration {
     private Optional<String> password;
 
     @Bean
-    public CaseInfosService caseInfosServiceImpl() {
-        return new CaseInfosServiceImpl();
-    }
-
-    @Bean
     @Override
     @SuppressWarnings("squid:S2095")
     public RestHighLevelClient elasticsearchClient() {

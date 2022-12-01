@@ -8,7 +8,6 @@ package com.powsybl.caseserver;
 
 import com.powsybl.caseserver.dto.CaseInfos;
 import com.powsybl.caseserver.elasticsearch.CaseInfosService;
-import com.powsybl.caseserver.elasticsearch.CaseInfosServiceImpl;
 import com.powsybl.caseserver.parsers.FileNameInfos;
 import com.powsybl.caseserver.parsers.FileNameParser;
 import com.powsybl.caseserver.parsers.FileNameParsers;
@@ -55,7 +54,7 @@ import static com.powsybl.caseserver.CaseException.createDirectoryNotFound;
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
 @Service
-@ComponentScan(basePackageClasses = {CaseInfosServiceImpl.class})
+@ComponentScan(basePackageClasses = {CaseInfosService.class})
 public class CaseService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CaseService.class);
