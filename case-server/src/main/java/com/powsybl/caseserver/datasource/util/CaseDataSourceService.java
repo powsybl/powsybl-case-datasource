@@ -8,15 +8,17 @@ package com.powsybl.caseserver.datasource.util;
 
 import com.powsybl.caseserver.CaseService;
 import com.powsybl.commons.datasource.DataSource;
-import com.powsybl.commons.exceptions.UncheckedUnsupportedEncodingException;
-import com.powsybl.iidm.import_.Importers;
+import com.powsybl.iidm.network.Importers;
 import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.stereotype.Service;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Set;
 import java.util.UUID;
@@ -74,12 +76,7 @@ public class CaseDataSourceService {
 
     Set<String> listName(UUID caseUuid, String regex) {
         DataSource dataSource = getDatasource(caseUuid);
-        String decodedRegex;
-        try {
-            decodedRegex = URLDecoder.decode(regex, "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            throw new UncheckedUnsupportedEncodingException(e);
-        }
+        String decodedRegex = URLDecoder.decode(regex, StandardCharsets.UTF_8);
         try {
             return dataSource.listNames(decodedRegex);
         } catch (IOException e) {
