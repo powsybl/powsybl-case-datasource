@@ -154,7 +154,6 @@ public class CaseControllerTest {
         //check that the case doesn't have an expiration date
         CaseMetadataEntity caseMetadataEntity = caseMetadataRepository.findById(firstCaseUuid).orElseThrow();
         assertEquals(firstCaseUuid, caseMetadataEntity.getId());
-        assertNotNull(caseMetadataEntity.getDate());
         assertNull(caseMetadataEntity.getExpirationDate());
 
         // retrieve case format
@@ -256,7 +255,6 @@ public class CaseControllerTest {
         //check that the case doesn't have an expiration date
         caseMetadataEntity = caseMetadataRepository.findById(secondCaseUuid).orElseThrow();
         assertEquals(secondCaseUuid, caseMetadataEntity.getId());
-        assertNotNull(caseMetadataEntity.getDate());
         assertNull(caseMetadataEntity.getExpirationDate());
 
         // delete all cases
@@ -279,7 +277,6 @@ public class CaseControllerTest {
         //check that the case doesn't have an expiration date
         caseMetadataEntity = caseMetadataRepository.findById(caseUuid).orElseThrow();
         assertEquals(caseUuid, caseMetadataEntity.getId());
-        assertNotNull(caseMetadataEntity.getDate());
         assertNull(caseMetadataEntity.getExpirationDate());
 
         //duplicate an existing case
@@ -300,13 +297,12 @@ public class CaseControllerTest {
         //check that the duplicated case doesn't have an expiration date
         caseMetadataEntity = caseMetadataRepository.findById(UUID.fromString(duplicateCaseUuid)).orElseThrow();
         assertEquals(duplicateCaseUuid, caseMetadataEntity.getId().toString());
-        assertNotNull(caseMetadataEntity.getDate());
         assertNull(caseMetadataEntity.getExpirationDate());
 
         // import a case with expiration
-        LocalDateTime beforeImportDate = LocalDateTime.now(ZoneOffset.UTC);
+        LocalDateTime beforeImportDate = LocalDateTime.now(ZoneOffset.UTC).plusHours(1);
         UUID thirdCaseUuid = importCase(TEST_CASE, true);
-        LocalDateTime afterImportDate = LocalDateTime.now(ZoneOffset.UTC);
+        LocalDateTime afterImportDate = LocalDateTime.now(ZoneOffset.UTC).plusHours(1);
 
         // assert that the broker message has been sent
         messageImport = outputDestination.receive(1000, "case.import.destination");
@@ -319,10 +315,9 @@ public class CaseControllerTest {
         //check that the case does have an expiration date
         caseMetadataEntity = caseMetadataRepository.findById(thirdCaseUuid).orElseThrow();
         assertEquals(thirdCaseUuid, caseMetadataEntity.getId());
-        assertNotNull(caseMetadataEntity.getDate());
-        //verify that beforeImportDate < caseMetadataEntity.getDate() < afterImportDate
-        assertTrue(caseMetadataEntity.getDate().isAfter(beforeImportDate));
-        assertTrue(caseMetadataEntity.getDate().isBefore(afterImportDate));
+        //verify that beforeImportDate < caseMetadataEntity.getExpirationDate() < afterImportDate
+        assertTrue(caseMetadataEntity.getExpirationDate().isAfter(beforeImportDate));
+        assertTrue(caseMetadataEntity.getExpirationDate().isBefore(afterImportDate));
         assertNotNull(caseMetadataEntity.getExpirationDate());
 
         //duplicate an existing case withExpiration
@@ -346,7 +341,6 @@ public class CaseControllerTest {
         //check that the duplicated case does have an expiration date
         caseMetadataEntity = caseMetadataRepository.findById(UUID.fromString(duplicateCaseUuid2)).orElseThrow();
         assertEquals(duplicateCaseUuid2, caseMetadataEntity.getId().toString());
-        assertNotNull(caseMetadataEntity.getDate());
         assertNotNull(caseMetadataEntity.getExpirationDate());
 
         //remove the expiration date of the previously duplicated case

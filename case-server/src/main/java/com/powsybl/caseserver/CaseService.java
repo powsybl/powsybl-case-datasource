@@ -216,12 +216,11 @@ public class CaseService {
             throw e;
         }
 
-        LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
         LocalDateTime expirationTime = null;
         if (withExpiration) {
-            expirationTime = now.plusHours(1);
+            expirationTime = LocalDateTime.now(ZoneOffset.UTC).plusHours(1);
         }
-        CaseMetadataEntity caseEntity = new CaseMetadataEntity(caseUuid, now, expirationTime);
+        CaseMetadataEntity caseEntity = new CaseMetadataEntity(caseUuid, expirationTime);
         caseMetadataRepository.save(caseEntity);
         CaseInfos caseInfos = createInfos(caseFile.getFileName().toString(), caseUuid, importer.getFormat());
         caseInfosService.addCaseInfos(caseInfos);
@@ -247,12 +246,11 @@ public class CaseService {
             CaseInfos caseInfos = createInfos(existingCaseInfos.getName(), newCaseUuid, existingCaseInfos.getFormat());
             caseInfosService.addCaseInfos(caseInfos);
 
-            LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
             LocalDateTime expirationTime = null;
             if (withExpiration) {
-                expirationTime = now.plusHours(1);
+                expirationTime = LocalDateTime.now(ZoneOffset.UTC).plusHours(1);
             }
-            CaseMetadataEntity caseEntity = new CaseMetadataEntity(newCaseUuid, now, expirationTime);
+            CaseMetadataEntity caseEntity = new CaseMetadataEntity(newCaseUuid, expirationTime);
             caseMetadataRepository.save(caseEntity);
 
             sendImportMessage(caseInfos.createMessage());

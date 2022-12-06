@@ -31,9 +31,6 @@ public class CaseMetadataEntity {
     @Column(name = "id")
     private UUID id;
 
-    @Column(name = "creationDate", nullable = false)
-    private LocalDateTime date;
-
-    @Column(name = "expirationDate", nullable = false)
+    @Column(name = "expirationDate")
     private LocalDateTime expirationDate;
 }
