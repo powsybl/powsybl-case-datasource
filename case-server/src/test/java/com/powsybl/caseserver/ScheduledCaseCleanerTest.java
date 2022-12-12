@@ -44,6 +44,11 @@ public class ScheduledCaseCleanerTest {
     @Before
     public void setUp() {
         MockitoAnnotations.openMocks(this);
+        cleanDB();
+    }
+
+    private void cleanDB() {
+        caseMetadataRepository.deleteAll();
     }
 
     @Test

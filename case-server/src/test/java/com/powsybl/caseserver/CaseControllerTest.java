@@ -6,7 +6,6 @@
  */
 package com.powsybl.caseserver;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.ByteStreams;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
@@ -70,7 +69,6 @@ public class CaseControllerTest {
     private static final String TEST_CASE_FORMAT = "XIIDM";
     private static final String NOT_A_NETWORK = "notANetwork.txt";
     private static final String STILL_NOT_A_NETWORK = "stillNotANetwork.xiidm";
-    private static final String TEST_CASE_URL = "/v1/cases/ae17bc33-77e2-4aca-b890-0b8cecd15175";
 
     private static final String GET_CASE_URL = "/v1/cases/{caseUuid}";
     private static final String GET_CASE_FORMAT_URL = "/v1/cases/{caseName}/format";
@@ -94,13 +92,16 @@ public class CaseControllerTest {
 
     private FileSystem fileSystem;
 
-    private ObjectMapper objectMapper = new ObjectMapper();
-
     @Before
     public void setUp() {
         fileSystem = Jimfs.newFileSystem(Configuration.unix());
         caseService.setFileSystem(fileSystem);
         caseService.setComputationManager(Mockito.mock(ComputationManager.class));
+        cleanDB();
+    }
+
+    private void cleanDB() {
+        caseMetadataRepository.deleteAll();
     }
 
     @After
