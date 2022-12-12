@@ -15,8 +15,8 @@ import com.powsybl.caseserver.parsers.FileNameParsers;
 import com.powsybl.commons.datasource.DataSource;
 import com.powsybl.computation.ComputationManager;
 import com.powsybl.computation.local.LocalComputationManager;
-import com.powsybl.iidm.import_.Importer;
-import com.powsybl.iidm.import_.Importers;
+import com.powsybl.iidm.network.Importer;
+import com.powsybl.iidm.network.Importers;
 import com.powsybl.iidm.network.Network;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -315,7 +315,7 @@ public class CaseService {
         }
 
         if (Files.exists(caseFile) && Files.isRegularFile(caseFile)) {
-            Network network = Importers.loadNetwork(caseFile);
+            Network network = Network.read(caseFile);
             if (network == null) {
                 throw CaseException.createFileNotImportable(caseFile);
             }
