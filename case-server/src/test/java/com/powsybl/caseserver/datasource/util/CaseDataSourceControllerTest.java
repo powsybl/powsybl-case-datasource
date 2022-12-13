@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.jimfs.Jimfs;
 import com.powsybl.caseserver.CaseApplication;
 import com.powsybl.caseserver.CaseService;
+import com.powsybl.caseserver.repository.CaseMetadataRepository;
 import com.powsybl.commons.datasource.DataSource;
 import com.powsybl.iidm.network.Importers;
 import org.junit.Before;
@@ -61,6 +62,9 @@ public class CaseDataSourceControllerTest {
     @Autowired
     private MockMvc mvc;
 
+    @MockBean
+    private CaseMetadataRepository caseMetadataRepository;
+
     @Autowired
     private CaseService caseService;
 
@@ -81,15 +85,7 @@ public class CaseDataSourceControllerTest {
         if (!Files.exists(path)) {
             Files.createDirectories(path);
         }
-        path = fileSystem.getPath(rootDirectory).resolve("public");
-        if (!Files.exists(path)) {
-            Files.createDirectories(path);
-        }
-        path = fileSystem.getPath(rootDirectory).resolve("private");
-        if (!Files.exists(path)) {
-            Files.createDirectories(path);
-        }
-        Path caseDirectory = fileSystem.getPath(rootDirectory).resolve("private").resolve(CASE_UUID.toString());
+        Path caseDirectory = fileSystem.getPath(rootDirectory).resolve(CASE_UUID.toString());
         if (!Files.exists(caseDirectory)) {
             Files.createDirectories(caseDirectory);
         }

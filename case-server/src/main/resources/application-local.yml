@@ -11,3 +11,9 @@ spring:
       ## to fill if authentication is needed
       # user:
       # password:
+
+powsybl-ws:
+  database:
+    host: localhost
+
+cleaning-cases-cron: 0 * 2 * * ?
