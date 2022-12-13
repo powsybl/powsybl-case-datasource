@@ -47,10 +47,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -345,7 +342,7 @@ public class CaseControllerTest {
         assertNotNull(caseMetadataEntity.getExpirationDate());
 
         //remove the expiration date of the previously duplicated case
-        mvc.perform(delete("/v1/cases/{caseUuid}/expiration", duplicateCaseUuid2))
+        mvc.perform(put("/v1/cases/{caseUuid}/disableExpiration", duplicateCaseUuid2))
                 .andExpect(status().isOk())
                 .andReturn();
 
@@ -362,7 +359,7 @@ public class CaseControllerTest {
 
         //remove the expiration date of a non existing case and expect a 404
         UUID randomUuid = UUID.randomUUID();
-        MvcResult deleteExpirationResult = mvc.perform(delete("/v1/cases/{caseUuid}/expiration", randomUuid))
+        MvcResult deleteExpirationResult = mvc.perform(put("/v1/cases/{caseUuid}/disableExpiration", randomUuid))
                 .andExpect(status().isNotFound())
                 .andReturn();
         assertTrue(deleteExpirationResult.getResponse().getErrorMessage().contains("case " + randomUuid + " not found"));

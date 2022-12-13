@@ -8,7 +8,6 @@ package com.powsybl.caseserver;
 
 import com.powsybl.caseserver.dto.CaseInfos;
 import com.powsybl.caseserver.elasticsearch.CaseInfosService;
-import com.powsybl.caseserver.elasticsearch.CaseInfosServiceImpl;
 import com.powsybl.caseserver.parsers.FileNameInfos;
 import com.powsybl.caseserver.parsers.FileNameParser;
 import com.powsybl.caseserver.parsers.FileNameParsers;
@@ -42,7 +41,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.stream.function.StreamBridge;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
 import org.springframework.messaging.Message;
@@ -58,7 +56,6 @@ import static com.powsybl.caseserver.CaseException.createDirectoryNotFound;
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
 @Service
-@ComponentScan(basePackageClasses = {CaseInfosServiceImpl.class, CaseMetadataRepository.class})
 public class CaseService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CaseService.class);
@@ -216,12 +213,7 @@ public class CaseService {
             throw e;
         }
 
-        LocalDateTime expirationTime = null;
-        if (withExpiration) {
-            expirationTime = LocalDateTime.now(ZoneOffset.UTC).plusHours(1);
-        }
-        CaseMetadataEntity caseEntity = new CaseMetadataEntity(caseUuid, expirationTime);
-        caseMetadataRepository.save(caseEntity);
+        createCaseMetadataEntity(caseUuid, withExpiration);
         CaseInfos caseInfos = createInfos(caseFile.getFileName().toString(), caseUuid, importer.getFormat());
         caseInfosService.addCaseInfos(caseInfos);
         sendImportMessage(caseInfos.createMessage());
@@ -245,13 +237,7 @@ public class CaseService {
             CaseInfos existingCaseInfos = caseInfosService.getCaseInfosByUuid(sourceCaseUuid.toString()).orElseThrow();
             CaseInfos caseInfos = createInfos(existingCaseInfos.getName(), newCaseUuid, existingCaseInfos.getFormat());
             caseInfosService.addCaseInfos(caseInfos);
-
-            LocalDateTime expirationTime = null;
-            if (withExpiration) {
-                expirationTime = LocalDateTime.now(ZoneOffset.UTC).plusHours(1);
-            }
-            CaseMetadataEntity caseEntity = new CaseMetadataEntity(newCaseUuid, expirationTime);
-            caseMetadataRepository.save(caseEntity);
+            createCaseMetadataEntity(newCaseUuid, withExpiration);
 
             sendImportMessage(caseInfos.createMessage());
             return newCaseUuid;
@@ -259,6 +245,14 @@ public class CaseService {
         } catch (IOException e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "An error occurred during case duplication");
         }
+    }
+
+    private void createCaseMetadataEntity(UUID newCaseUuid, boolean withExpiration) {
+        LocalDateTime expirationTime = null;
+        if (withExpiration) {
+            expirationTime = LocalDateTime.now(ZoneOffset.UTC).plusHours(1);
+        }
+        caseMetadataRepository.save(new CaseMetadataEntity(newCaseUuid, expirationTime));
     }
 
     CaseInfos createInfos(String fileBaseName, UUID caseUuid, String format) {

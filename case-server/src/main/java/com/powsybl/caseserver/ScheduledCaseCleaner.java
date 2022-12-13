@@ -9,10 +9,8 @@ package com.powsybl.caseserver;
 import com.powsybl.caseserver.repository.CaseMetadataRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -20,28 +18,29 @@ import java.time.ZoneOffset;
 /**
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
  */
-@Component
-@ComponentScan(basePackageClasses = {CaseService.class, CaseMetadataRepository.class})
+@Service
 public class ScheduledCaseCleaner {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ScheduledCaseCleaner.class);
 
-    @Autowired
-    private CaseMetadataRepository caseMetadataRepository;
+    private final CaseMetadataRepository caseMetadataRepository;
 
-    @Autowired
-    private CaseService caseService;
+    private final CaseService caseService;
+
+    public ScheduledCaseCleaner(CaseMetadataRepository caseMetadataRepository, CaseService caseService) {
+        this.caseMetadataRepository = caseMetadataRepository;
+        this.caseService = caseService;
+    }
 
     @Scheduled(cron = "${cleaning-cases-cron}", zone = "UTC")
     public void deleteExpiredCases() {
         LocalDateTime localDateTime = LocalDateTime.now(ZoneOffset.UTC);
         LOGGER.info("Cleaning cases cron starting execution at {}", localDateTime);
-        caseMetadataRepository.findAll().forEach(caseMetadataEntity -> {
-            if (caseMetadataEntity.getExpirationDate() != null && localDateTime.isAfter(caseMetadataEntity.getExpirationDate())) {
-                caseService.deleteCase(caseMetadataEntity.getId());
-                caseMetadataRepository.deleteById(caseMetadataEntity.getId());
-            }
-        });
-
+        caseMetadataRepository.findAll().stream().filter(caseMetadataEntity -> caseMetadataEntity.getExpirationDate() != null)
+                .filter(caseMetadataEntity -> localDateTime.isAfter(caseMetadataEntity.getExpirationDate()))
+                .forEach(caseMetadataEntity -> {
+                    caseService.deleteCase(caseMetadataEntity.getId());
+                    caseMetadataRepository.deleteById(caseMetadataEntity.getId());
+                });
     }
 }

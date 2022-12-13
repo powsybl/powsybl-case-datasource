@@ -26,13 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import static com.powsybl.caseserver.CaseException.createDirectoryNotFound;
@@ -149,16 +143,18 @@ public class CaseController {
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The case has been duplicated"),
             @ApiResponse(responseCode = "404", description = "Source case not found"),
             @ApiResponse(responseCode = "500", description = "An error occurred during the case file duplication")})
-    public ResponseEntity<UUID> createCase(@RequestParam("duplicateFrom") UUID sourceCaseUuid,
-                                           @RequestParam(value = "withExpiration", required = false, defaultValue = "false") boolean withExpiration) {
+    public ResponseEntity<UUID> createCase(
+            @RequestParam("duplicateFrom") UUID sourceCaseUuid,
+            @RequestParam(value = "withExpiration", required = false, defaultValue = "false") boolean withExpiration) {
         LOGGER.info("createCase request received with parameter sourceCaseUuid = {}", sourceCaseUuid);
         UUID newCaseUuid = caseService.createCase(sourceCaseUuid, withExpiration);
         return ResponseEntity.ok().body(newCaseUuid);
     }
 
-    @DeleteMapping(value = "/cases/{caseUuid}/expiration")
+    @PutMapping(value = "/cases/{caseUuid}/disableExpiration")
     @Operation(summary = "disable the case expiration")
-    @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "The case expiration has been removed"),
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "The case expiration has been removed"),
             @ApiResponse(responseCode = "404", description = "Source case not found")})
     public ResponseEntity<Void> disableCaseExpiration(@PathVariable("caseUuid") UUID caseUuid) {
         LOGGER.info("disableCaseExpiration request received for caseUuid = {}", caseUuid);
