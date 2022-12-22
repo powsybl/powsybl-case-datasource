@@ -10,21 +10,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.jimfs.Jimfs;
 import com.powsybl.caseserver.CaseApplication;
 import com.powsybl.caseserver.CaseService;
+import com.powsybl.caseserver.elasticsearch.CaseInfosRepository;
+import com.powsybl.caseserver.repository.CaseMetadataRepository;
 import com.powsybl.commons.datasource.DataSource;
-import com.powsybl.iidm.import_.Importers;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.FileSystem;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.util.Set;
-import java.util.UUID;
+import com.powsybl.iidm.network.Importers;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -41,6 +30,16 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.*;
+import java.util.Set;
+import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -64,6 +63,12 @@ public class CaseDataSourceControllerTest {
     @Autowired
     private MockMvc mvc;
 
+    @MockBean
+    private CaseMetadataRepository caseMetadataRepository;
+
+    @MockBean
+    CaseInfosRepository caseInfosRepository;
+
     @Autowired
     private CaseService caseService;
 
@@ -84,15 +89,7 @@ public class CaseDataSourceControllerTest {
         if (!Files.exists(path)) {
             Files.createDirectories(path);
         }
-        path = fileSystem.getPath(rootDirectory).resolve("public");
-        if (!Files.exists(path)) {
-            Files.createDirectories(path);
-        }
-        path = fileSystem.getPath(rootDirectory).resolve("private");
-        if (!Files.exists(path)) {
-            Files.createDirectories(path);
-        }
-        Path caseDirectory = fileSystem.getPath(rootDirectory).resolve("private").resolve(CASE_UUID.toString());
+        Path caseDirectory = fileSystem.getPath(rootDirectory).resolve(CASE_UUID.toString());
         if (!Files.exists(caseDirectory)) {
             Files.createDirectories(caseDirectory);
         }

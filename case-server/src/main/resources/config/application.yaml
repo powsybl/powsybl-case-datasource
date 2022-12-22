@@ -8,3 +8,10 @@ spring:
         publishCaseImport-out-0:
           destination: ${powsybl-ws.rabbitmq.destination.prefix:}case.import
       output-bindings: publishCaseImport
+
+powsybl-ws:
+  database:
+    name: case_metadata
+
+cleaning-cases-cron: 0 * 2 * * ?
+
