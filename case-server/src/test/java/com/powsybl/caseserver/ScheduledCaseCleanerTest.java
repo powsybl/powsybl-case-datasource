@@ -6,6 +6,7 @@
  */
 package com.powsybl.caseserver;
 
+import com.powsybl.caseserver.elasticsearch.CaseInfosRepository;
 import com.powsybl.caseserver.repository.CaseMetadataEntity;
 import com.powsybl.caseserver.repository.CaseMetadataRepository;
 import org.junit.Before;
@@ -37,6 +38,9 @@ public class ScheduledCaseCleanerTest {
 
     @Autowired
     public ScheduledCaseCleaner scheduledCaseCleaner;
+
+    @MockBean
+    CaseInfosRepository caseInfosRepository;
 
     @MockBean
     public CaseService caseService;

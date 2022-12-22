@@ -31,7 +31,7 @@ import static org.junit.Assert.*;
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE, properties = {"test.elasticsearch.enabled=true"})
 public class CaseFileNameParserTests {
 
     private static final String SN_UCTE_CASE_FILE_NAME      = "20200103_0915_SN5_D80.UCT";

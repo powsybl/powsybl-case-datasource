@@ -19,14 +19,22 @@ import com.powsybl.computation.local.LocalComputationManager;
 import com.powsybl.iidm.network.Importer;
 import com.powsybl.iidm.network.Importers;
 import com.powsybl.iidm.network.Network;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.stream.function.StreamBridge;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.http.HttpStatus;
+import org.springframework.messaging.Message;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
+
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.nio.file.DirectoryStream;
-import java.nio.file.FileSystem;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
+import java.nio.file.*;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
@@ -36,19 +44,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cloud.stream.function.StreamBridge;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.http.HttpStatus;
-import org.springframework.messaging.Message;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.server.ResponseStatusException;
-
 import static com.powsybl.caseserver.CaseException.createDirectoryNotFound;
 
 /**
@@ -56,6 +51,7 @@ import static com.powsybl.caseserver.CaseException.createDirectoryNotFound;
  * @author Franck Lecuyer <franck.lecuyer at rte-france.com>
  */
 @Service
+@ComponentScan(basePackageClasses = {CaseInfosService.class})
 public class CaseService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CaseService.class);
@@ -74,7 +70,6 @@ public class CaseService {
     private StreamBridge caseInfosPublisher;
 
     @Autowired
-    @Lazy
     private CaseInfosService caseInfosService;
 
     @Value("${case-store-directory:#{systemProperties['user.home'].concat(\"/cases\")}}")

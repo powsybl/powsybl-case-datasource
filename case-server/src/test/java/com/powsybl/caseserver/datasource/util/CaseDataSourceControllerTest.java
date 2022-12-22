@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.jimfs.Jimfs;
 import com.powsybl.caseserver.CaseApplication;
 import com.powsybl.caseserver.CaseService;
+import com.powsybl.caseserver.elasticsearch.CaseInfosRepository;
 import com.powsybl.caseserver.repository.CaseMetadataRepository;
 import com.powsybl.commons.datasource.DataSource;
 import com.powsybl.iidm.network.Importers;
@@ -64,6 +65,9 @@ public class CaseDataSourceControllerTest {
 
     @MockBean
     private CaseMetadataRepository caseMetadataRepository;
+
+    @MockBean
+    CaseInfosRepository caseInfosRepository;
 
     @Autowired
     private CaseService caseService;
