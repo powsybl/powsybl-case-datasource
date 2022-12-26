@@ -146,7 +146,7 @@ public class CaseController {
     public ResponseEntity<UUID> duplicateCase(
             @RequestParam("duplicateFrom") UUID sourceCaseUuid,
             @RequestParam(value = "withExpiration", required = false, defaultValue = "false") boolean withExpiration) {
-        LOGGER.info("duplicateCase request received with parameter sourceCaseUuid = {}", sourceCaseUuid);
+        LOGGER.debug("duplicateCase request received with parameter sourceCaseUuid = {}", sourceCaseUuid);
         UUID newCaseUuid = caseService.duplicateCase(sourceCaseUuid, withExpiration);
         return ResponseEntity.ok().body(newCaseUuid);
     }
@@ -157,7 +157,7 @@ public class CaseController {
             @ApiResponse(responseCode = "200", description = "The case expiration has been removed"),
             @ApiResponse(responseCode = "404", description = "Source case not found")})
     public ResponseEntity<Void> disableCaseExpiration(@PathVariable("caseUuid") UUID caseUuid) {
-        LOGGER.info("disableCaseExpiration request received for caseUuid = {}", caseUuid);
+        LOGGER.debug("disableCaseExpiration request received for caseUuid = {}", caseUuid);
         caseService.disableCaseExpiration(caseUuid);
         return ResponseEntity.ok().build();
     }
