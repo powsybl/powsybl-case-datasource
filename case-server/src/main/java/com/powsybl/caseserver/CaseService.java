@@ -215,7 +215,7 @@ public class CaseService {
         return caseUuid;
     }
 
-    UUID createCase(UUID sourceCaseUuid, boolean withExpiration) {
+    UUID duplicateCase(UUID sourceCaseUuid, boolean withExpiration) {
         try {
             Path existingCaseFile = getCaseFile(sourceCaseUuid);
             if (existingCaseFile == null || existingCaseFile.getParent() == null) {
