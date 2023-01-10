@@ -8,18 +8,11 @@ package com.powsybl.caseserver.elasticsearch;
 
 import com.google.common.collect.Lists;
 import com.powsybl.caseserver.dto.CaseInfos;
-
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
 import org.elasticsearch.index.query.QueryBuilders;
 import org.joda.time.DateTime;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
@@ -27,6 +20,11 @@ import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * A class to implement metadatas transfer in the DB elasticsearch
@@ -37,9 +35,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class CaseInfosService {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(CaseInfosService.class);
-
     @Autowired
+    @Lazy
     private CaseInfosRepository caseInfosRepository;
 
     @Autowired
