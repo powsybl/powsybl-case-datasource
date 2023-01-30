@@ -2,4 +2,6 @@ target/
 
 # IntelliJ
 /.idea
+/case-datasource/.idea
+/case-server/.idea
 *.iml

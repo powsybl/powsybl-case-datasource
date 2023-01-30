@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Copyright (c) 2023, RTE (http://www.rte-france.com)
+    This Source Code Form is subject to the terms of the Mozilla Public
+    License, v. 2.0. If a copy of the MPL was not distributed with this
+    file, You can obtain one at http://mozilla.org/MPL/2.0/.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.powsybl</groupId>
+    <artifactId>powsybl-case-datasource-client</artifactId>
+    <name>Case datasource client</name>
+    <version>1.0.0-SNAPSHOT</version>
+
+    <licenses>
+        <license>
+            <name>Mozilla Public License, Version 2.0</name>
+            <url>https://www.mozilla.org/en-US/MPL/2.0/</url>
+        </license>
+    </licenses>
+
+    <scm>
+        <connection>scm:git:https://github.com/powsybl/powsybl-case-server.git</connection>
+        <developerConnection>scm:git:https://github.com/powsybl/powsybl-case-server.git</developerConnection>
+        <url>https://github.com/powsybl/powsybl-case-server.git</url>
+    </scm>
+
+    <developers>
+        <developer>
+            <name>Abdelsalem HEDHILI</name>
+            <email>abdelsalem.hedhili@rte-france.com</email>
+            <organization>RTE</organization>
+            <organizationUrl>http://www.rte-france.com</organizationUrl>
+        </developer>
+    </developers>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <java.version>11</java.version>
+        <!-- FIXME why maven won't work without the following 2 lines -->
+        <maven.compiler.source>${java.version}</maven.compiler.source>
+        <maven.compiler.target>${java.version}</maven.compiler.target>
+
+        <jackson.version>2.13.2.20220328</jackson.version>
+        <springboot.version>2.7.3</springboot.version>
+        <testcontainers.version>1.16.2</testcontainers.version>
+
+        <powsybl-dependencies.version>2022.0.0</powsybl-dependencies.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- overrides of imports -->
+
+            <!-- The version 2.10 put by Powsybl cause a problem. spring boot 2.6 needs at least 2.13: https://github.com/FasterXML/jackson-databind/issues/2683 -->
+            <!-- java.lang.NoSuchMethodError: 'boolean com.fasterxml.jackson.databind.SerializationConfig.hasExplicitTimeZone()' -->
+            <!-- Use the version from spring boot 2.6.6 which contains the fix for the  spring 4 shell CVE -->
+            <dependency>
+                <groupId>com.fasterxml.jackson</groupId>
+                <artifactId>jackson-bom</artifactId>
+                <version>${jackson.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>com.powsybl</groupId>
+                <artifactId>powsybl-dependencies</artifactId>
+                <version>${powsybl-dependencies.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${springboot.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <dependencies>
+        <!-- Compile dependencies -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.powsybl</groupId>
+            <artifactId>powsybl-commons</artifactId>
+        </dependency>
+
+        <!-- Test dependencies -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</project>
