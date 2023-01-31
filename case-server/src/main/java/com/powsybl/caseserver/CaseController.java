@@ -125,6 +125,7 @@ public class CaseController {
     public ResponseEntity<Boolean> exists(@PathVariable("caseUuid") UUID caseUuid) {
         boolean exists = caseService.caseExists(caseUuid);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(exists);
+
     }
 
     @PostMapping(value = "/cases", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
