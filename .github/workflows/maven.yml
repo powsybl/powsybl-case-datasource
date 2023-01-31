@@ -42,7 +42,7 @@ jobs:
         run: mvn --batch-mode -Pjacoco install
         working-directory: ./case-server
 
-      - name: Run SonarCloud analysis on case server client
+      - name: Run SonarCloud analysis on case server
         run: >
           mvn --batch-mode -DskipTests sonar:sonar
           -Dsonar.host.url=https://sonarcloud.io
