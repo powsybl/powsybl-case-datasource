@@ -27,6 +27,10 @@ jobs:
         run: mvn --batch-mode -Pjacoco install
         working-directory: ./case-datasource
 
+      - name: Build case server with Maven
+        run: mvn --batch-mode -Pjacoco install
+        working-directory: ./case-server
+
       #We only run the sonar analysis on the server directory because we can't push 2 sonar result to the same sonar repository
       #TODO add the analysis on the client when the client and server are split into 2 differents github repo
       - name: Run SonarCloud analysis on case server
@@ -40,10 +44,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
-      - name: Build case server with Maven
-        run: mvn --batch-mode -Pjacoco install
-        working-directory: ./case-server
-
       - name: Build Docker image - Main
         if: github.ref == 'refs/heads/main'
         run: >
@@ -52,6 +52,7 @@ jobs:
           -Djib.to.image=docker.io/powsybl/case-server
           -Djib.to.auth.username=powsyblci
           -Djib.to.auth.password=${{ secrets.DOCKERHUB_TOKEN }}
+        working-directory: ./case-server
 
       - name: Build Docker image - Tag
         if: startsWith(github.ref, 'refs/tags/')
@@ -61,6 +62,7 @@ jobs:
           -Djib.to.image=docker.io/powsybl/case-server:${GITHUB_REF_NAME#v}
           -Djib.to.auth.username=powsyblci
           -Djib.to.auth.password=${{ secrets.DOCKERHUB_TOKEN }}
+        working-directory: ./case-server
 
       - name: Broadcast update event
         if: github.ref == 'refs/heads/main'
