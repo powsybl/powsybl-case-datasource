@@ -12,7 +12,6 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
@@ -36,7 +35,6 @@ import java.util.stream.Collectors;
 public class CaseInfosService {
 
     @Autowired
-    @Lazy
     private CaseInfosRepository caseInfosRepository;
 
     @Autowired

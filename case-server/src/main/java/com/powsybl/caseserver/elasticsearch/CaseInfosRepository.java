@@ -7,7 +7,6 @@
 package com.powsybl.caseserver.elasticsearch;
 
 import com.powsybl.caseserver.dto.CaseInfos;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
@@ -17,7 +16,6 @@ import org.springframework.data.elasticsearch.repository.ElasticsearchRepository
  *
  * @author Slimane Amar <slimane.amar at rte-france.com>
  */
-@Lazy
 public interface CaseInfosRepository extends ElasticsearchRepository<CaseInfos, String> {
 
     Page<CaseInfos> findByUuid(String id, Pageable pageable);

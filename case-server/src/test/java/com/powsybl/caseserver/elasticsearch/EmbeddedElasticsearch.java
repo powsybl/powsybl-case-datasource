@@ -4,9 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-package com.powsybl.caseserver;
+package com.powsybl.caseserver.elasticsearch;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.testcontainers.elasticsearch.ElasticsearchContainer;
 
@@ -22,16 +21,13 @@ import javax.annotation.PreDestroy;
 public class EmbeddedElasticsearch {
 
     private static final String ES_DOCKER_IMAGE_NAME = "docker.elastic.co/elasticsearch/elasticsearch";
-    private static final String ES_DOCKER_IMAGE_VERSION = "7.17.4";
+    private static final String ES_DOCKER_IMAGE_VERSION = "7.9.3";
 
     private static ElasticsearchContainer elasticsearchContainer;
 
-    @Value("${test.elasticsearch.enabled:false}")
-    boolean elasticsearchEnabled;
-
     @PostConstruct
     public void postConstruct() {
-        if (elasticsearchContainer != null || !elasticsearchEnabled) {
+        if (elasticsearchContainer != null) {
             return;
         }
 

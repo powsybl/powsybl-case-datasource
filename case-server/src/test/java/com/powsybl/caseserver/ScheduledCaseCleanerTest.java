@@ -7,12 +7,12 @@
 package com.powsybl.caseserver;
 
 import com.powsybl.caseserver.elasticsearch.CaseInfosRepository;
+import com.powsybl.caseserver.elasticsearch.DisableElasticsearch;
 import com.powsybl.caseserver.repository.CaseMetadataEntity;
 import com.powsybl.caseserver.repository.CaseMetadataRepository;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -22,7 +22,8 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.UUID;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -31,6 +32,7 @@ import static org.mockito.Mockito.verify;
  */
 @RunWith(SpringRunner.class)
 @SpringBootTest
+@DisableElasticsearch
 public class ScheduledCaseCleanerTest {
 
     @Autowired
@@ -47,7 +49,6 @@ public class ScheduledCaseCleanerTest {
 
     @Before
     public void setUp() {
-        MockitoAnnotations.openMocks(this);
         cleanDB();
     }
 
