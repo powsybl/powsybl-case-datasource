@@ -10,6 +10,13 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
+    <parent>
+        <groupId>com.powsybl</groupId>
+        <artifactId>powsybl-parent</artifactId>
+        <version>9</version>
+        <relativePath/>
+    </parent>
+
     <groupId>com.powsybl</groupId>
     <artifactId>powsybl-case-datasource-client</artifactId>
     <name>Case datasource client</name>
@@ -38,34 +45,14 @@
     </developers>
 
     <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <java.version>11</java.version>
-        <!-- FIXME why maven won't work without the following 2 lines -->
-        <maven.compiler.source>${java.version}</maven.compiler.source>
-        <maven.compiler.target>${java.version}</maven.compiler.target>
-
-        <jackson.version>2.13.2.20220328</jackson.version>
         <springboot.version>2.7.3</springboot.version>
-        <testcontainers.version>1.16.2</testcontainers.version>
 
-        <powsybl-dependencies.version>2022.0.0</powsybl-dependencies.version>
+        <powsybl-dependencies.version>2023.0.1</powsybl-dependencies.version>
     </properties>
 
     <dependencyManagement>
         <dependencies>
             <!-- overrides of imports -->
-
-            <!-- The version 2.10 put by Powsybl cause a problem. spring boot 2.6 needs at least 2.13: https://github.com/FasterXML/jackson-databind/issues/2683 -->
-            <!-- java.lang.NoSuchMethodError: 'boolean com.fasterxml.jackson.databind.SerializationConfig.hasExplicitTimeZone()' -->
-            <!-- Use the version from spring boot 2.6.6 which contains the fix for the  spring 4 shell CVE -->
-            <dependency>
-                <groupId>com.fasterxml.jackson</groupId>
-                <artifactId>jackson-bom</artifactId>
-                <version>${jackson.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-
             <dependency>
                 <groupId>com.powsybl</groupId>
                 <artifactId>powsybl-dependencies</artifactId>
