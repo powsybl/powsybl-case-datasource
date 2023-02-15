@@ -71,19 +71,19 @@ public class CaseDataSourceClientTest {
                 eq(byte[].class)))
                 .willReturn(ResponseEntity.ok("Data in the file".getBytes()));
 
-        given(caseServerRest.exchange(eq("/v1/cases/" +  randomUuid + "/datasource?suffix=A&ext=xml"),
+        given(caseServerRest.exchange(eq("/v1/cases/" + randomUuid + "/datasource?suffix=A&ext=xml"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
                 eq(byte[].class)))
                 .willReturn(ResponseEntity.ok("Data in the file".getBytes()));
 
-        given(caseServerRest.exchange(eq("/v1/cases/"  + randomUuid + "/datasource/exists?fileName=A.xml"),
+        given(caseServerRest.exchange(eq("/v1/cases/" + randomUuid + "/datasource/exists?fileName=A.xml"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
                 eq(Boolean.class)))
                 .willReturn(ResponseEntity.ok(true));
 
-        given(caseServerRest.exchange(eq("/v1/cases/"  + randomUuid + "/datasource/exists?suffix=A&ext=xml"),
+        given(caseServerRest.exchange(eq("/v1/cases/" + randomUuid + "/datasource/exists?suffix=A&ext=xml"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
                 eq(Boolean.class)))
