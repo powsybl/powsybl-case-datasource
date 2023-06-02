@@ -13,7 +13,7 @@
     <parent>
         <groupId>com.powsybl</groupId>
         <artifactId>powsybl-parent</artifactId>
-        <version>9</version>
+        <version>11</version>
         <relativePath/>
     </parent>
 
@@ -47,7 +47,7 @@
     </developers>
 
     <properties>
-        <java.version>11</java.version>
+        <java.version>17</java.version>
 
         <springboot.version>2.7.3</springboot.version>
 
