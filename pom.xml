@@ -47,7 +47,7 @@
     </developers>
 
     <properties>
-        <springboot.version>3.1.3</springboot.version>
+        <springboot.version>3.1.2</springboot.version>
 
         <powsybl-dependencies.version>2023.2.1</powsybl-dependencies.version>
     </properties>
