@@ -6,11 +6,11 @@
  */
 package com.powsybl.cases.datasource;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
@@ -26,8 +26,8 @@ import java.util.Set;
 import java.util.UUID;
 
 import static java.util.Arrays.asList;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
@@ -35,19 +35,17 @@ import static org.mockito.BDDMockito.given;
 /**
  * @author Chamseddine Benhamed <chamseddine.benhamed at rte-france.com>
  */
-
-@RunWith(MockitoJUnitRunner.class)
-public class CaseDataSourceClientTest {
+@ExtendWith(MockitoExtension.class)
+class CaseDataSourceClientTest {
 
     @Mock
     private RestTemplate caseServerRest;
 
     private CaseDataSourceClient caseDataSourceClient;
 
-    private UUID randomUuid = UUID.randomUUID();
-
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
+        final UUID randomUuid = UUID.randomUUID();
         caseDataSourceClient = new CaseDataSourceClient(caseServerRest, randomUuid);
 
         given(caseServerRest.exchange(eq("/v1/cases/{caseUuid}/datasource/baseName"),
@@ -57,7 +55,7 @@ public class CaseDataSourceClientTest {
                 eq(randomUuid)))
                 .willReturn(ResponseEntity.ok("myCaseName"));
 
-        ParameterizedTypeReference< Set<String>> parameterizedTypeReference = new ParameterizedTypeReference<Set<String>>() { };
+        ParameterizedTypeReference<Set<String>> parameterizedTypeReference = new ParameterizedTypeReference<>() { };
 
         given(caseServerRest.exchange(eq("/v1/cases/" + randomUuid + "/datasource/list?regex=.*"),
                 eq(HttpMethod.GET),
@@ -91,7 +89,7 @@ public class CaseDataSourceClientTest {
     }
 
     @Test
-    public void test() throws IOException {
+    void test() throws IOException {
         assertEquals("myCaseName", caseDataSourceClient.getBaseName());
 
         assertEquals(new HashSet<>(asList("A.xml", "B.xml")), caseDataSourceClient.listNames(".*"));
