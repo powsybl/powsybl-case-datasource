@@ -18,7 +18,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
@@ -89,7 +88,7 @@ class CaseDataSourceClientTest {
     }
 
     @Test
-    void test() throws IOException {
+    void test() throws Exception {
         assertEquals("myCaseName", caseDataSourceClient.getBaseName());
 
         assertEquals(new HashSet<>(asList("A.xml", "B.xml")), caseDataSourceClient.listNames(".*"));
