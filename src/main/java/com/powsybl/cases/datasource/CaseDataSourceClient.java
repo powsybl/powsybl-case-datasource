@@ -101,6 +101,11 @@ public class CaseDataSourceClient implements ReadOnlyDataSource {
     }
 
     @Override
+    public boolean isDataExtension(String s) {
+        return true;
+    }
+
+    @Override
     public InputStream newInputStream(String suffix, String ext) {
         String path = UriComponentsBuilder.fromPath("/" + CASE_API_VERSION + "/cases/{caseUuid}/datasource")
                 .queryParam("suffix", suffix)
