@@ -10,6 +10,7 @@ import com.powsybl.commons.datasource.ReadOnlyDataSource;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +19,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.DefaultUriBuilderFactory;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Objects;
 import java.util.Set;
@@ -113,13 +114,19 @@ public class CaseDataSourceClient implements ReadOnlyDataSource {
                 .buildAndExpand(caseUuid)
                 .toUriString();
         try {
-            ResponseEntity<byte[]> responseEntity = restTemplate.exchange(path,
+            ResponseEntity<Resource> responseEntity = restTemplate.exchange(path,
                                                                           HttpMethod.GET,
                                                                           HttpEntity.EMPTY,
-                                                                          byte[].class);
-            return new ByteArrayInputStream(responseEntity.getBody());
+                                                                          Resource.class);
+            Resource body = responseEntity.getBody();
+            if (body == null) {
+                throw new CaseDataSourceClientException("Response body is null for suffix: " + suffix + " and ext: " + ext);
+            }
+            return body.getInputStream();
         } catch (HttpStatusCodeException e) {
             throw new CaseDataSourceClientException("Exception when requesting the file inputStream: " + e.getResponseBodyAsString());
+        } catch (IOException e) {
+            throw new CaseDataSourceClientException("Exception when opening inputStream for suffix: " + suffix + " and ext: " + ext, e);
         }
     }
 
@@ -130,13 +137,19 @@ public class CaseDataSourceClient implements ReadOnlyDataSource {
                 .buildAndExpand(caseUuid)
                 .toUriString();
         try {
-            ResponseEntity<byte[]> responseEntity = restTemplate.exchange(path,
+            ResponseEntity<Resource> responseEntity = restTemplate.exchange(path,
                                                                           HttpMethod.GET,
                                                                           HttpEntity.EMPTY,
-                                                                          byte[].class);
-            return new ByteArrayInputStream(responseEntity.getBody());
+                    Resource.class);
+            Resource body = responseEntity.getBody();
+            if (body == null) {
+                throw new CaseDataSourceClientException("Response body is null for fileName: " + fileName);
+            }
+            return body.getInputStream();
         } catch (HttpStatusCodeException e) {
             throw new CaseDataSourceClientException("Exception when requesting the file inputStream: " + e.getResponseBodyAsString());
+        } catch (IOException e) {
+            throw new CaseDataSourceClientException("Exception when opening inputStream for fileName" + fileName, e);
         }
     }
 

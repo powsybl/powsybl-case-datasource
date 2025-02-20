@@ -12,12 +12,15 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
@@ -62,17 +65,20 @@ class CaseDataSourceClientTest {
                 eq(parameterizedTypeReference)))
                 .willReturn(ResponseEntity.ok(new HashSet<>(asList("A.xml", "B.xml"))));
 
+        String data = "Data in the file";
+        byte[] responseBytes = data.getBytes();
+
         given(caseServerRest.exchange(eq("/v1/cases/" + randomUuid + "/datasource?fileName=A.xml"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
-                eq(byte[].class)))
-                .willReturn(ResponseEntity.ok("Data in the file".getBytes()));
+                eq(Resource.class)))
+                .willReturn(ResponseEntity.ok(new InputStreamResource(new ByteArrayInputStream(responseBytes))));
 
         given(caseServerRest.exchange(eq("/v1/cases/" + randomUuid + "/datasource?suffix=A&ext=xml"),
                 eq(HttpMethod.GET),
                 any(HttpEntity.class),
-                eq(byte[].class)))
-                .willReturn(ResponseEntity.ok("Data in the file".getBytes()));
+                eq(Resource.class)))
+                .willReturn(ResponseEntity.ok(new InputStreamResource(new ByteArrayInputStream(responseBytes))));
 
         given(caseServerRest.exchange(eq("/v1/cases/" + randomUuid + "/datasource/exists?fileName=A.xml"),
                 eq(HttpMethod.GET),
