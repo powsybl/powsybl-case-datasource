@@ -109,7 +109,7 @@ public class CaseDataSourceClient implements ReadOnlyDataSource {
                 .queryParam("ext", ext)
                 .buildAndExpand(caseUuid)
                 .toUriString();
-        return fetchInputStream(path, "suffix: " + suffix + ", ext: " + ext);
+        return fetchInputStream(path);
     }
 
     @Override
@@ -118,21 +118,21 @@ public class CaseDataSourceClient implements ReadOnlyDataSource {
                 .queryParam("fileName", fileName)
                 .buildAndExpand(caseUuid)
                 .toUriString();
-        return fetchInputStream(path, "fileName: " + fileName);
+        return fetchInputStream(path);
     }
 
-    private InputStream fetchInputStream(String path, String description) {
+    private InputStream fetchInputStream(String path) {
         try {
             ResponseEntity<Resource> responseEntity = restTemplate.exchange(path, HttpMethod.GET, HttpEntity.EMPTY, Resource.class);
             Resource body = responseEntity.getBody();
             if (body == null) {
-                throw new CaseDataSourceClientException("Response body is null for " + description);
+                throw new CaseDataSourceClientException("Response body is null for " + path);
             }
             return body.getInputStream();
         } catch (HttpStatusCodeException e) {
-            throw new CaseDataSourceClientException("HTTP error when requesting file inputStream for " + description + ": " + e.getResponseBodyAsString(), e);
+            throw new CaseDataSourceClientException("Exception when requesting the file inputStream: " + e.getResponseBodyAsString());
         } catch (IOException e) {
-            throw new CaseDataSourceClientException("I/O error when opening inputStream for " + description, e);
+            throw new CaseDataSourceClientException("I/O error when opening inputStream for " + path, e);
         }
     }
 
