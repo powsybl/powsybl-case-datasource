@@ -108,48 +108,35 @@ public class CaseDataSourceClient implements ReadOnlyDataSource {
 
     @Override
     public InputStream newInputStream(String suffix, String ext) {
-        String path = UriComponentsBuilder.fromPath("/" + CASE_API_VERSION + "/cases/{caseUuid}/datasource")
-                .queryParam("suffix", suffix)
-                .queryParam("ext", ext)
-                .buildAndExpand(caseUuid)
-                .toUriString();
-        try {
-            ResponseEntity<Resource> responseEntity = restTemplate.exchange(path,
-                                                                          HttpMethod.GET,
-                                                                          HttpEntity.EMPTY,
-                                                                          Resource.class);
-            Resource body = responseEntity.getBody();
-            if (body == null) {
-                throw new CaseDataSourceClientException("Response body is null for suffix: " + suffix + " and ext: " + ext);
-            }
-            return body.getInputStream();
-        } catch (HttpStatusCodeException e) {
-            throw new CaseDataSourceClientException("Exception when requesting the file inputStream: " + e.getResponseBodyAsString());
-        } catch (IOException e) {
-            throw new CaseDataSourceClientException("Exception when opening inputStream for suffix: " + suffix + " and ext: " + ext, e);
-        }
+        return fetchInputStream(UriComponentsBuilder.fromPath("/" + CASE_API_VERSION + "/cases/{caseUuid}/datasource")
+                        .queryParam("suffix", suffix)
+                        .queryParam("ext", ext)
+                        .buildAndExpand(caseUuid)
+                        .toUriString(),
+                        "suffix: " + suffix + ", ext: " + ext);
     }
 
     @Override
     public InputStream newInputStream(String fileName) {
-        String path = UriComponentsBuilder.fromPath("/" + CASE_API_VERSION + "/cases/{caseUuid}/datasource")
-                .queryParam("fileName", fileName)
-                .buildAndExpand(caseUuid)
-                .toUriString();
+        return fetchInputStream(UriComponentsBuilder.fromPath("/" + CASE_API_VERSION + "/cases/{caseUuid}/datasource")
+                        .queryParam("fileName", fileName)
+                        .buildAndExpand(caseUuid)
+                        .toUriString(),
+                        "fileName: " + fileName);
+    }
+
+    private InputStream fetchInputStream(String path, String description) {
         try {
-            ResponseEntity<Resource> responseEntity = restTemplate.exchange(path,
-                                                                          HttpMethod.GET,
-                                                                          HttpEntity.EMPTY,
-                    Resource.class);
+            ResponseEntity<Resource> responseEntity = restTemplate.exchange(path, HttpMethod.GET, HttpEntity.EMPTY, Resource.class);
             Resource body = responseEntity.getBody();
             if (body == null) {
-                throw new CaseDataSourceClientException("Response body is null for fileName: " + fileName);
+                throw new CaseDataSourceClientException("Response body is null for " + description);
             }
             return body.getInputStream();
         } catch (HttpStatusCodeException e) {
-            throw new CaseDataSourceClientException("Exception when requesting the file inputStream: " + e.getResponseBodyAsString());
+            throw new CaseDataSourceClientException("HTTP error when requesting file inputStream for " + description + ": " + e.getResponseBodyAsString(), e);
         } catch (IOException e) {
-            throw new CaseDataSourceClientException("Exception when opening inputStream for fileName" + fileName, e);
+            throw new CaseDataSourceClientException("I/O error when opening inputStream for " + description, e);
         }
     }
 

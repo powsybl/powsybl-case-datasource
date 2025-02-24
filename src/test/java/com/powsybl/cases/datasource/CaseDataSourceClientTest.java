@@ -148,7 +148,7 @@ class CaseDataSourceClientTest {
                 .willReturn(ResponseEntity.ok().build());
 
         CaseDataSourceClientException exception = assertThrows(CaseDataSourceClientException.class, () -> caseDataSourceClient.newInputStream("A.xml"));
-        assertTrue(exception.getMessage().contains("Response body is null for fileName"));
+        assertEquals("Response body is null for fileName: A.xml", exception.getMessage());
 
         given(caseServerRest.exchange(eq("/v1/cases/" + caseUuid + "/datasource?suffix=A&ext=xml"),
                 eq(HttpMethod.GET),
@@ -157,7 +157,7 @@ class CaseDataSourceClientTest {
                 .willReturn(ResponseEntity.ok().build());
 
         exception = assertThrows(CaseDataSourceClientException.class, () -> caseDataSourceClient.newInputStream("A", "xml"));
-        assertTrue(exception.getMessage().contains("Response body is null for suffix"));
+        assertEquals("Response body is null for suffix: A, ext: xml", exception.getMessage());
     }
 
     @Test
@@ -171,7 +171,7 @@ class CaseDataSourceClientTest {
                 .willReturn(ResponseEntity.ok(resource));
 
         CaseDataSourceClientException exception = assertThrows(CaseDataSourceClientException.class, () -> caseDataSourceClient.newInputStream("A.xml"));
-        assertTrue(exception.getMessage().contains("Exception when opening inputStream for fileName"));
+        assertEquals("I/O error when opening inputStream for fileName: A.xml", exception.getMessage());
 
         given(caseServerRest.exchange(eq("/v1/cases/" + caseUuid + "/datasource?suffix=A&ext=xml"),
                 eq(HttpMethod.GET),
@@ -180,6 +180,6 @@ class CaseDataSourceClientTest {
                 .willReturn(ResponseEntity.ok(resource));
 
         exception = assertThrows(CaseDataSourceClientException.class, () -> caseDataSourceClient.newInputStream("A", "xml"));
-        assertTrue(exception.getMessage().contains("Exception when opening inputStream for suffix"));
+        assertEquals("I/O error when opening inputStream for suffix: A, ext: xml", exception.getMessage());
     }
 }
