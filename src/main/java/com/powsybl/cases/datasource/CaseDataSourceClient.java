@@ -73,15 +73,7 @@ public class CaseDataSourceClient implements ReadOnlyDataSource {
                 .queryParam("ext", ext)
                 .buildAndExpand(caseUuid)
                 .toUriString();
-        try {
-            ResponseEntity<Boolean> responseEntity = restTemplate.exchange(path,
-                                                                           HttpMethod.GET,
-                                                                           HttpEntity.EMPTY,
-                                                                           Boolean.class);
-            return responseEntity.getBody();
-        } catch (HttpStatusCodeException e) {
-            throw new CaseDataSourceClientException("Exception when checking file existence: " + e.getResponseBodyAsString());
-        }
+        return checkFileExistence(path);
     }
 
     @Override
@@ -90,6 +82,10 @@ public class CaseDataSourceClient implements ReadOnlyDataSource {
                 .queryParam("fileName", fileName)
                 .buildAndExpand(caseUuid)
                 .toUriString();
+        return checkFileExistence(path);
+    }
+
+    private boolean checkFileExistence(String path) {
         try {
             ResponseEntity<Boolean> responseEntity = restTemplate.exchange(path,
                                                                            HttpMethod.GET,
@@ -108,21 +104,21 @@ public class CaseDataSourceClient implements ReadOnlyDataSource {
 
     @Override
     public InputStream newInputStream(String suffix, String ext) {
-        return fetchInputStream(UriComponentsBuilder.fromPath("/" + CASE_API_VERSION + "/cases/{caseUuid}/datasource")
-                        .queryParam("suffix", suffix)
-                        .queryParam("ext", ext)
-                        .buildAndExpand(caseUuid)
-                        .toUriString(),
-                        "suffix: " + suffix + ", ext: " + ext);
+        String path = UriComponentsBuilder.fromPath("/" + CASE_API_VERSION + "/cases/{caseUuid}/datasource")
+                .queryParam("suffix", suffix)
+                .queryParam("ext", ext)
+                .buildAndExpand(caseUuid)
+                .toUriString();
+        return fetchInputStream(path, "suffix: " + suffix + ", ext: " + ext);
     }
 
     @Override
     public InputStream newInputStream(String fileName) {
-        return fetchInputStream(UriComponentsBuilder.fromPath("/" + CASE_API_VERSION + "/cases/{caseUuid}/datasource")
-                        .queryParam("fileName", fileName)
-                        .buildAndExpand(caseUuid)
-                        .toUriString(),
-                        "fileName: " + fileName);
+        String path = UriComponentsBuilder.fromPath("/" + CASE_API_VERSION + "/cases/{caseUuid}/datasource")
+                .queryParam("fileName", fileName)
+                .buildAndExpand(caseUuid)
+                .toUriString();
+        return fetchInputStream(path, "fileName: " + fileName);
     }
 
     private InputStream fetchInputStream(String path, String description) {
