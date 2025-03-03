@@ -10,6 +10,7 @@ import com.powsybl.commons.datasource.ReadOnlyDataSource;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +19,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.DefaultUriBuilderFactory;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Objects;
 import java.util.Set;
@@ -72,15 +73,7 @@ public class CaseDataSourceClient implements ReadOnlyDataSource {
                 .queryParam("ext", ext)
                 .buildAndExpand(caseUuid)
                 .toUriString();
-        try {
-            ResponseEntity<Boolean> responseEntity = restTemplate.exchange(path,
-                                                                           HttpMethod.GET,
-                                                                           HttpEntity.EMPTY,
-                                                                           Boolean.class);
-            return responseEntity.getBody();
-        } catch (HttpStatusCodeException e) {
-            throw new CaseDataSourceClientException("Exception when checking file existence: " + e.getResponseBodyAsString());
-        }
+        return checkFileExistence(path);
     }
 
     @Override
@@ -89,6 +82,10 @@ public class CaseDataSourceClient implements ReadOnlyDataSource {
                 .queryParam("fileName", fileName)
                 .buildAndExpand(caseUuid)
                 .toUriString();
+        return checkFileExistence(path);
+    }
+
+    private boolean checkFileExistence(String path) {
         try {
             ResponseEntity<Boolean> responseEntity = restTemplate.exchange(path,
                                                                            HttpMethod.GET,
@@ -112,15 +109,7 @@ public class CaseDataSourceClient implements ReadOnlyDataSource {
                 .queryParam("ext", ext)
                 .buildAndExpand(caseUuid)
                 .toUriString();
-        try {
-            ResponseEntity<byte[]> responseEntity = restTemplate.exchange(path,
-                                                                          HttpMethod.GET,
-                                                                          HttpEntity.EMPTY,
-                                                                          byte[].class);
-            return new ByteArrayInputStream(responseEntity.getBody());
-        } catch (HttpStatusCodeException e) {
-            throw new CaseDataSourceClientException("Exception when requesting the file inputStream: " + e.getResponseBodyAsString());
-        }
+        return fetchInputStream(path);
     }
 
     @Override
@@ -129,14 +118,21 @@ public class CaseDataSourceClient implements ReadOnlyDataSource {
                 .queryParam("fileName", fileName)
                 .buildAndExpand(caseUuid)
                 .toUriString();
+        return fetchInputStream(path);
+    }
+
+    private InputStream fetchInputStream(String path) {
         try {
-            ResponseEntity<byte[]> responseEntity = restTemplate.exchange(path,
-                                                                          HttpMethod.GET,
-                                                                          HttpEntity.EMPTY,
-                                                                          byte[].class);
-            return new ByteArrayInputStream(responseEntity.getBody());
+            ResponseEntity<Resource> responseEntity = restTemplate.exchange(path, HttpMethod.GET, HttpEntity.EMPTY, Resource.class);
+            Resource body = responseEntity.getBody();
+            if (body == null) {
+                throw new CaseDataSourceClientException("Response body is null for " + path);
+            }
+            return body.getInputStream();
         } catch (HttpStatusCodeException e) {
             throw new CaseDataSourceClientException("Exception when requesting the file inputStream: " + e.getResponseBodyAsString());
+        } catch (IOException e) {
+            throw new CaseDataSourceClientException("I/O error when opening inputStream for " + path, e);
         }
     }
 
