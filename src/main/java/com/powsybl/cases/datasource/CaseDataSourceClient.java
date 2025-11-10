@@ -7,13 +7,16 @@
 package com.powsybl.cases.datasource;
 
 import com.powsybl.commons.datasource.ReadOnlyDataSource;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.http.client.ClientHttpRequestFactoryBuilder;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.DefaultUriBuilderFactory;
@@ -29,6 +32,7 @@ import java.util.UUID;
  * @author Chamseddine Benhamed <chamseddine.benhamed at rte-france.com>
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
  */
+@Component
 public class CaseDataSourceClient implements ReadOnlyDataSource {
 
     private static final String CASE_API_VERSION = "v1";
@@ -37,15 +41,24 @@ public class CaseDataSourceClient implements ReadOnlyDataSource {
 
     private UUID caseUuid;
 
+    @Autowired
+    public CaseDataSourceClient(RestTemplateBuilder restTemplateBuilder,
+                                @Value("${case-server.base.url:http://case-server/}") String caseServerBaseUri,
+                                UUID caseUuid) {
+        this.restTemplate = Objects.requireNonNull(restTemplateBuilder).uriTemplateHandler(new DefaultUriBuilderFactory(caseServerBaseUri)).build();
+        this.caseUuid = Objects.requireNonNull(caseUuid);
+    }
+
     public CaseDataSourceClient(RestTemplate restTemplate, UUID caseUuid) {
         this.restTemplate = Objects.requireNonNull(restTemplate);
         this.caseUuid = Objects.requireNonNull(caseUuid);
     }
 
     private static RestTemplate createRestTemplate(String caseServerBaseUri) {
-        RestTemplate restTemplate = new RestTemplateBuilder().build();
-        restTemplate.setUriTemplateHandler(new DefaultUriBuilderFactory(caseServerBaseUri));
-        return restTemplate;
+        return new RestTemplateBuilder().
+                requestFactoryBuilder(ClientHttpRequestFactoryBuilder.simple())
+                .uriTemplateHandler(new DefaultUriBuilderFactory(caseServerBaseUri))
+                .build();
     }
 
     public CaseDataSourceClient(@Value("${case-server.base.url:http://case-server/}") String caseServerBaseUri, UUID caseUuid) {
