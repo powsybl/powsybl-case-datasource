@@ -7,12 +7,13 @@
 package com.powsybl.cases.datasource;
 
 import com.powsybl.commons.datasource.ReadOnlyDataSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.http.client.ClientHttpRequestFactoryBuilder;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.core.io.Resource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
@@ -22,24 +23,31 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.DefaultUriBuilderFactory;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Objects;
-import java.util.Set;
-import java.util.UUID;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.util.*;
 
 /**
  * @author Chamseddine Benhamed <chamseddine.benhamed at rte-france.com>
  * @author Abdelsalem Hedhili <abdelsalem.hedhili at rte-france.com>
  */
 @Component
-public class CaseDataSourceClient implements ReadOnlyDataSource {
+public class CaseDataSourceClient implements ReadOnlyDataSource, AutoCloseable {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(CaseDataSourceClient.class);
 
     private static final String CASE_API_VERSION = "v1";
 
     private final RestTemplate restTemplate;
 
     private UUID caseUuid;
+
+    private final Map<String, Path> fileCache = new HashMap<>();
 
     @Autowired
     public CaseDataSourceClient(RestTemplateBuilder restTemplateBuilder,
@@ -122,7 +130,7 @@ public class CaseDataSourceClient implements ReadOnlyDataSource {
                 .queryParam("ext", ext)
                 .buildAndExpand(caseUuid)
                 .toUriString();
-        return fetchInputStream(path);
+        return fetchInputStream(path, suffix + "." + ext);
     }
 
     @Override
@@ -131,21 +139,42 @@ public class CaseDataSourceClient implements ReadOnlyDataSource {
                 .queryParam("fileName", fileName)
                 .buildAndExpand(caseUuid)
                 .toUriString();
-        return fetchInputStream(path);
+        return fetchInputStream(path, fileName);
     }
 
-    private InputStream fetchInputStream(String path) {
-        try {
-            ResponseEntity<Resource> responseEntity = restTemplate.exchange(path, HttpMethod.GET, HttpEntity.EMPTY, Resource.class);
-            Resource body = responseEntity.getBody();
-            if (body == null) {
-                throw new CaseDataSourceClientException("Response body is null for " + path);
+    private InputStream fetchInputStream(String path, String fileName) {
+        Path cachedFile = fileCache.get(fileName);
+        if (cachedFile != null && Files.exists(cachedFile)) {
+            try {
+                LOGGER.debug("Loading from cache: {}", path);
+                return new FileInputStream(cachedFile.toFile());
+            } catch (IOException e) {
+                fileCache.remove(fileName);
             }
-            return body.getInputStream();
+        }
+
+        try {
+            LOGGER.debug("Fetching from case server: {}", path);
+            return restTemplate.execute(path, HttpMethod.GET, null, response -> {
+                if (response.getStatusCode().is2xxSuccessful()) {
+                    Path tempFile = Paths.get("/tmp", "case-datasource-" + caseUuid + "-" + fileName);
+
+                    try (InputStream bodyStream = response.getBody()) {
+                        Files.copy(bodyStream, tempFile, StandardCopyOption.REPLACE_EXISTING);
+                    } catch (IOException e) {
+                        Files.deleteIfExists(tempFile);
+                        throw e;
+                    }
+
+                    fileCache.put(fileName, tempFile);
+
+                    return new FileInputStream(tempFile.toFile());
+                } else {
+                    throw new CaseDataSourceClientException("HTTP error " + response.getStatusCode() + " when requesting " + path);
+                }
+            });
         } catch (HttpStatusCodeException e) {
             throw new CaseDataSourceClientException("Exception when requesting the file inputStream: " + e.getResponseBodyAsString());
-        } catch (IOException e) {
-            throw new CaseDataSourceClientException("I/O error when opening inputStream for " + path, e);
         }
     }
 
@@ -168,5 +197,18 @@ public class CaseDataSourceClient implements ReadOnlyDataSource {
 
     public void setCaseName(UUID caseUuid) {
         this.caseUuid = Objects.requireNonNull(caseUuid);
+    }
+
+    @Override
+    public void close() {
+        for (Path tempFile : fileCache.values()) {
+            try {
+                LOGGER.debug("Cleaning temporary file: {}", tempFile);
+                Files.deleteIfExists(tempFile);
+            } catch (IOException e) {
+                LOGGER.error("Failed to delete temporary file: {}", tempFile, e);
+            }
+        }
+        fileCache.clear();
     }
 }
