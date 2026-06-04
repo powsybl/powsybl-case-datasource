@@ -54,15 +54,15 @@ public class CaseDataSourceClient implements ReadOnlyDataSource {
         this.caseUuid = Objects.requireNonNull(caseUuid);
     }
 
+    public CaseDataSourceClient(@Value("${case-server.base.url:http://case-server/}") String caseServerBaseUri, UUID caseUuid) {
+        this(createRestTemplate(caseServerBaseUri), caseUuid);
+    }
+
     private static RestTemplate createRestTemplate(String caseServerBaseUri) {
         return new RestTemplateBuilder().
                 requestFactoryBuilder(ClientHttpRequestFactoryBuilder.simple())
                 .uriTemplateHandler(new DefaultUriBuilderFactory(caseServerBaseUri))
                 .build();
-    }
-
-    public CaseDataSourceClient(@Value("${case-server.base.url:http://case-server/}") String caseServerBaseUri, UUID caseUuid) {
-        this(createRestTemplate(caseServerBaseUri), caseUuid);
     }
 
     @Override
