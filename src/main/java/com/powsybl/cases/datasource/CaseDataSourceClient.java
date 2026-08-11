@@ -19,7 +19,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.DefaultUriBuilderFactory;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
@@ -45,7 +44,7 @@ public class CaseDataSourceClient implements ReadOnlyDataSource {
     public CaseDataSourceClient(RestTemplateBuilder restTemplateBuilder,
                                 @Value("${case-server.base.url:http://case-server/}") String caseServerBaseUri,
                                 UUID caseUuid) {
-        this.restTemplate = Objects.requireNonNull(restTemplateBuilder).uriTemplateHandler(new DefaultUriBuilderFactory(caseServerBaseUri)).build();
+        this.restTemplate = Objects.requireNonNull(restTemplateBuilder).rootUri(caseServerBaseUri).build();
         this.caseUuid = Objects.requireNonNull(caseUuid);
     }
 
@@ -61,7 +60,7 @@ public class CaseDataSourceClient implements ReadOnlyDataSource {
     private static RestTemplate createRestTemplate(String caseServerBaseUri) {
         return new RestTemplateBuilder().
                 requestFactoryBuilder(ClientHttpRequestFactoryBuilder.simple())
-                .uriTemplateHandler(new DefaultUriBuilderFactory(caseServerBaseUri))
+                .rootUri(caseServerBaseUri)
                 .build();
     }
 
