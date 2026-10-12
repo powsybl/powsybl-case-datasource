@@ -10,15 +10,12 @@ import com.powsybl.commons.datasource.ReadOnlyDataSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.http.client.ClientHttpRequestFactoryBuilder;
-import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.io.Resource;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpStatusCodeException;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
@@ -36,42 +33,34 @@ public class CaseDataSourceClient implements ReadOnlyDataSource {
 
     private static final String CASE_API_VERSION = "v1";
 
-    private final RestTemplate restTemplate;
+    private RestClient caseServerRestClient;
 
     private UUID caseUuid;
 
     @Autowired
-    public CaseDataSourceClient(RestTemplateBuilder restTemplateBuilder,
-                                @Value("${case-server.base.url:http://case-server/}") String caseServerBaseUri,
-                                UUID caseUuid) {
-        this.restTemplate = Objects.requireNonNull(restTemplateBuilder).rootUri(caseServerBaseUri).build();
-        this.caseUuid = Objects.requireNonNull(caseUuid);
-    }
-
-    public CaseDataSourceClient(RestTemplate restTemplate, UUID caseUuid) {
-        this.restTemplate = Objects.requireNonNull(restTemplate);
+    public CaseDataSourceClient(RestClient restClient, UUID caseUuid) {
+        this.caseServerRestClient = Objects.requireNonNull(restClient);
         this.caseUuid = Objects.requireNonNull(caseUuid);
     }
 
     public CaseDataSourceClient(@Value("${case-server.base.url:http://case-server/}") String caseServerBaseUri, UUID caseUuid) {
-        this(createRestTemplate(caseServerBaseUri), caseUuid);
+        this(createRestClient(caseServerBaseUri), caseUuid);
     }
 
-    private static RestTemplate createRestTemplate(String caseServerBaseUri) {
-        return new RestTemplateBuilder().
-                requestFactoryBuilder(ClientHttpRequestFactoryBuilder.simple())
-                .rootUri(caseServerBaseUri)
-                .build();
+    private static RestClient createRestClient(String caseServerBaseUri) {
+        return RestClient.builder()
+            .requestFactory(ClientHttpRequestFactoryBuilder.simple().build())
+            .baseUrl(caseServerBaseUri)
+            .build();
     }
 
     @Override
     public String getBaseName() {
         try {
-            ResponseEntity<String> responseEntity = restTemplate.exchange("/" + CASE_API_VERSION + "/cases/{caseUuid}/datasource/baseName",
-                                                                          HttpMethod.GET,
-                                                                          HttpEntity.EMPTY,
-                                                                          String.class,
-                                                                          caseUuid);
+            ResponseEntity<String> responseEntity = caseServerRestClient.get()
+                .uri("/" + CASE_API_VERSION + "/cases/{caseUuid}/datasource/baseName", caseUuid)
+                .retrieve()
+                .toEntity(String.class);
             return responseEntity.getBody();
         } catch (HttpStatusCodeException e) {
             throw new CaseDataSourceClientException("Exception when requesting baseName", e);
@@ -99,10 +88,10 @@ public class CaseDataSourceClient implements ReadOnlyDataSource {
 
     private boolean checkFileExistence(String path) {
         try {
-            ResponseEntity<Boolean> responseEntity = restTemplate.exchange(path,
-                                                                           HttpMethod.GET,
-                                                                           HttpEntity.EMPTY,
-                                                                           Boolean.class);
+            ResponseEntity<Boolean> responseEntity = caseServerRestClient.get()
+                    .uri(path)
+                    .retrieve()
+                    .toEntity(Boolean.class);
             return responseEntity.getBody();
         } catch (HttpStatusCodeException e) {
             throw new CaseDataSourceClientException("Exception when checking file existence:" + e.getResponseBodyAsString());
@@ -135,7 +124,10 @@ public class CaseDataSourceClient implements ReadOnlyDataSource {
 
     private InputStream fetchInputStream(String path) {
         try {
-            ResponseEntity<Resource> responseEntity = restTemplate.exchange(path, HttpMethod.GET, HttpEntity.EMPTY, Resource.class);
+            ResponseEntity<Resource> responseEntity = caseServerRestClient.get()
+                .uri(path)
+                .retrieve()
+                .toEntity(Resource.class);
             Resource body = responseEntity.getBody();
             if (body == null) {
                 throw new CaseDataSourceClientException("Response body is null for " + path);
@@ -155,10 +147,10 @@ public class CaseDataSourceClient implements ReadOnlyDataSource {
                 .buildAndExpand(caseUuid)
                 .toUriString();
         try {
-            ResponseEntity<Set<String>> responseEntity = restTemplate.exchange(path,
-                                                                               HttpMethod.GET,
-                                                                               HttpEntity.EMPTY,
-                                                                               new ParameterizedTypeReference<Set<String>>() { });
+            ResponseEntity<Set<String>> responseEntity = caseServerRestClient.get()
+                    .uri(path)
+                    .retrieve()
+                    .toEntity(new ParameterizedTypeReference<Set<String>>() { });
             return responseEntity.getBody();
         } catch (HttpStatusCodeException e) {
             throw new CaseDataSourceClientException("Exception when requesting the files listNames: " + e.getResponseBodyAsString());
