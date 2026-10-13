@@ -59,7 +59,7 @@ class CaseDataSourceClientTest {
         given(caseServerRest.get()
                 .uri(eq("/v1/cases/{caseUuid}/datasource/baseName"), eq(caseUuid))
                 .retrieve()
-                .toEntity(eq(String.class)))
+                .toEntity(String.class))
                 .willReturn(ResponseEntity.ok("myCaseName"));
 
         assertEquals("myCaseName", caseDataSourceClient.getBaseName());
@@ -81,7 +81,7 @@ class CaseDataSourceClientTest {
         given(caseServerRest.get()
                 .uri(eq("/v1/cases/" + caseUuid + "/datasource/exists?fileName=A.xml"))
                 .retrieve()
-                .toEntity(eq(Boolean.class)))
+                .toEntity(Boolean.class))
                 .willReturn(ResponseEntity.ok(true));
 
         assertTrue(caseDataSourceClient.exists("A.xml"));
@@ -89,7 +89,7 @@ class CaseDataSourceClientTest {
         given(caseServerRest.get()
                 .uri(eq("/v1/cases/" + caseUuid + "/datasource/exists?suffix=A&ext=xml"))
                 .retrieve()
-                .toEntity(eq(Boolean.class)))
+                .toEntity(Boolean.class))
                 .willReturn(ResponseEntity.ok(true));
 
         assertTrue(caseDataSourceClient.exists("A", "xml"));
@@ -103,7 +103,7 @@ class CaseDataSourceClientTest {
         given(caseServerRest.get()
                 .uri(eq("/v1/cases/" + caseUuid + "/datasource?fileName=A.xml"))
                 .retrieve()
-                .toEntity(eq(Resource.class)))
+                .toEntity(Resource.class))
                 .willReturn(ResponseEntity.ok(new InputStreamResource(new ByteArrayInputStream(responseBytes))));
 
         try (InputStreamReader isReader = new InputStreamReader(caseDataSourceClient.newInputStream("A.xml"), StandardCharsets.UTF_8)) {
@@ -119,7 +119,7 @@ class CaseDataSourceClientTest {
         given(caseServerRest.get()
             .uri(eq("/v1/cases/" + caseUuid + "/datasource?suffix=A&ext=xml"))
             .retrieve()
-            .toEntity(eq(Resource.class)))
+            .toEntity(Resource.class))
             .willReturn(ResponseEntity.ok(new InputStreamResource(new ByteArrayInputStream(responseBytes))));
 
         try (InputStreamReader isReader = new InputStreamReader(caseDataSourceClient.newInputStream("A", "xml"), StandardCharsets.UTF_8)) {
@@ -138,7 +138,7 @@ class CaseDataSourceClientTest {
         given(caseServerRest.get()
                 .uri(eq("/v1/cases/" + caseUuid + "/datasource?fileName=A.xml"))
                 .retrieve()
-                .toEntity(eq(Resource.class)))
+                .toEntity(Resource.class))
                 .willReturn(ResponseEntity.ok().build());
 
         CaseDataSourceClientException exception = assertThrows(CaseDataSourceClientException.class, () -> caseDataSourceClient.newInputStream("A.xml"));
@@ -147,7 +147,7 @@ class CaseDataSourceClientTest {
         given(caseServerRest.get()
                 .uri(eq("/v1/cases/" + caseUuid + "/datasource?suffix=A&ext=xml"))
                 .retrieve()
-                .toEntity(eq(Resource.class)))
+                .toEntity(Resource.class))
                 .willReturn(ResponseEntity.ok().build());
 
         exception = assertThrows(CaseDataSourceClientException.class, () -> caseDataSourceClient.newInputStream("A", "xml"));
@@ -161,7 +161,7 @@ class CaseDataSourceClientTest {
         given(caseServerRest.get()
                 .uri(eq("/v1/cases/" + caseUuid + "/datasource?fileName=A.xml"))
                 .retrieve()
-                .toEntity(eq(Resource.class)))
+                .toEntity(Resource.class))
                 .willReturn(ResponseEntity.ok(resource));
 
         CaseDataSourceClientException exception = assertThrows(CaseDataSourceClientException.class, () -> caseDataSourceClient.newInputStream("A.xml"));
@@ -170,7 +170,7 @@ class CaseDataSourceClientTest {
         given(caseServerRest.get()
                 .uri(eq("/v1/cases/" + caseUuid + "/datasource?suffix=A&ext=xml"))
                 .retrieve()
-                .toEntity(eq(Resource.class)))
+                .toEntity(Resource.class))
                 .willReturn(ResponseEntity.ok(resource));
 
         exception = assertThrows(CaseDataSourceClientException.class, () -> caseDataSourceClient.newInputStream("A", "xml"));
