@@ -51,7 +51,7 @@
         <java.version>25</java.version>
         <maven.jacoco.version>0.8.15</maven.jacoco.version>
         <checkstyle.version>13.8.0</checkstyle.version>
-        <springboot.version>3.5.11</springboot.version>
+        <springboot.version>4.0.8</springboot.version>
         <powsybl-dependencies.version>2026.1.0</powsybl-dependencies.version>
         <sonar.organization>powsybl-ci-github</sonar.organization>
         <sonar.projectKey>com.powsybl:powsybl-case-datasource</sonar.projectKey>
@@ -82,6 +82,10 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-restclient</artifactId>
         </dependency>
         <dependency>
             <groupId>com.powsybl</groupId>
