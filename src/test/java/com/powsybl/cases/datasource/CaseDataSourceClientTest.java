@@ -14,10 +14,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.RestClient;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
@@ -25,11 +23,11 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
-import java.util.Set;
 import java.util.UUID;
 
 import static java.util.Arrays.asList;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Answers.RETURNS_DEEP_STUBS;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
@@ -40,8 +38,8 @@ import static org.mockito.BDDMockito.given;
 @ExtendWith(MockitoExtension.class)
 class CaseDataSourceClientTest {
 
-    @Mock
-    private RestTemplate caseServerRest;
+    @Mock(answer = RETURNS_DEEP_STUBS)
+    private RestClient caseServerRest;
 
     @Mock
     private Resource resource;
@@ -58,11 +56,10 @@ class CaseDataSourceClientTest {
 
     @Test
     void getBaseName() {
-        given(caseServerRest.exchange(eq("/v1/cases/{caseUuid}/datasource/baseName"),
-                eq(HttpMethod.GET),
-                any(HttpEntity.class),
-                eq(String.class),
-                eq(caseUuid)))
+        given(caseServerRest.get()
+                .uri(eq("/v1/cases/{caseUuid}/datasource/baseName"), eq(caseUuid))
+                .retrieve()
+                .toEntity(String.class))
                 .willReturn(ResponseEntity.ok("myCaseName"));
 
         assertEquals("myCaseName", caseDataSourceClient.getBaseName());
@@ -70,13 +67,10 @@ class CaseDataSourceClientTest {
 
     @Test
     void listName() {
-        ParameterizedTypeReference<Set<String>> parameterizedTypeReference = new ParameterizedTypeReference<>() {
-        };
-
-        given(caseServerRest.exchange(eq("/v1/cases/" + caseUuid + "/datasource/list?regex=.*"),
-                eq(HttpMethod.GET),
-                any(HttpEntity.class),
-                eq(parameterizedTypeReference)))
+        given(caseServerRest.get()
+                .uri(eq("/v1/cases/" + caseUuid + "/datasource/list?regex=.*"))
+                .retrieve()
+                .toEntity(any(ParameterizedTypeReference.class)))
                 .willReturn(ResponseEntity.ok(new HashSet<>(asList("A.xml", "B.xml"))));
 
         assertEquals(new HashSet<>(asList("A.xml", "B.xml")), caseDataSourceClient.listNames(".*"));
@@ -84,18 +78,18 @@ class CaseDataSourceClientTest {
 
     @Test
     void exists() {
-        given(caseServerRest.exchange(eq("/v1/cases/" + caseUuid + "/datasource/exists?fileName=A.xml"),
-                eq(HttpMethod.GET),
-                any(HttpEntity.class),
-                eq(Boolean.class)))
+        given(caseServerRest.get()
+                .uri(eq("/v1/cases/" + caseUuid + "/datasource/exists?fileName=A.xml"))
+                .retrieve()
+                .toEntity(Boolean.class))
                 .willReturn(ResponseEntity.ok(true));
 
         assertTrue(caseDataSourceClient.exists("A.xml"));
 
-        given(caseServerRest.exchange(eq("/v1/cases/" + caseUuid + "/datasource/exists?suffix=A&ext=xml"),
-                eq(HttpMethod.GET),
-                any(HttpEntity.class),
-                eq(Boolean.class)))
+        given(caseServerRest.get()
+                .uri(eq("/v1/cases/" + caseUuid + "/datasource/exists?suffix=A&ext=xml"))
+                .retrieve()
+                .toEntity(Boolean.class))
                 .willReturn(ResponseEntity.ok(true));
 
         assertTrue(caseDataSourceClient.exists("A", "xml"));
@@ -106,10 +100,10 @@ class CaseDataSourceClientTest {
         String data = "Data in the file";
         byte[] responseBytes = data.getBytes();
 
-        given(caseServerRest.exchange(eq("/v1/cases/" + caseUuid + "/datasource?fileName=A.xml"),
-                eq(HttpMethod.GET),
-                any(HttpEntity.class),
-                eq(Resource.class)))
+        given(caseServerRest.get()
+                .uri(eq("/v1/cases/" + caseUuid + "/datasource?fileName=A.xml"))
+                .retrieve()
+                .toEntity(Resource.class))
                 .willReturn(ResponseEntity.ok(new InputStreamResource(new ByteArrayInputStream(responseBytes))));
 
         try (InputStreamReader isReader = new InputStreamReader(caseDataSourceClient.newInputStream("A.xml"), StandardCharsets.UTF_8)) {
@@ -122,11 +116,11 @@ class CaseDataSourceClientTest {
             assertEquals("Data in the file", datasourceResponse.toString());
         }
 
-        given(caseServerRest.exchange(eq("/v1/cases/" + caseUuid + "/datasource?suffix=A&ext=xml"),
-                eq(HttpMethod.GET),
-                any(HttpEntity.class),
-                eq(Resource.class)))
-                .willReturn(ResponseEntity.ok(new InputStreamResource(new ByteArrayInputStream(responseBytes))));
+        given(caseServerRest.get()
+            .uri(eq("/v1/cases/" + caseUuid + "/datasource?suffix=A&ext=xml"))
+            .retrieve()
+            .toEntity(Resource.class))
+            .willReturn(ResponseEntity.ok(new InputStreamResource(new ByteArrayInputStream(responseBytes))));
 
         try (InputStreamReader isReader = new InputStreamReader(caseDataSourceClient.newInputStream("A", "xml"), StandardCharsets.UTF_8)) {
             BufferedReader reader = new BufferedReader(isReader);
@@ -141,19 +135,19 @@ class CaseDataSourceClientTest {
 
     @Test
     void newInputStreamWithEmptyBody() {
-        given(caseServerRest.exchange(eq("/v1/cases/" + caseUuid + "/datasource?fileName=A.xml"),
-                eq(HttpMethod.GET),
-                any(HttpEntity.class),
-                eq(Resource.class)))
+        given(caseServerRest.get()
+                .uri(eq("/v1/cases/" + caseUuid + "/datasource?fileName=A.xml"))
+                .retrieve()
+                .toEntity(Resource.class))
                 .willReturn(ResponseEntity.ok().build());
 
         CaseDataSourceClientException exception = assertThrows(CaseDataSourceClientException.class, () -> caseDataSourceClient.newInputStream("A.xml"));
         assertTrue(exception.getMessage().contains("Response body is null for"));
 
-        given(caseServerRest.exchange(eq("/v1/cases/" + caseUuid + "/datasource?suffix=A&ext=xml"),
-                eq(HttpMethod.GET),
-                any(HttpEntity.class),
-                eq(Resource.class)))
+        given(caseServerRest.get()
+                .uri(eq("/v1/cases/" + caseUuid + "/datasource?suffix=A&ext=xml"))
+                .retrieve()
+                .toEntity(Resource.class))
                 .willReturn(ResponseEntity.ok().build());
 
         exception = assertThrows(CaseDataSourceClientException.class, () -> caseDataSourceClient.newInputStream("A", "xml"));
@@ -164,19 +158,19 @@ class CaseDataSourceClientTest {
     void newInputStreamWithIOException() throws IOException {
         given(resource.getInputStream()).willThrow(new IOException("Test"));
 
-        given(caseServerRest.exchange(eq("/v1/cases/" + caseUuid + "/datasource?fileName=A.xml"),
-                eq(HttpMethod.GET),
-                any(HttpEntity.class),
-                eq(Resource.class)))
+        given(caseServerRest.get()
+                .uri(eq("/v1/cases/" + caseUuid + "/datasource?fileName=A.xml"))
+                .retrieve()
+                .toEntity(Resource.class))
                 .willReturn(ResponseEntity.ok(resource));
 
         CaseDataSourceClientException exception = assertThrows(CaseDataSourceClientException.class, () -> caseDataSourceClient.newInputStream("A.xml"));
         assertTrue(exception.getMessage().contains("I/O error when opening inputStream for"));
 
-        given(caseServerRest.exchange(eq("/v1/cases/" + caseUuid + "/datasource?suffix=A&ext=xml"),
-                eq(HttpMethod.GET),
-                any(HttpEntity.class),
-                eq(Resource.class)))
+        given(caseServerRest.get()
+                .uri(eq("/v1/cases/" + caseUuid + "/datasource?suffix=A&ext=xml"))
+                .retrieve()
+                .toEntity(Resource.class))
                 .willReturn(ResponseEntity.ok(resource));
 
         exception = assertThrows(CaseDataSourceClientException.class, () -> caseDataSourceClient.newInputStream("A", "xml"));
